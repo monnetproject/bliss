@@ -1,0 +1,84 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package eu.monnetproject.translation.topics;
+
+import eu.monnetproject.lang.Script;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+/**
+ *
+ * @author john
+ */
+public class PTBTokenizerTest {
+    
+    public PTBTokenizerTest() {
+    }
+    
+    @BeforeClass
+    public static void setUpClass() {
+    }
+    
+    @AfterClass
+    public static void tearDownClass() {
+    }
+    
+    @Before
+    public void setUp() {
+    }
+    
+    @After
+    public void tearDown() {
+    }
+
+    /**
+     * Test of tokenize method, of class PTBTokenizer.
+     */
+    @Test
+    public void testTokenize() {
+        System.out.println("tokenize");
+        String input = "So in \"this\" test, we wish to check everything; that "
+                + "is in the PTB Guidelines. So..., a question? A statement! "
+                + "(and maybe a note). And I'll say I'm gonna test somethings like "
+                + "you're and you've and don't and I'LL, I'M, YOU'RE, DON'T. And some garbage: "
+                + "Gimme, gonna, gotta, 'twas, 'tis, more'n, whaddya, whatcha. "
+                + "Finally,    we   add   some    exageratted    spacing!";
+        PTBTokenizer instance = new PTBTokenizer();
+        List<String> expResult = Arrays.asList("So","in","``","this","''","test",",","we","wish","to","check","everything",";","that",
+                "is","in","the","PTB","Guidelines",".","So","...",",","a","question","?","A","statement","!",
+                "(","and","maybe","a","note",")",".","And","I","'ll","say","I","'m","gon","na","test","somethings","like",
+                "you","'re","and","you","'ve","and","do","n't","and","I","'LL",",","I","'M",",","YOU","'RE",",","DO","N'T",".","And","some","garbage",":",
+                "Gim","me",",","gon","na",",","got","ta",",","'t","was",",","'t","is",",","more","'n",",","wha","dd","ya",",","wha","t","cha",".",
+                "Finally",",","we","add","some","exageratted","spacing","!");
+        List<Token> result = instance.tokenize(input);
+        final Iterator<Token> tokIter = result.iterator();
+        final Iterator<String> expIter = expResult.iterator();
+        while(tokIter.hasNext() && expIter.hasNext()) {
+            assertEquals(expIter.next(),tokIter.next().getValue());
+        }
+        assertFalse(tokIter.hasNext());
+        assertFalse(expIter.hasNext());
+        
+    }
+
+    /**
+     * Test of getScript method, of class PTBTokenizer.
+     */
+    @Test
+    public void testGetScript() {
+        System.out.println("getScript");
+        PTBTokenizer instance = new PTBTokenizer();
+        Script expResult = Script.LATIN;
+        Script result = instance.getScript();
+        assertEquals(expResult, result);
+    }
+}
