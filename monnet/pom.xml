@@ -1,0 +1,41 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>eu.monnetproject.topics</groupId>
+      <artifactId>topics</artifactId>
+      <version>1.12.7-SNAPSHOT</version>
+      <relativePath>..</relativePath>
+    </parent>
+    <artifactId>monnet</artifactId>
+    <packaging>bundle</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>eu.monnetproject</groupId>
+            <artifactId>core</artifactId>
+            <version>1.12.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.monnetproject</groupId>
+            <artifactId>translation.core</artifactId>
+            <version>1.12.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>lda</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>betalm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.monnetproject</groupId>
+            <artifactId>nlp.owlapi</artifactId>
+            <version>1.12.7-SNAPSHOT</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+</project>
