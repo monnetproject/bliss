@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -55,10 +56,10 @@ public class FilterByILI {
         final File outFile = new File(args[2]);
         final boolean reverseILI;
         final boolean translate;
-        if(args[3].equals("src-trans")) {
+        if (args[3].equals("src-trans")) {
             reverseILI = false;
             translate = true;
-        } else if(args[3].equals("trg")) {
+        } else if (args[3].equals("trg")) {
             reverseILI = true;
             translate = false;
         } else {
@@ -78,7 +79,7 @@ public class FilterByILI {
             fail("Cannot write output");
         }
 
-        final HashMap<String, String> ili = buildILI(iliFile,reverseILI);
+        final HashMap<String, String> ili = buildILI(iliFile, reverseILI);
 
         final PrintWriter out;
         if (args[2].endsWith(".gz")) {
@@ -89,15 +90,13 @@ public class FilterByILI {
             out = new PrintWriter(outFile);
         }
 
-        filter(intCorpusFile, ili, out,translate);
+        filter(intCorpusFile, ili, out, translate);
 
         out.close();
     }
 
-    public static HashMap<String, String> buildILI(File iliFile,boolean reverse) throws IOException {
-        final Scanner scanner = new Scanner(iliFile.getName().endsWith(".gz")
-                ? new GZIPInputStream(new FileInputStream(iliFile)) : (iliFile.getName().endsWith(".bz2")
-                ? new BZip2CompressorInputStream(new FileInputStream(iliFile)) : new FileInputStream(iliFile)));
+    public static HashMap<String, String> buildILI(File iliFile, boolean reverse) throws IOException {
+        final Scanner scanner = new Scanner(fileAsInputStream(iliFile));
         final HashMap<String, String> ili = new HashMap<String, String>();
         while (scanner.hasNextLine()) {
             final String line = scanner.nextLine();
@@ -108,7 +107,7 @@ public class FilterByILI {
             if (ss.length != 2) {
                 throw new RuntimeException("Bad line: " + line);
             }
-            if(reverse) {
+            if (reverse) {
                 ili.put(ss[1], ss[0]);
             } else {
                 ili.put(ss[0], ss[1]);
@@ -118,9 +117,7 @@ public class FilterByILI {
     }
 
     public static void filter(File corpusFile, HashMap<String, String> ili, PrintWriter out, boolean translate) throws IOException {
-        final Scanner scanner = new Scanner(corpusFile.getName().endsWith(".gz")
-                ? new GZIPInputStream(new FileInputStream(corpusFile)) : (corpusFile.getName().endsWith(".bz2")
-                ? new BZip2CompressorInputStream(new FileInputStream(corpusFile)) : new FileInputStream(corpusFile)));
+        final Scanner scanner = new Scanner(fileAsInputStream(corpusFile));
         while (scanner.hasNextLine()) {
             final String line = scanner.nextLine();
             final int n = line.lastIndexOf(":");
@@ -129,7 +126,7 @@ public class FilterByILI {
             }
             final String title = line.substring(0, n);
             if (ili.containsKey(title)) {
-                if(translate) {
+                if (translate) {
                     out.println(ili.get(title) + line.substring(n));
                 } else {
                     out.println(line);
@@ -140,7 +137,13 @@ public class FilterByILI {
 
     private static void fail(String message) {
         System.err.println(message);
-        System.err.println("Usage:\n\tmvn exec:java -Dexec.mainClass=" + FilterByILI.class.getName() + " -Dexec.args=\"corpus.int[.gz|.bz2] ili out[.gz|.bz2] src-trans|trg");
+        System.err.println("Usage:\n\tmvn exec:java -Dexec.mainClass=" + FilterByILI.class.getName() + " -Dexec.args=\"corpus.int[.gz|.bz2] ili out[.gz|.bz2] src-trans|trg\"");
         System.exit(-1);
+    }
+
+    public static InputStream fileAsInputStream(File corpusFile) throws IOException {
+        return corpusFile.getName().endsWith(".gz")
+                ? new GZIPInputStream(new FileInputStream(corpusFile)) : (corpusFile.getName().endsWith(".bz2")
+                ? new BZip2CompressorInputStream(new FileInputStream(corpusFile)) : new FileInputStream(corpusFile));
     }
 }
