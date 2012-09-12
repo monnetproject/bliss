@@ -72,7 +72,7 @@ public class MateFindingTrial {
         } else if(method.equals("ME_SURJ")) {
             parallelSimilarity = new MinErrorSurjection(new File(trainFile));
         } else {
-            parallelSimilarity = new BetaLM(new File(trainFile));
+            parallelSimilarity = new BetaLMImpl(new File(trainFile));
         }
         compare(parallelSimilarity, testFile);
     }
