@@ -27,7 +27,6 @@
 package eu.monnetproject.translation.topics.lda;
 //
 import eu.monnetproject.translation.topics.Tokenizer;
-import eu.monnetproject.translation.topics.Token;
 import eu.monnetproject.lang.Language;
 import eu.monnetproject.lang.Script;
 import eu.monnetproject.framework.services.Services;
@@ -100,9 +99,9 @@ public class LDA {
             docLangs.add(langIdx);
             LinkedList<Integer> d = new LinkedList<Integer>();
             System.err.println(">>>>" + doc.getName());
-            for (Token tk : tokenizer.tokenize(doc.getText().toLowerCase())) {
-                if (hasPassed(passed, freq, tk.getValue(), minFreq)) {
-                    final String word = tk.getValue();
+            for (String tk : tokenizer.tokenize(doc.getText().toLowerCase())) {
+                if (hasPassed(passed, freq, tk, minFreq)) {
+                    final String word = tk;
                     System.err.print(word + " ");
                     int wordIdx;
                     if (!wordMap.containsKey(word)) {
@@ -196,9 +195,9 @@ public class LDA {
             throw new IllegalArgumentException("Cannot tokenize document");
         }
         ArrayList<Integer> rv = new ArrayList<Integer>();
-        for (Token tk : tokenizer.tokenize(doc.getText())) {
-            if (words.containsKey(tk.getValue())) {
-                rv.add(words.get(tk.getValue()));
+        for (String tk : tokenizer.tokenize(doc.getText())) {
+            if (words.containsKey(tk)) {
+                rv.add(words.get(tk));
             } else {
                 // OOV
             }
