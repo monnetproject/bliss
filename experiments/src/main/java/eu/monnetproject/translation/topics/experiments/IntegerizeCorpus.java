@@ -73,8 +73,8 @@ public class IntegerizeCorpus {
     private static void fail(String message) {
         System.err.println(message);
         System.err.println("\nUsage:\n"
-                + "\tmvn exec:java -Dexec.mainClass=eu.monnetproject.translation.topics.experiments.IntegerizeCorpus -Dexec.args=\"[-s SAMPLING_RATE] corpus[.gz|bz2] wordMap output[.gz|bz2]\"\n"
-                + "\t\tcorpus and output may use suffix .gz to enable compression\n"
+                + "\tmvn exec:java -Dexec.mainClass=eu.monnetproject.translation.topics.experiments.IntegerizeCorpus -Dexec.args=\"[-s SAMPLING_RATE] corpus[.gz|.bz2] wordMap output[.gz|.bz2]\"\n"
+                + "\t\tcorpus and output may use suffix .gz or .bz2 to enable compression\n"
                 + "\t\twordMap is always appended to (if it exists)");
         System.exit(-1);
     }
@@ -94,7 +94,7 @@ public class IntegerizeCorpus {
             }
         }
 
-        if (argList.size() != 2) {
+        if (argList.size() != 3) {
             fail("Wrong number of arguments");
         }
         final File corpusFile = new File(argList.get(0));
