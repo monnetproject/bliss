@@ -116,4 +116,8 @@ public class LDAReranker implements TranslationRanker {
     public String getName() {
         return "LDA";
     }
+
+    @Override
+    public void close() {
+    }
 }

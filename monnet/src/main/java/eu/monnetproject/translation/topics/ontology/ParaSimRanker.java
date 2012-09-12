@@ -128,4 +128,8 @@ public class ParaSimRanker implements TranslationRanker {
     public String getName() {
         return "ParaSim";
     }
+
+    @Override
+    public void close() {
+    }
 }
