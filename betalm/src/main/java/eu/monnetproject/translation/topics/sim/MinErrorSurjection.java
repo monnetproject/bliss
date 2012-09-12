@@ -50,7 +50,7 @@ public class MinErrorSurjection implements SimilarityMetric {
 
     public MinErrorSurjection(File file) throws IOException {
         final ParallelReader data = ParallelReader.fromFile(file);
-        this.W = data.W;
+        this.W = data.W();
         final SparseArray[][] Xt = transpose(data.x);
         this.surjes = calculateSurjections(Xt, invMap(data.words));
     }

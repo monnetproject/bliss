@@ -71,7 +71,7 @@ public class WxWCLESA implements SimilarityMetric {
     public WxWCLESA(File file) throws IOException {
         // Load data
         final ParallelReader data = ParallelReader.fromFile(file);
-        this.W = data.W;
+        this.W = data.W();
         this.J = data.x.length;
         // We collect X and Y^T
         this.Xt = data.x;

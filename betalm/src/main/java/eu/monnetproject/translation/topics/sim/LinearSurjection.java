@@ -48,7 +48,7 @@ public class LinearSurjection implements SimilarityMetric {
 
     public LinearSurjection(File file) throws IOException {
         final ParallelReader data = ParallelReader.fromFile(file);
-        this.W = data.W;
+        this.W = data.W();
         final SparseArray[][] Xt = transpose(data.x);
         final double[][] norms = norms(Xt);
         this.surjes = calculateSurjections(Xt, norms);

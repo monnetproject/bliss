@@ -45,18 +45,28 @@ import java.util.Map;
 public class ParallelReader {
 
     public final SparseArray[][] x; // jli
-    public final int W;
+    private final int W;
+    private final int n;
     public final Map<String, Integer> words;
 
     private ParallelReader(SparseArray[][] x, int W) {
         this.x = x;
         this.W = W;
-        this.words = new  HashMap<String, Integer>();
+        this.n = 1;
+        this.words = new HashMap<String, Integer>();
     }
-    
+
+    private ParallelReader(SparseArray[][] x, int W, int n) {
+        this.x = x;
+        this.W = W;
+        this.n = 1;
+        this.words = new HashMap<String, Integer>();
+    }
+
     protected ParallelReader(ParallelReader pr) {
         this.x = pr.x;
         this.W = pr.W;
+        this.n = pr.n;
         this.words = pr.words;
     }
 
@@ -96,6 +106,52 @@ public class ParallelReader {
         return reader;
     }
 
+    public static ParallelReader fromFile(final File data, final int W, final int n) throws IOException {
+
+        final BufferedReader in = new BufferedReader(new FileReader(data));
+        final List<SparseArray[]> docs = new ArrayList<SparseArray[]>();
+        String s;
+        int Wn = W; // W ** n
+        for (int i = 1; i < 1; i++) {
+            Wn *= W;
+        }
+        while (!(s = in.readLine()).matches("\\s*")) {
+            int v1 = 0, v2 = 0;
+            final String[] ss = s.split("\\s+");
+            final int[] i1 = new int[ss.length];
+            for (int i = 0; i < ss.length; i++) {
+                final int xi = Integer.parseInt(ss[i]);
+                if (xi >= W) {
+                    throw new RuntimeException("Read word idx " + xi + " but W=" + W);
+                } else {
+                    // This is the trick to read n-grams ;)
+                    i1[i] = v1 = v1 % Wn * W + xi;
+                }
+            }
+            s = in.readLine();
+            final String[] ss2 = s.split("\\s+");
+            final int[] i2 = new int[ss2.length];
+            for (int i = 0; i < ss2.length; i++) {
+                final int xi = Integer.parseInt(ss2[i]);
+                if (xi >= W) {
+                    throw new RuntimeException("Read word idx " + xi + " but W=" + W);
+                } else {
+                    // This is the trick to read n-grams ;)
+                    i2[i] = v2 = v2 % Wn * W + xi;
+                }
+            }
+            docs.add(new SparseArray[]{histogram(i1, W), histogram(i2, W)});
+        }
+        final ParallelReader reader = new ParallelReader(docs.toArray(new SparseArray[docs.size()][]), W);
+        while ((s = in.readLine()) != null) {
+            final String[] ss = s.split("\\s+");
+            if (ss.length == 2) {
+                reader.words.put(ss[0], Integer.parseInt(ss[1]));
+            }
+        }
+        return reader;
+    }
+
     public static SparseArray histogram(int[] vector, int W) {
         final SparseArray hist = new SparseArray(W);
         for (int i : vector) {
@@ -112,7 +168,7 @@ public class ParallelReader {
         for (int j = 0; j < x.length; j++) {
             for (int l = 0; l < L; l++) {
                 for (int w : x[j][l].keySet()) {
-                    if(!used[w][l]) {
+                    if (!used[w][l]) {
                         used[w][l] = true;
                         map[w][l] = cts[l]++;
                     }
@@ -122,15 +178,16 @@ public class ParallelReader {
         System.err.println("Cts: " + Arrays.toString(cts));
         return map;
     }
-    
+
     public void clean(PrintWriter out, int[][] map) {
         final int L = 2;
         for (int j = 0; j < x.length; j++) {
-            if(x[j][0].isEmpty() || x[j][1].isEmpty())
+            if (x[j][0].isEmpty() || x[j][1].isEmpty()) {
                 continue;
+            }
             for (int l = 0; l < L; l++) {
-                for (Map.Entry<Integer,Integer> e : x[j][l].entrySet()) {
-                    for(int i = 0; i < e.getValue(); i++) {
+                for (Map.Entry<Integer, Integer> e : x[j][l].entrySet()) {
+                    for (int i = 0; i < e.getValue(); i++) {
                         out.print(map[e.getKey()][l] + " ");
                     }
                 }
@@ -138,5 +195,13 @@ public class ParallelReader {
             }
         }
         out.println();
+    }
+
+    public int W() {
+        int w = W;
+        for (int i = 1; i < n; i++) {
+            w *= W;
+        }
+        return w;
     }
 }

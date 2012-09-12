@@ -46,7 +46,7 @@ public class ParallelSimilarityTest {
                 fromArray(new int[]{0, 0, 0, 0, 2, 1})
             }
         };
-        final BetaLM instance = new BetaLM(x,6, new String[] { "a", "b", "c", "x", "y", "z" });
+        final BetaLMImpl instance = new BetaLMImpl(x,6, new String[] { "a", "b", "c", "x", "y", "z" });
         final double[] vector = instance.simVec(Arrays.asList("a","a","a","b"));
         assertEquals(0,vector[0],0.0);
         assertTrue(vector[3] > vector[4]);

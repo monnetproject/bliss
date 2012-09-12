@@ -53,7 +53,7 @@ public class CLESA implements SimilarityMetric {
         this.J = pr.x.length;
         this.n = new int[J];
         this.n_f = new int[J];
-        this.W = pr.W;
+        this.W = pr.W();
         this.xt = transpose(pr.x);
         this.words = pr.words;
         this.df = new double[W];
