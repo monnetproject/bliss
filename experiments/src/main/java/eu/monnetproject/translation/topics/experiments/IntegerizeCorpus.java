@@ -58,7 +58,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
 public class IntegerizeCorpus {
 
     private static final Tokenizer tokenizer = new PTBTokenizer();
-    private static final Pattern docStart = Pattern.compile("<doc .* title=\"(.*)\">.*");
+    private static final Pattern docStart = Pattern.compile("<doc.*title=\"(.*)\">.*");
     private static final Pattern docEnd = Pattern.compile("</doc>");
     /**
      * Normalize the token (i.e., make lowercase)
