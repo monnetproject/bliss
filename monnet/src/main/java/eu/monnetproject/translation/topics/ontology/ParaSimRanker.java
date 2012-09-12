@@ -29,7 +29,7 @@ package eu.monnetproject.translation.topics.ontology;
 import eu.monnetproject.ontology.Entity;
 import eu.monnetproject.translation.PhraseTableEntry;
 import eu.monnetproject.translation.TranslationRanker;
-import eu.monnetproject.translation.topics.sim.BetaLM;
+import eu.monnetproject.translation.topics.sim.BetaLMImpl;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,7 +80,7 @@ public class ParaSimRanker implements TranslationRanker {
 //        }
     }
     
-    public ParaSimRanker(BetaLM paraSim, int[] ontologyTerms) {
+    public ParaSimRanker(BetaLMImpl paraSim, int[] ontologyTerms) {
         this(paraSim.words,paraSim.simVec(ontologyTerms),paraSim.mu_f);
     }
 

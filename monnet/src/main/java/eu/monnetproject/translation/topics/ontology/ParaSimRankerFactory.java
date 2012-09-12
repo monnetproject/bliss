@@ -32,7 +32,7 @@ import eu.monnetproject.lang.Language;
 import eu.monnetproject.ontology.Ontology;
 import eu.monnetproject.tokenizer.TokenizerFactory;
 import eu.monnetproject.translation.TranslationRanker;
-import eu.monnetproject.translation.topics.sim.BetaLM;
+import eu.monnetproject.translation.topics.sim.BetaLMImpl;
 import eu.monnetproject.translation.topics.sim.BinaryReader;
 import java.io.File;
 import java.util.HashMap;
@@ -57,7 +57,7 @@ public class ParaSimRankerFactory extends AbstractRankerFactory {
         if(props.containsKey(srcLang+"-"+trgLang)) {
             try {
                 log.info("Loading Parallel Similarity data");
-                final BetaLM paraSim = new BetaLM(new File(props.get(srcLang+"-"+trgLang).toString()));
+                final BetaLMImpl paraSim = new BetaLMImpl(new File(props.get(srcLang+"-"+trgLang).toString()));
                 log.info("Calculating Parallel Similarity vector");
                 return new ParaSimRanker(paraSim, onto2doc(paraSim.words, ontology, srcLang));
 //                return new TranslationRanker() {

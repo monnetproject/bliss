@@ -10,6 +10,7 @@
     </parent>
     <artifactId>monnet</artifactId>
     <packaging>bundle</packaging>
+    <name>Monnet Translate-Topic Integration</name>
     <dependencies>
         <dependency>
             <groupId>eu.monnetproject</groupId>
