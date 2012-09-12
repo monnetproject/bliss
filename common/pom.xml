@@ -10,6 +10,7 @@
     </parent>
     <artifactId>common</artifactId>
     <packaging>bundle</packaging>
+    <name>Commons</name>
     <dependencies>
         <dependency>
             <groupId>it.unimi.dsi</groupId>
