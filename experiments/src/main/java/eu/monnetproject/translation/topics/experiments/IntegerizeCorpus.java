@@ -136,6 +136,7 @@ public class IntegerizeCorpus {
 
         integerize(corpusIn, wordMap, out, sampleRate);
 
+        out.close();
         wordMap.write(wordMapFile);
     }
 
