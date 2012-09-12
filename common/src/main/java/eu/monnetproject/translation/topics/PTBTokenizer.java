@@ -50,8 +50,8 @@ public class PTBTokenizer implements Tokenizer {
                     matcher.groupCount() > 1 ?
                   //  matcher.groupCount() > 2 ?
                     //  replace.replaceAll("\\\\1", matcher.group(1)).replaceAll("\\\\2", matcher.group(2)).replaceAll("\\\\3", matcher.group(3)) :
-                      replace.replaceAll("\\\\1", matcher.group(1)).replaceAll("\\\\2", matcher.group(2)) :
-                      replace.replaceAll("\\\\1", matcher.group(1)) :
+                      replace.replace("\\1", matcher.group(1)).replace("\\2", matcher.group(2)) :
+                      replace.replace("\\1", matcher.group(1)) :
                       replace;
             sb.replace(matcher.start(), matcher.end(), replace2);
             start = matcher.start() + replace.length();
