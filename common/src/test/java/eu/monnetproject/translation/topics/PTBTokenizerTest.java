@@ -59,11 +59,11 @@ public class PTBTokenizerTest {
                 "you","'re","and","you","'ve","and","do","n't","and","I","'LL",",","I","'M",",","YOU","'RE",",","DO","N'T",".","And","some","garbage",":",
                 "Gim","me",",","gon","na",",","got","ta",",","'t","was",",","'t","is",",","more","'n",",","wha","dd","ya",",","wha","t","cha",".",
                 "Finally",",","we","add","some","exageratted","spacing","!");
-        List<Token> result = instance.tokenize(input);
-        final Iterator<Token> tokIter = result.iterator();
+        List<String> result = instance.tokenize(input);
+        final Iterator<String> tokIter = result.iterator();
         final Iterator<String> expIter = expResult.iterator();
         while(tokIter.hasNext() && expIter.hasNext()) {
-            assertEquals(expIter.next(),tokIter.next().getValue());
+            assertEquals(expIter.next(),tokIter.next());
         }
         assertFalse(tokIter.hasNext());
         assertFalse(expIter.hasNext());

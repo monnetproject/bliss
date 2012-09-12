@@ -39,7 +39,7 @@ public interface Tokenizer {
      * @param input The string to tokenize
      * @return A list of tokens
      */
-	List<Token> tokenize(String input);
+	List<String> tokenize(String input);
 	
 	/**
 	 * Get the script the tokenizer supports

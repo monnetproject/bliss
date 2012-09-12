@@ -27,6 +27,7 @@ package eu.monnetproject.translation.topics;
 
 import eu.monnetproject.lang.Script;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,7 +64,7 @@ public class PTBTokenizer implements Tokenizer {
     }
     
     @Override
-    public List<Token> tokenize(String input) {
+    public List<String> tokenize(String input) {
         final StringBuilder sb = new StringBuilder(input);
         // Generic Latin Charset rules
         replaceAll(sb,"^\"","``");
@@ -106,31 +107,12 @@ public class PTBTokenizer implements Tokenizer {
         replaceAll(sb," +$","");
         
         // Format into a token list
-        final String[] tokArr = sb.toString().split("\\s+");
-        final ArrayList<Token> tokenList = new ArrayList<Token>(tokArr.length);
-        for(String s : tokArr) {
-            tokenList.add(new TokenImpl(s));
-        }
-        return tokenList;
+        return Arrays.asList(sb.toString().split("\\s+"));
     }
 
     @Override
     public Script getScript() {
         return Script.LATIN;
-    }
-    
-    private static class TokenImpl implements Token {
-        private final String value;
-
-        public TokenImpl(String value) {
-            this.value = value;
-        }
-        
-        @Override
-        public String getValue() {
-            return value;
-        }
-        
     }
 
 }
