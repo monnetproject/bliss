@@ -26,9 +26,10 @@ then
   chmod a+x WikiExtract.py
 fi
 
-if [ ! -f "experiments/target" ];
+if [ ! -f experiments/target/ ];
 then
-   mvn install
+   echo "Compiling Monnet Topics"
+   mvn install || die "Maven2 build failed... is Maven2 installed?"
 fi
 
 if [ ! -f wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 ];
@@ -37,7 +38,7 @@ then
   wget http://dumps.wikimedia.org/${SRCLANG}wiki/latest/${SRCLANG}wiki-latest-pages-articles.xml.bz2 -O wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 || die "Could not download WikiPedia dump"
 fi
 
-if [ -f wiki/${SRCLANG}wiki.xml.gz ]
+if [ ! -f wiki/${SRCLANG}wiki.xml.gz ]
 then
   echo "Step 2. Extract Wikipedia $SRCLANG"
   bzcat wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 -cb 10M -o wiki/${SRCLANG}wiki
@@ -51,7 +52,7 @@ then
   wget http://dumps.wikimedia.org/${TRGLANG}wiki/latest/${TRGLANG}wiki-latest-pages-articles.xml.bz2 -O wiki/${TRGLANG}wiki-latest-pages-articles.xml.bz2 || die "Could not download WikiPedia dump"
 fi
 
-if [ -f wiki/${TRGLANG}wiki.xml.gz ]
+if [ ! -f wiki/${TRGLANG}wiki.xml.gz ]
 then
   echo "Step 4. Extract Wikipedia $TRGLANG"
   bzcat wiki/${TRGLANG}wiki-latest-pages-articles.xml.bz2 -cb 10M -o wiki/${TRGLANG}wiki
@@ -61,51 +62,51 @@ fi
 
 cd wiki/$SRCLANG-$TRGLANG/
 
-if [ -f ili ]
+if [ ! -f ili ]
 then
    echo "Step 5. Build Interlingual Index"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterlingualIndex" -Dexec.args="../${SRCLANG}wiki-latest-pages-articles.xml.bz2 $TRGLANG ili"
 fi
 
-if [ -f ${SRCLANG}wiki.$SAMPLING.int.gz ]
+if [ ! -f ${SRCLANG}wiki.$SAMPLING.int.gz ]
 then 
   echo "Step 6. Integerize $SRCLANG Wikipedia"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${SRCLANG}wiki.xml.gz wordMap$SAMPLING ${SRCLANG}wiki.$SAMPLING.int.gz"
 fi
 
-if [ -f ${TRGLANG}wiki.$SAMPLING.int.gz ]
+if [ ! -f ${TRGLANG}wiki.$SAMPLING.int.gz ]
 then 
   echo "Step 7. Integerize $TRGLANG Wikipedia"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${TRGLANG}wiki.xml.gz wordMap$SAMPLING ${TRGLANG}wiki.$SAMPLING.int.gz"
 fi
 
 
-if [ -f ${SRCLANG}wiki.$SAMPLING.filt.gz ]
+if [ ! -f ${SRCLANG}wiki.$SAMPLING.filt.gz ]
 then
    echo "Step  8. Filter/translate $SRCLANG by ILI"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterByILI" -Dexec.args="${SRCLANG}wiki.$SAMPLING.int.gz ili ${SRCLANG}wiki.$SAMPLING.filt.gz src-trans"
 fi
 
-if [ -f ${TRGLANG}wiki.$SAMPLING.filt.gz ]
+if [ ! -f ${TRGLANG}wiki.$SAMPLING.filt.gz ]
 then
    echo "Step  9. Filter $TRGLANG by ILI"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterByILI" -Dexec.args="${TRGLANG}wiki.$SAMPLING.int.gz ili ${TRGLANG}wiki.$SAMPLING.filt.gz trg"
 fi
 
-if [ -f ${SRCLANG}wiki.$SAMPLING.sort.gz ]
+if [ ! -f ${SRCLANG}wiki.$SAMPLING.sort.gz ]
 then 
    echo "Step 10. Sort ${SCRLANG} data"
    LC_ALL=C sort ${SRCLANG}wiki.$SAMPLING.filt.gz > ${SRCLANG}wiki.$SAMPLING.sort.gz
 fi
 
 
-if [ -f ${TRGLANG}wiki.$SAMPLING.sort.gz ]
+if [ ! -f ${TRGLANG}wiki.$SAMPLING.sort.gz ]
 then 
    echo "Step 11. Sort ${SCRLANG} data"
    LC_ALL=C sort ${TRGLANG}wiki.$SAMPLING.filt.gz > ${SRCLANG}wiki.$SAMPLING.sort.gz
 fi
 
-if [ -f ${SRCLANG}wiki.$SAMPLING.gz ]
+if [ ! -f ${SRCLANG}wiki.$SAMPLING.gz ]
 then
    echo "Step 12. Interleave and binarize data"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${TRGLANG}wiki.$SAMPLING.sort.gz ${TRGLANG}wiki.$SAMPLING.sort.gz ${SRCLANG}wiki.$SAMPLING.gz"
