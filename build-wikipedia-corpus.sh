@@ -19,7 +19,7 @@ then
   mkdir -p wiki/$SRCLANG-$TRGLANG/
 fi
 
-if [ ! -f "WikiExtract.py" ];
+if [ ! -f "WikiExtractor.py" ];
 then
   echo "Obtaining UniPisa WikiExtract Script"
   wget -q http://medialab.di.unipi.it/Project/SemaWiki/Tools/WikiExtractor.py || die "Please download WikiExtract.py script"
@@ -41,7 +41,7 @@ fi
 if [ ! -f wiki/${SRCLANG}wiki.xml.gz ] && [ -f wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 ]
 then
   echo "Step 2. Extract Wikipedia $SRCLANG"
-  bzcat wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 | python WikiExtract.py -cb 10M -o wiki/${SRCLANG}wiki
+  bzcat wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 | python WikiExtractor.py -cb 10M -o wiki/${SRCLANG}wiki
   find wiki/${SRCLANG}wiki -name '*.bz2' -exec bunzip2 {} \; | gzip wiki/${SRCLANG}wiki.xml.gz
   rm -fr wiki/${SRCLANG}wiki/
 fi
@@ -55,7 +55,7 @@ fi
 if [ ! -f wiki/${TRGLANG}wiki.xml.gz ] && [ -f wiki/${TRGLANG}wiki-latest-pages-articles.xml.bz2 ]
 then
   echo "Step 4. Extract Wikipedia $TRGLANG"
-  bzcat wiki/${TRGLANG}wiki-latest-pages-articles.xml.bz2 | python WikiExtract.py -cb 10M -o wiki/${TRGLANG}wiki
+  bzcat wiki/${TRGLANG}wiki-latest-pages-articles.xml.bz2 | python WikiExtractor.py -cb 10M -o wiki/${TRGLANG}wiki
   find wiki/${TRGLANG}wiki -name '*.bz2' -exec bunzip2 {} \; | gzip wiki/${TRGLANG}wiki.xml.gz
   rm -fr wiki/${TRGLANG}wiki/
 fi
