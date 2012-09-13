@@ -94,13 +94,19 @@ fi
 
 if [ -f ${SRCLANG}wiki.$SAMPLING.sort.gz ]
 then 
-   echo "Step 10. Sort remaining data"
+   echo "Step 10. Sort ${SCRLANG} data"
    LC_ALL=C sort ${SRCLANG}wiki.$SAMPLING.filt.gz > ${SRCLANG}wiki.$SAMPLING.sort.gz
+fi
+
+
+if [ -f ${TRGLANG}wiki.$SAMPLING.sort.gz ]
+then 
+   echo "Step 11. Sort ${SCRLANG} data"
    LC_ALL=C sort ${TRGLANG}wiki.$SAMPLING.filt.gz > ${SRCLANG}wiki.$SAMPLING.sort.gz
 fi
 
 if [ -f ${SRCLANG}wiki.$SAMPLING.gz ]
 then
-   echo "Step 11. Interleave and binarize data"
+   echo "Step 12. Interleave and binarize data"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${TRGLANG}wiki.$SAMPLING.sort.gz ${TRGLANG}wiki.$SAMPLING.sort.gz ${SRCLANG}wiki.$SAMPLING.gz"
 fi
