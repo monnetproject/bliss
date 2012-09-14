@@ -34,8 +34,8 @@ import java.util.Random;
 /**
  * Count using the sticky sampling method. This method is described in:
  * "Approximate Frequency Counts over Data Streams" (2002) G.S. Manku and R.
- * Motwani. I have slightly modified it so that instead of a fixed counter it uses 
- * an adaptive counter based on available memory.
+ * Motwani. I have slightly modified it so that instead of a fixed counter it
+ * uses an adaptive counter based on available memory.
  *
  * @author John McCrae
  */
@@ -47,12 +47,13 @@ public class StickySamplingCounter implements Counter {
     // The probability of adding a new n-gram
     private double r;
     // The number of elements in the stream
-    protected long p, lastP = 100000;
+    protected long p;
     final Random random = new Random();
-    private final double critical = Double.parseDouble(System.getProperty("sampling.critical","0.2"));
+    private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
     /**
      * Create a Sticky Sampling Counter
+     *
      * @param N The largest n-gram to count
      */
     public StickySamplingCounter(int N) {
@@ -81,37 +82,37 @@ public class StickySamplingCounter implements Counter {
             }
         }
         p++;
-        if(p % 100 == 0 && memoryCritical()) {
+        if (p % 1000 == 0 && memoryCritical()) {
             prune();
         }
     }
 
     private boolean memoryCritical() {
         final Runtime runtime = Runtime.getRuntime();
-        return (double)(runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory()) / (double)runtime.maxMemory() < critical;
+        return (double) (runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory()) / (double) runtime.maxMemory() < critical;
     }
-    
+
     private int sampleFromGeometric(double rate) {
         // See "Non-Uniform Random Variate Generation" by L. Devroye
-        return (int)(Math.log(random.nextDouble()) / Math.log(1-rate));
+        return (int) (Math.log(random.nextDouble()) / Math.log(1 - rate));
     }
 
     protected void prune() {
-        double rate = (double)lastP / (double)p;
-        for (int i = 1; i <= N; i++) {
-            final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            final ObjectIterator<Entry<NGram>> iter = ngcs.object2IntEntrySet().iterator();
-            while (iter.hasNext()) {
-                final int f = sampleFromGeometric(rate);
-                final Entry<NGram> entry = iter.next();
-                if(entry.getIntValue() <= f) {
-                    iter.remove();
+        do {
+            r *= 0.5;
+            for (int i = 1; i <= N; i++) {
+                final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
+                final ObjectIterator<Entry<NGram>> iter = ngcs.object2IntEntrySet().iterator();
+                while (iter.hasNext()) {
+                    final int f = sampleFromGeometric(r);
+                    final Entry<NGram> entry = iter.next();
+                    if (entry.getIntValue() <= f) {
+                        iter.remove();
+                    }
                 }
             }
-        }
-        System.gc();
-        r *= rate;
-        lastP = p;
+            System.gc();
+        } while (memoryCritical());
     }
 
     @Override

@@ -27,9 +27,6 @@
 package eu.monnetproject.translation.langmodels;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
 
@@ -44,12 +41,14 @@ public class LossyCounter implements Counter {
 
     private final int N;
     private final NGramCarousel carousel;
-    private final Object2ObjectOpenHashMap<NGram,FreqDelta>[] counts;
-    private final int w;
+    private final StdNGramCountSet nGramCountSet;
     private int b;
-    // The number of elements in the stream
-    private long p;
+    /**
+     * Number of tokens read
+     */
+    protected long p;
     final Random random = new Random();
+    private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
     /**
      * Create a lossy counter
@@ -58,16 +57,12 @@ public class LossyCounter implements Counter {
      * @param w The bucket width, e.g., 1000
      */
     @SuppressWarnings("unchecked")
-    public LossyCounter(int N, int w) {
+    public LossyCounter(int N) {
         this.N = N;
-        this.w = w;
         this.b = 1;
         this.p = 0;
         this.carousel = new NGramCarousel(N);
-        this.counts = new Object2ObjectOpenHashMap[N];
-        for(int i = 0; i < N; i++) {
-            counts[i] = new Object2ObjectOpenHashMap<NGram, FreqDelta>();
-        }
+        this.nGramCountSet = new StdNGramCountSet(N);
     }
 
     @Override
@@ -80,28 +75,38 @@ public class LossyCounter implements Counter {
         carousel.offer(w);
         for (int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
-            final Object2ObjectMap<NGram,FreqDelta> ngcs = counts[i-1];
+            final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             if (ngcs.containsKey(ngram)) {
-                ngcs.get(ngram).freq++;
+                ngcs.put(ngram, ngcs.getInt(ngram) + 1);
             } else {
-                ngcs.put(ngram, new FreqDelta(1, b-1));
+                ngcs.put(ngram, 1);
             }
         }
-        if (++p % w == 0) {
+        p++;
+        if (p % 1000 == 0 && memoryCritical()) {
             prune();
         }
     }
-    private void prune() {
-        b++;
-        for (int i = 1; i <= N; i++) {
-            final ObjectIterator<Entry<NGram, FreqDelta>> iter = counts[i-1].object2ObjectEntrySet().fastIterator();
-            while (iter.hasNext()) {
-                final Entry<NGram, FreqDelta> entry = iter.next();
-                if (entry.getValue().freq + entry.getValue().delta <= b) {
-                    iter.remove();
-                } 
+    private final Runtime runtime = Runtime.getRuntime();
+
+    private boolean memoryCritical() {
+        return (double) (runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory()) / (double) runtime.maxMemory() < critical;
+    }
+
+    protected void prune() {
+        do {
+            b++;
+            for (int i = 1; i <= N; i++) {
+                final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
+                while (iter.hasNext()) {
+                    final Object2IntMap.Entry<NGram> entry = iter.next();
+                    if (entry.getValue() < b) {
+                        iter.remove();
+                    }
+                }
             }
-        }
+            System.gc();
+        } while (memoryCritical());
     }
 
     @Override
@@ -111,31 +116,6 @@ public class LossyCounter implements Counter {
 
     @Override
     public NGramCountSet counts() {
-        final StdNGramCountSet nGramCountSet = new StdNGramCountSet(N);
-        
-        for (int i = 1; i <= N; i++) {
-            final ObjectIterator<Entry<NGram, FreqDelta>> iter = counts[i-1].object2ObjectEntrySet().fastIterator();
-            final Object2IntMap<NGram> map = nGramCountSet.ngramCount(i);
-            while(iter.hasNext()) {
-                final Entry<NGram, FreqDelta> entry = iter.next();
-                map.put(entry.getKey(), entry.getValue().freq);
-                iter.remove();
-            }
-        }
-        
         return nGramCountSet;
     }
-    
-    private static class FreqDelta {
-        public int freq;
-        public int delta;
-
-        public FreqDelta(int freq, int delta) {
-            this.freq = freq;
-            this.delta = delta;
-        }
-        
-        
-    }
-    
 }
