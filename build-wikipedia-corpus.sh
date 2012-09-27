@@ -42,7 +42,7 @@ if [ ! -f wiki/${SRCLANG}wiki.xml.gz ] && [ -f wiki/${SRCLANG}wiki-latest-pages-
 then
   echo "Step 2. Extract Wikipedia $SRCLANG"
   bzcat wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 | python WikiExtractor.py -cb 10M -o wiki/${SRCLANG}wiki
-  find wiki/${SRCLANG}wiki -name '*.bz2' -exec bunzip2 {} \; | gzip wiki/${SRCLANG}wiki.xml.gz
+  find wiki/${SRCLANG}wiki -name '*.bz2' -exec bunzip2 -c {} \; | gzip > wiki/${SRCLANG}wiki.xml.gz
   rm -fr wiki/${SRCLANG}wiki/
 fi
 
@@ -56,7 +56,7 @@ if [ ! -f wiki/${TRGLANG}wiki.xml.gz ] && [ -f wiki/${TRGLANG}wiki-latest-pages-
 then
   echo "Step 4. Extract Wikipedia $TRGLANG"
   bzcat wiki/${TRGLANG}wiki-latest-pages-articles.xml.bz2 | python WikiExtractor.py -cb 10M -o wiki/${TRGLANG}wiki
-  find wiki/${TRGLANG}wiki -name '*.bz2' -exec bunzip2 {} \; | gzip wiki/${TRGLANG}wiki.xml.gz
+  find wiki/${TRGLANG}wiki -name '*.bz2' -exec bunzip2 -c {} \; | gzip > wiki/${TRGLANG}wiki.xml.gz
   rm -fr wiki/${TRGLANG}wiki/
 fi
 
