@@ -26,6 +26,10 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics;
 
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -167,6 +171,23 @@ public class SparseArray extends HashMap<Integer, Integer> {
             }
         }
         return sa;
+    }
+    
+    public static SparseArray fromBinary(File file, int W) throws IOException {
+        final DataInputStream dis = new DataInputStream(new FileInputStream(file));
+        final SparseArray arr = new SparseArray(W);
+        while(dis.available() > 0) {
+            arr.inc(dis.readInt());
+        }
+        return arr;
+    }
+    
+    public static SparseArray histogram(int[] vector, int W) {
+        final SparseArray hist = new SparseArray(W);
+        for (int i : vector) {
+            hist.inc(i);
+        }
+        return hist;
     }
     
     public static int[][] toArray(SparseArray[] sas) {
