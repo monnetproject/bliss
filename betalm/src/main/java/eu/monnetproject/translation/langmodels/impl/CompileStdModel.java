@@ -26,8 +26,12 @@
 package eu.monnetproject.translation.langmodels.impl;
 
 import eu.monnetproject.translation.langmodels.LossyCounter;
+import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
+import eu.monnetproject.translation.topics.WordMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  *
@@ -63,5 +67,34 @@ public class CompileStdModel {
         }
         return counter.counts();
     }
+    
+    public void writeModel(PrintWriter out, WordMap wordMap, NGramCountSet countSet) {
+        final String[] inverseWordMap = wordMap.invert();
+        out.println("\\data\\");
+        for(int i = 1; i <= countSet.N(); i++) {
+            out.println("ngram " + i + "=" + countSet.ngramCount(i).size());            
+        }
+        out.println();
+        for(int i = 1; i <= countSet.N(); i++) {
+            long l = countSet.sum(i);
+            out.println("\\"+i+"-grams:");
+            for(Object2IntMap.Entry<NGram> entry : countSet.ngramCount(i).object2IntEntrySet()) {
+                double p = entry.getIntValue();
+                p = Math.log10(p / l);
+                out.print(p + "\t");
+                final int[] ng = entry.getKey().ngram;
+                for(int j = 0; j < ng.length; j++) {
+                    out.print(inverseWordMap[ng[j]]);
+                    if(j+1 != ng.length) {
+                        out.print(" ");
+                    }
+                }
+                out.println();
+            }
+            out.println();
+        }
+        out.println("\\end\\");
+    }
+    
     
 }
