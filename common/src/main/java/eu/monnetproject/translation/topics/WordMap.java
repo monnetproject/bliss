@@ -120,7 +120,7 @@ public class WordMap extends Object2IntOpenHashMap<String> {
     
     public String[] invert() {
         int max = 0;
-        for(int i : super.values) {
+        for(int i : super.values()) {
             max = Math.max(max, i);
         }
         final String[] inverseMap = new String[max+1];
