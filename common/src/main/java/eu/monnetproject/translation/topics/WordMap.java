@@ -42,6 +42,7 @@ import java.io.IOException;
  *
  * @author John McCrae
  */
+@SuppressWarnings("serial")
 public class WordMap extends Object2IntOpenHashMap<String> {
 
     /**
@@ -115,6 +116,20 @@ public class WordMap extends Object2IntOpenHashMap<String> {
             }
         }
         return true;
+    }
+    
+    public String[] invert() {
+        int max = 0;
+        for(int i : super.values) {
+            max = Math.max(max, i);
+        }
+        final String[] inverseMap = new String[max+1];
+        final ObjectIterator<Entry<String>> iter = super.object2IntEntrySet().fastIterator();
+        while(iter.hasNext()) {
+            final Entry<String> entry = iter.next();
+            inverseMap[entry.getIntValue()] = entry.getKey();
+        }
+        return inverseMap;
     }
 
     /**
