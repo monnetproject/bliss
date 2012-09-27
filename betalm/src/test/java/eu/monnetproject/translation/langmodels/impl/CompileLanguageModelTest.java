@@ -3,7 +3,7 @@ package eu.monnetproject.translation.langmodels.impl;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
 import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
-import eu.monnetproject.translation.langmodels.impl.CompileStdModel.SourceType;
+import eu.monnetproject.translation.langmodels.impl.CompileLanguageModel.SourceType;
 import eu.monnetproject.translation.topics.WordMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
@@ -14,18 +14,18 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
  * @author john
  */
-public class CompileStdModelTest {
+public class CompileLanguageModelTest {
 
-    public CompileStdModelTest() {
+    public CompileLanguageModelTest() {
     }
 
     @BeforeClass
@@ -45,7 +45,7 @@ public class CompileStdModelTest {
     }
 
     /**
-     * Test of doCount method, of class CompileStdModel.
+     * Test of doCount method, of class CompileLanguageModel.
      */
     @Test
     public void testDoCount() throws Exception {
@@ -68,7 +68,7 @@ public class CompileStdModelTest {
                 }));
         IntegerizedCorpusReader reader = new IntegerizedCorpusReader(corpus);
         SourceType type = SourceType.SIMPLE;
-        CompileStdModel instance = new CompileStdModel();
+        CompileLanguageModel instance = new CompileLanguageModel();
         NGramCountSet expResult = new NGramCountSetImpl(N);
         expResult.ngramCount(1).put(new NGram(new int[]{1}), 4);
         expResult.ngramCount(1).put(new NGram(new int[]{2}), 2);
@@ -109,7 +109,7 @@ public class CompileStdModelTest {
     }
 
     /**
-     * Test of writeModel method, of class CompileStdModel.
+     * Test of writeModel method, of class CompileLanguageModel.
      */
     @Test
     public void testWriteModel() {
@@ -146,7 +146,7 @@ public class CompileStdModelTest {
         countSet.inc(2);
         countSet.inc(2);
         countSet.inc(2);
-        CompileStdModel instance = new CompileStdModel();
+        CompileLanguageModel instance = new CompileLanguageModel();
         instance.writeModel(out, wordMap, countSet.asWeightedSet());
         final String ls = System.getProperty("line.separator");
         final String expResult = "\\data\\" + ls

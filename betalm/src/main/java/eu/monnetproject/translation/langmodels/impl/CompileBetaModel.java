@@ -28,6 +28,7 @@ package eu.monnetproject.translation.langmodels.impl;
 
 import eu.monnetproject.translation.langmodels.LossyWeightedCounter;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.sim.BetaSimFunction;
 import java.io.IOException;
 import java.util.Arrays;
@@ -36,18 +37,18 @@ import java.util.Arrays;
  *
  * @author John McCrae
  */
-public class CompileBetaModel {
-
-    public WeightedNGramCountSet doCount(int N, IntegerizedCorpusReader reader, CompileStdModel.SourceType type, BetaSimFunction beta) throws IOException {
+public class CompileBetaModel extends CompileLanguageModel {
+    
+    public WeightedNGramCountSet doCount(int N, IntegerizedCorpusReader reader, CompileLanguageModel.SourceType type, BetaSimFunction beta) throws IOException {
         final LossyWeightedCounter counter = new LossyWeightedCounter(N);
         long read = 0;
-        boolean inDoc = type != CompileStdModel.SourceType.INTERLEAVED_USE_SECOND;
+        boolean inDoc = type != CompileLanguageModel.SourceType.INTERLEAVED_USE_SECOND;
         while (reader.nextDocument()) {
             final int[] doc = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
-            final double v = beta.score(doc);
+            final double v = beta.score(SparseArray.histogram(doc,0));
             for (int tk : doc) {
                 if (tk == 0) {
-                    if (type == CompileStdModel.SourceType.SIMPLE) {
+                    if (type == CompileLanguageModel.SourceType.SIMPLE) {
                         counter.docEnd();
                     } else {
                         if (inDoc) {

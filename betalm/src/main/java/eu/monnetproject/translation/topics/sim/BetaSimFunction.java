@@ -26,11 +26,13 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics.sim;
 
+import eu.monnetproject.translation.topics.SparseArray;
+
 /**
  *
  * @author John McCrae
  */
 public interface BetaSimFunction {
 
-    double score(int[] document);
+    double score(SparseArray document);
 }

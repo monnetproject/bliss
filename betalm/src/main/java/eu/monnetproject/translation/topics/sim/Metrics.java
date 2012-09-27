@@ -50,6 +50,16 @@ public class Metrics {
         return a2 > 0 && b2 > 0 ? ab / Math.sqrt(a2) / Math.sqrt(b2) : 0;
     }
     
+    public static BetaSimFunction cosSim(final SparseArray vec1) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray vec2) {
+                return cosSim(vec1,vec2);
+            }
+        };
+    }
+    
     public static double cosSim(double[] vec1, SparseArray vec2) {
         double ab = 0.0;
         double a2 = 0.0;
@@ -79,6 +89,16 @@ public class Metrics {
         }
         return kld;
     }
+    
+    public static BetaSimFunction kullbackLeiblerDivergence(final SparseArray vec1) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray vec2) {
+                return kullbackLeiblerDivergence(vec1, vec2);
+            }
+        };
+    }
 
     public static double jaccardIndex(SparseArray vec1, SparseArray vec2) {
         int intersect = 0;
@@ -99,7 +119,17 @@ public class Metrics {
 
         return union == 0 ? 0.0 : (double) intersect / union;
     }
+    
+    public static BetaSimFunction jaccardIndex(final SparseArray vec1) {
+        return new BetaSimFunction() {
 
+            @Override
+            public double score(SparseArray vec2) {
+                return jaccardIndex(vec1, vec2);
+            }
+        };
+    }
+    
     public static double normalCosSim(SparseArray vec1, SparseArray vec2, double[] mu, double sumMu2) {
         final int v1sum = vec1.sum();
         final int v2sum = vec2.sum();
@@ -130,6 +160,16 @@ public class Metrics {
         }
         return a2 > 0 && b2 > 0 && ab > 0 ? ab / Math.sqrt(a2) / Math.sqrt(b2) : 0;
     }
+    
+    public static BetaSimFunction normalCosSim(final SparseArray vec1, final double[] mu, final double sumMu2) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray vec2) {
+                return normalCosSim(vec1, vec2, mu, sumMu2);
+            }
+        };
+    }
 
     public static double diceCoefficient(SparseArray vec1, SparseArray vec2) {
         final int v1sum = vec1.size();
@@ -144,6 +184,16 @@ public class Metrics {
             }
         }
         return 2.0 * (double) v12 / (v1sum + v2sum);
+    }
+    
+    public static BetaSimFunction diceCoefficient(final SparseArray vec1) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray document) {
+                return diceCoefficient(vec1, document);
+            }
+        };
     }
 
     public static double dfDiceCoefficient(SparseArray vec1, SparseArray vec2, double[] df) {
@@ -162,6 +212,16 @@ public class Metrics {
             denom += (1.0 - df[i]);
         }
         return denom == 0.0 ? 0.0 : (2.0 * num / denom);
+    }
+    
+    public static BetaSimFunction dfDiceCoefficient(final SparseArray vec1, final double[] df) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray document) {
+                return dfDiceCoefficient(vec1, document, df);
+            }
+        };
     }
     
     public static double dfJaccardCoefficient(SparseArray vec1, SparseArray vec2, double[] df) {
@@ -183,6 +243,16 @@ public class Metrics {
         }
         return denom == 0.0 ? 0.0 : num / denom;
     }
+    
+    public static BetaSimFunction dfJaccardCoefficient(final SparseArray vec1, final double[] df) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray document) {
+                return dfJaccardCoefficient(vec1, document, df);
+            }
+        };
+    }
 
     public static double rogersTanimoto(SparseArray vec1, SparseArray vec2) {
         final int N = vec1.n();
@@ -200,5 +270,25 @@ public class Metrics {
         }
 
         return (double) (N - diff) / (double) (N + diff);
+    }
+    
+    public static BetaSimFunction rogersTanimoto(final SparseArray vec1) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray document) {
+                return rogersTanimoto(vec1, document);
+            }
+        };
+    }
+    
+    public static BetaSimFunction selective(final BetaSimFunction function, final double selectivity) {
+        return new BetaSimFunction() {
+
+            @Override
+            public double score(SparseArray document) {
+                return Math.pow(function.score(document),selectivity);
+            }
+        };
     }
 }
