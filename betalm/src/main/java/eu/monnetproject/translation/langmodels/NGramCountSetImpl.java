@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.langmodels;
 
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
@@ -34,13 +35,13 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
  *
  * @author John McCrae
  */
-public class StdNGramCountSet implements NGramCountSet {
+public class NGramCountSetImpl implements NGramCountSet {
 
     private final int N;
     private final Object2IntOpenHashMap<NGram>[] counts;
     private final long[] sums;
 
-    public StdNGramCountSet(int N) {
+    public NGramCountSetImpl(int N) {
         this.N = N;
         counts = new Object2IntOpenHashMap[N];
         for (int i = 0; i < N; i++) {
@@ -72,5 +73,43 @@ public class StdNGramCountSet implements NGramCountSet {
     @Override
     public void sub(int n, int v) {
         sums[n - 1] -= v;
+    }
+    private AsWeighted asWeighted;
+
+    @Override
+    public WeightedNGramCountSet asWeightedSet() {
+        if (asWeighted == null) {
+            return asWeighted = new AsWeighted();
+        } else {
+            return asWeighted;
+        }
+    }
+
+    private class AsWeighted implements WeightedNGramCountSet {
+
+        @Override
+        public int N() {
+            return N;
+        }
+
+        @Override
+        public Object2DoubleMap<NGram> ngramCount(int n) {
+            return new Object2IntAsDoubleMap<NGram>(counts[n - 1]);
+        }
+
+        @Override
+        public double sum(int n) {
+            return sums[n - 1];
+        }
+
+        @Override
+        public void add(int n, double v) {
+            sums[n - 1] += v;
+        }
+
+        @Override
+        public void sub(int n, double v) {
+            sums[n - 1] -= v;
+        }
     }
 }

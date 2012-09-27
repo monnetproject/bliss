@@ -81,6 +81,7 @@ public class LossyWeightedCounter implements WeightedCounter {
             } else {
                 ngcs.put(ngram, v);
             }
+            nGramCountSet.add(i, v);
         }
         p++;
         bStep *= (double) (p - 1) / (double) p;
@@ -105,6 +106,7 @@ public class LossyWeightedCounter implements WeightedCounter {
                     final Object2DoubleMap.Entry<NGram> entry = iter.next();
                     if (entry.getValue() < thresh) {
                         iter.remove();
+                        nGramCountSet.sub(i, entry.getDoubleValue());
                     }
                 }
             }
@@ -126,6 +128,7 @@ public class LossyWeightedCounter implements WeightedCounter {
 
         private final int N;
         private final Object2DoubleOpenHashMap<NGram>[] counts;
+        private final double[] sums;
 
         public WeightedNGramCountSetImpl(int N) {
             this.N = N;
@@ -133,6 +136,7 @@ public class LossyWeightedCounter implements WeightedCounter {
             for (int i = 0; i < N; i++) {
                 counts[i] = new Object2DoubleOpenHashMap<NGram>();
             }
+            sums = new double[N];
         }
 
         @Override
@@ -143,6 +147,21 @@ public class LossyWeightedCounter implements WeightedCounter {
         @Override
         public int N() {
             return N;
+        }
+
+        @Override
+        public double sum(int n) {
+            return sums[n - 1];
+        }
+
+        @Override
+        public void add(int n, double v) {
+            sums[n - 1] += v;
+        }
+
+        @Override
+        public void sub(int n, double v) {
+            sums[n - 1] -= v;
         }
     }
 }

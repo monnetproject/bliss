@@ -2,7 +2,7 @@ package eu.monnetproject.translation.langmodels.impl;
 
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
-import eu.monnetproject.translation.langmodels.StdNGramCountSet;
+import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
 import eu.monnetproject.translation.langmodels.impl.CompileStdModel.SourceType;
 import eu.monnetproject.translation.topics.WordMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -69,7 +69,7 @@ public class CompileStdModelTest {
         IntegerizedCorpusReader reader = new IntegerizedCorpusReader(corpus);
         SourceType type = SourceType.SIMPLE;
         CompileStdModel instance = new CompileStdModel();
-        NGramCountSet expResult = new StdNGramCountSet(N);
+        NGramCountSet expResult = new NGramCountSetImpl(N);
         expResult.ngramCount(1).put(new NGram(new int[]{1}), 4);
         expResult.ngramCount(1).put(new NGram(new int[]{2}), 2);
         expResult.ngramCount(1).put(new NGram(new int[]{3}), 2);
@@ -122,7 +122,7 @@ public class CompileStdModelTest {
         wordMap.offer("c");
         wordMap.offer("d");
         int N = 2;
-        NGramCountSet countSet = new StdNGramCountSet(N);
+        NGramCountSet countSet = new NGramCountSetImpl(N);
         countSet.ngramCount(1).put(new NGram(new int[]{1}), 4);
         countSet.ngramCount(1).put(new NGram(new int[]{2}), 2);
         countSet.ngramCount(1).put(new NGram(new int[]{3}), 2);
@@ -147,7 +147,7 @@ public class CompileStdModelTest {
         countSet.inc(2);
         countSet.inc(2);
         CompileStdModel instance = new CompileStdModel();
-        instance.writeModel(out, wordMap, countSet);
+        instance.writeModel(out, wordMap, countSet.asWeightedSet());
         final String ls = System.getProperty("line.separator");
         final String expResult = "\\data\\" + ls
                 + "ngram 1=4" + ls

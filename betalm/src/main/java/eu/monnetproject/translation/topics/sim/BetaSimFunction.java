@@ -24,52 +24,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************************/
-package eu.monnetproject.translation.langmodels;
-
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+package eu.monnetproject.translation.topics.sim;
 
 /**
- * A set of n-gram count sets, i.e., the set of 1-grams, 2-grams, 3-grams etc.
- * 
+ *
  * @author John McCrae
  */
-public interface NGramCountSet {
-    /**
-     * The length of the longest n-gram
-     * @return n
-     */
-    int N();
-    
-    /**
-     * The counts of n-gram
-     * @param n The length of n-grams
-     * @return A map giving an integer count for each n-gram
-     */
-    Object2IntMap<NGram> ngramCount(int n);
-    
-    /**
-     * The total value of all n-gram
-     * @param n The length of n-grams
-     * @return Sum of all n-gram counts
-     */
-    long sum(int n);
-    
-    /**
-     * Increment the total count of n-grams
-     * @param n At length n
-     */
-    void inc(int n);
-    
-    /**
-     * Remove a number of counts (due to pruning)
-     * @param n At length n
-     * @param v counts
-     */
-    void sub(int n, int v);
-    
-    /**
-     * Return this as a weighted set
-     * @return {@code this} as a weighted object
-     */
-    WeightedNGramCountSet asWeightedSet();
+public interface BetaSimFunction {
+
+    double score(int[] document);
 }

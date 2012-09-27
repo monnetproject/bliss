@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,55 +24,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.langmodels;
+package eu.monnetproject.translation.langmodels.impl;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import eu.monnetproject.translation.langmodels.LossyWeightedCounter;
+import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.topics.sim.BetaSimFunction;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
- * The obvious method for counting: never throw away anything, never make
- * an error.
- * 
+ *
  * @author John McCrae
  */
-public class ExhaustiveCounter implements Counter {
-    private final int N;
-    private final NGramCarousel carousel;
-    private final NGramCountSetImpl nGramCountSet;
-    
-    public ExhaustiveCounter(int N) {
-        this.N = N;
-        this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new NGramCountSetImpl(N);
-    }
-    
-    @Override
-    public int N() {
-        return N;
-    }
+public class CompileBetaModel {
 
-    @Override
-    public void offer(int w) {
-        carousel.offer(w);
-        for(int i = 1; i <= carousel.maxNGram(); i++) {
-            final NGram ngram = carousel.ngram(i);
-            final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            nGramCountSet.inc(i);
-            if(ngcs.containsKey(ngram)) {
-                ngcs.put(ngram, ngcs.getInt(ngram)+1);
-            } else {
-                ngcs.put(ngram, 1);
+    public WeightedNGramCountSet doCount(int N, IntegerizedCorpusReader reader, CompileStdModel.SourceType type, BetaSimFunction beta) throws IOException {
+        final LossyWeightedCounter counter = new LossyWeightedCounter(N);
+        long read = 0;
+        boolean inDoc = type != CompileStdModel.SourceType.INTERLEAVED_USE_SECOND;
+        while (reader.nextDocument()) {
+            final int[] doc = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
+            final double v = beta.score(doc);
+            for (int tk : doc) {
+                if (tk == 0) {
+                    if (type == CompileStdModel.SourceType.SIMPLE) {
+                        counter.docEnd();
+                    } else {
+                        if (inDoc) {
+                            counter.docEnd();
+                            inDoc = false;
+                        } else {
+                            inDoc = true;
+                        }
+                    }
+                } else if (inDoc) {
+                    counter.offer(tk,v);
+                }
+                if (++read % 1048576 == 0) {
+                    System.err.print(".");
+                }
             }
         }
+        return counter.counts();
     }
-
-    @Override
-    public void docEnd() {
-        carousel.reset();
-    }
-
-    @Override
-    public NGramCountSet counts() {
-        return nGramCountSet;
-    }
-
 }

@@ -34,7 +34,37 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
  */
 public interface WeightedNGramCountSet {
 
+    /**
+     * The length of the longest n-gram
+     * @return n
+     */
     int N();
     
+    /**
+     * The counts of n-gram
+     * @param n The length of n-grams
+     * @return A map giving an integer count for each n-gram
+     */
     Object2DoubleMap<NGram> ngramCount(int n);
+    
+    /**
+     * The total value of all n-gram
+     * @param n The length of n-grams
+     * @return Sum of all n-gram counts
+     */
+    double sum(int n);
+    
+    /**
+     * Increment the total count of n-grams
+     * @param n At length n
+     * @param v The amount to increase the count
+     */
+    void add(int n, double v);
+    
+    /**
+     * Remove a number of counts (due to pruning)
+     * @param n At length n
+     * @param v counts
+     */
+    void sub(int n, double v);
 }

@@ -43,7 +43,7 @@ public class StickySamplingCounter implements Counter {
 
     private final int N;
     private final NGramCarousel carousel;
-    private final StdNGramCountSet nGramCountSet;
+    private final NGramCountSetImpl nGramCountSet;
     // The probability of adding a new n-gram
     private double r;
     // The number of elements in the stream
@@ -61,7 +61,7 @@ public class StickySamplingCounter implements Counter {
         this.p = 0;
         this.r = 1.0;
         this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new StdNGramCountSet(N);
+        this.nGramCountSet = new NGramCountSetImpl(N);
     }
 
     @Override

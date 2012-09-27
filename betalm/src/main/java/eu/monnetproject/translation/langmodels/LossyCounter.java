@@ -41,7 +41,7 @@ public class LossyCounter implements Counter {
 
     private final int N;
     private final NGramCarousel carousel;
-    private final StdNGramCountSet nGramCountSet;
+    private final NGramCountSetImpl nGramCountSet;
     private int b;
     /**
      * Number of tokens read
@@ -62,7 +62,7 @@ public class LossyCounter implements Counter {
         this.b = 1;
         this.p = 0;
         this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new StdNGramCountSet(N);
+        this.nGramCountSet = new NGramCountSetImpl(N);
     }
 
     @Override
