@@ -55,6 +55,7 @@ public class ExhaustiveCounter implements Counter {
         for(int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
             final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
+            nGramCountSet.inc(i);
             if(ngcs.containsKey(ngram)) {
                 ngcs.put(ngram, ngcs.getInt(ngram)+1);
             } else {

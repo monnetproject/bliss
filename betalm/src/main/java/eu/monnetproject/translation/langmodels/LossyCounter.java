@@ -76,6 +76,7 @@ public class LossyCounter implements Counter {
         for (int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
             final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
+            nGramCountSet.inc(i);
             if (ngcs.containsKey(ngram)) {
                 ngcs.put(ngram, ngcs.getInt(ngram) + 1);
             } else {
@@ -101,6 +102,7 @@ public class LossyCounter implements Counter {
                 while (iter.hasNext()) {
                     final Object2IntMap.Entry<NGram> entry = iter.next();
                     if (entry.getValue() < b) {
+                        nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();
                     }
                 }

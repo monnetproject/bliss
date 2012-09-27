@@ -26,44 +26,32 @@
  *********************************************************************************/
 package eu.monnetproject.translation.langmodels;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-
 /**
- * A set of n-gram count sets, i.e., the set of 1-grams, 2-grams, 3-grams etc.
- * 
+ *
  * @author John McCrae
  */
-public interface NGramCountSet {
+public interface WeightedCounter {
+    
+    
     /**
-     * The length of the longest n-gram
-     * @return n
+     * The largest n-gram being counted
      */
     int N();
     
     /**
-     * The counts of n-gram
-     * @param n The length of n-grams
-     * @return A map giving an integer count for each n-gram
+     * Offer a value using a weighted score
+     * @param w The element to count
+     * @param score The weighted score
      */
-    Object2IntMap<NGram> ngramCount(int n);
+    public void offer(int w, double score);
     
     /**
-     * The total value of all n-gram
-     * @param n The length of n-grams
-     * @return Sum of all n-gram counts
+     * Indicate that current document has ended
      */
-    long sum(int n);
+    void docEnd();
     
     /**
-     * Increment the total count of n-grams
-     * @param n At length n
+     * Finalize the counts, and return them as a set of counts
      */
-    void inc(int n);
-    
-    /**
-     * Remove a number of counts (due to pruning)
-     * @param n At length n
-     * @param v counts
-     */
-    void sub(int n, int v);
+    WeightedNGramCountSet counts();
 }

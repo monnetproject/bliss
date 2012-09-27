@@ -1,5 +1,4 @@
-/**
- * *******************************************************************************
+/*********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,53 +23,59 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.langmodels;
+package eu.monnetproject.translation.langmodels.impl;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.nio.IntBuffer;
 
 /**
- * Std NGram count set (implemented by Array of HashMaps)
  *
  * @author John McCrae
  */
-public class StdNGramCountSet implements NGramCountSet {
+public class IntegerizedCorpusReader {
 
-    private final int N;
-    private final Object2IntOpenHashMap<NGram>[] counts;
-    private final long[] sums;
-
-    public StdNGramCountSet(int N) {
-        this.N = N;
-        counts = new Object2IntOpenHashMap[N];
-        for (int i = 0; i < N; i++) {
-            counts[i] = new Object2IntOpenHashMap<NGram>();
+    private final DataInputStream corpus;
+    public final static int CAPACITY = Integer.parseInt(System.getProperty("integer.corpus.max","262144"));
+    private final IntBuffer buffer = IntBuffer.allocate(CAPACITY);
+    
+            
+    public IntegerizedCorpusReader(DataInputStream corpus) {
+        this.corpus = corpus;
+    }
+    
+    public int nextToken() throws IOException {
+        int tk = corpus.readInt();
+        if(tk == 0) {
+            buffer.clear();
+        } else { 
+            buffer.put(tk);
         }
-        sums = new long[N];
+        return tk;
     }
-
-    @Override
-    public Object2IntMap<NGram> ngramCount(int n) {
-        return counts[n - 1];
+    
+    public boolean nextDocument() throws IOException {
+        if(corpus.available() == 0) {
+            return false;
+        }
+        buffer.clear();
+        int tk;
+        while((tk = corpus.readInt()) != 0 && corpus.available() != 0 && buffer.remaining() > 0) {
+            buffer.put(tk);
+        }
+        return true;
     }
-
-    @Override
-    public int N() {
-        return N;
+    
+    public boolean hasNext() throws IOException {
+        // > 1 as we assume that the last document is \0-terminated 
+        return corpus.available() > 1;
     }
-
-    @Override
-    public long sum(int n) {
-        return sums[n - 1];
+    
+    public int getBufferSize() {
+        return buffer.position();
     }
-
-    @Override
-    public void inc(int n) {
-        sums[n - 1]++;
-    }
-
-    @Override
-    public void sub(int n, int v) {
-        sums[n - 1] -= v;
+    
+    public int[] getBuffer() {
+        return buffer.array();
     }
 }

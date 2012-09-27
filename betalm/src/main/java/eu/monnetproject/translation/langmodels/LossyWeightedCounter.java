@@ -26,42 +26,43 @@
  */
 package eu.monnetproject.translation.langmodels;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
 
 /**
- * Count using the sticky sampling method. This method is described in:
- * "Approximate Frequency Counts over Data Streams" (2002) G.S. Manku and R.
- * Motwani. I have slightly modified it so that instead of a fixed counter it
- * uses an adaptive counter based on available memory.
+ * As with lossy counter but counts with a different weight for each element
  *
  * @author John McCrae
  */
-public class StickySamplingCounter implements Counter {
+public class LossyWeightedCounter implements WeightedCounter {
 
     private final int N;
     private final NGramCarousel carousel;
-    private final StdNGramCountSet nGramCountSet;
-    // The probability of adding a new n-gram
-    private double r;
-    // The number of elements in the stream
+    private final WeightedNGramCountSetImpl nGramCountSet;
+    private double b;
+    private double bStep = 1.0;
+    /**
+     * Number of tokens read
+     */
     protected long p;
     final Random random = new Random();
     private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
     /**
-     * Create a Sticky Sampling Counter
+     * Create a lossy counter
      *
      * @param N The largest n-gram to count
+     * @param w The bucket width, e.g., 1000
      */
-    public StickySamplingCounter(int N) {
+    @SuppressWarnings("unchecked")
+    public LossyWeightedCounter(int N) {
         this.N = N;
+        this.b = 1;
         this.p = 0;
-        this.r = 1.0;
         this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new StdNGramCountSet(N);
+        this.nGramCountSet = new WeightedNGramCountSetImpl(N);
     }
 
     @Override
@@ -70,45 +71,39 @@ public class StickySamplingCounter implements Counter {
     }
 
     @Override
-    public void offer(int w) {
+    public void offer(int w, double v) {
         carousel.offer(w);
         for (int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
-            final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            nGramCountSet.inc(i);
+            final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             if (ngcs.containsKey(ngram)) {
-                ngcs.put(ngram, ngcs.getInt(ngram) + 1);
-            } else if (random.nextDouble() < r) {
-                ngcs.put(ngram, 1);
+                ngcs.put(ngram, ngcs.getDouble(ngram) + v);
+            } else {
+                ngcs.put(ngram, v);
             }
         }
         p++;
+        bStep *= (double) (p - 1) / (double) p;
+        bStep += v / p;
         if (p % 1000 == 0 && memoryCritical()) {
             prune();
         }
     }
+    private final Runtime runtime = Runtime.getRuntime();
 
     private boolean memoryCritical() {
-        final Runtime runtime = Runtime.getRuntime();
         return (double) (runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory()) / (double) runtime.maxMemory() < critical;
-    }
-
-    private int sampleFromGeometric(double rate) {
-        // See "Non-Uniform Random Variate Generation" by L. Devroye
-        return (int) (Math.log(random.nextDouble()) / Math.log(1 - rate));
     }
 
     protected void prune() {
         do {
-            r *= 0.5;
+            b++;
+            final double thresh = bStep * b;
             for (int i = 1; i <= N; i++) {
-                final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-                final ObjectIterator<Entry<NGram>> iter = ngcs.object2IntEntrySet().iterator();
+                final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();
                 while (iter.hasNext()) {
-                    final int f = sampleFromGeometric(r);
-                    final Entry<NGram> entry = iter.next();
-                    if (entry.getIntValue() <= f) {
-                        nGramCountSet.sub(i, entry.getIntValue());
+                    final Object2DoubleMap.Entry<NGram> entry = iter.next();
+                    if (entry.getValue() < thresh) {
                         iter.remove();
                     }
                 }
@@ -123,7 +118,31 @@ public class StickySamplingCounter implements Counter {
     }
 
     @Override
-    public NGramCountSet counts() {
+    public WeightedNGramCountSet counts() {
         return nGramCountSet;
+    }
+
+    private static class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
+
+        private final int N;
+        private final Object2DoubleOpenHashMap<NGram>[] counts;
+
+        public WeightedNGramCountSetImpl(int N) {
+            this.N = N;
+            counts = new Object2DoubleOpenHashMap[N];
+            for (int i = 0; i < N; i++) {
+                counts[i] = new Object2DoubleOpenHashMap<NGram>();
+            }
+        }
+
+        @Override
+        public Object2DoubleMap<NGram> ngramCount(int n) {
+            return counts[n - 1];
+        }
+
+        @Override
+        public int N() {
+            return N;
+        }
     }
 }

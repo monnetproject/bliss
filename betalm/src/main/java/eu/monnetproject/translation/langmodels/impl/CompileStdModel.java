@@ -1,5 +1,4 @@
-/**
- * *******************************************************************************
+/*********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,53 +23,45 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.langmodels;
+package eu.monnetproject.translation.langmodels.impl;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import eu.monnetproject.translation.langmodels.LossyCounter;
+import eu.monnetproject.translation.langmodels.NGramCountSet;
+import java.io.IOException;
 
 /**
- * Std NGram count set (implemented by Array of HashMaps)
  *
  * @author John McCrae
  */
-public class StdNGramCountSet implements NGramCountSet {
-
-    private final int N;
-    private final Object2IntOpenHashMap<NGram>[] counts;
-    private final long[] sums;
-
-    public StdNGramCountSet(int N) {
-        this.N = N;
-        counts = new Object2IntOpenHashMap[N];
-        for (int i = 0; i < N; i++) {
-            counts[i] = new Object2IntOpenHashMap<NGram>();
+public class CompileStdModel {
+    
+    public enum SourceType {
+        SIMPLE,
+        INTERLEAVED_USE_FIRST,
+        INTERLEAVED_USE_SECOND
+    };
+    
+    public NGramCountSet doCount(int N, IntegerizedCorpusReader reader, SourceType type) throws IOException {
+        final LossyCounter counter = new LossyCounter(N);
+        boolean inDoc = type != SourceType.INTERLEAVED_USE_SECOND;
+        while(reader.hasNext()) {
+            final int tk = reader.nextToken();
+            if(tk == 0) {
+                if(type == SourceType.SIMPLE) {
+                    counter.docEnd();
+                } else {
+                    if(inDoc) {
+                        counter.docEnd();
+                        inDoc = false;
+                    } else {
+                        inDoc = true;
+                    }
+                }
+            } else if(inDoc) {
+                counter.offer(tk);
+            }
         }
-        sums = new long[N];
+        return counter.counts();
     }
-
-    @Override
-    public Object2IntMap<NGram> ngramCount(int n) {
-        return counts[n - 1];
-    }
-
-    @Override
-    public int N() {
-        return N;
-    }
-
-    @Override
-    public long sum(int n) {
-        return sums[n - 1];
-    }
-
-    @Override
-    public void inc(int n) {
-        sums[n - 1]++;
-    }
-
-    @Override
-    public void sub(int n, int v) {
-        sums[n - 1] -= v;
-    }
+    
 }
