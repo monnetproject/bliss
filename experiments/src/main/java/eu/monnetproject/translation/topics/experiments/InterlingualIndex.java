@@ -74,6 +74,8 @@ public class InterlingualIndex {
         
         buildILI(wikiFile, targetLanguage, out);
         
+        out.flush();
+        
         out.close();
     }
     
@@ -94,7 +96,9 @@ public class InterlingualIndex {
             if(titleMatcher.matches()) {
                 title = titleMatcher.group(1).replace("\t", " ");
             } else if(langMatcher.matches()) {
-                out.println(title + "\t" + langMatcher.group(1).replaceAll("\t", " "));
+                final String translation = langMatcher.group(1);
+                System.err.println(title + " -> " + translation);
+                out.println(title + "\t" + translation.replaceAll("\t", " "));
             }            
         }
     }
