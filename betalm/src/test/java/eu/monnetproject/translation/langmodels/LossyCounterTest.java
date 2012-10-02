@@ -81,7 +81,8 @@ public class LossyCounterTest {
         assertFalse(counts.ngramCount(3).containsKey(ngram(2,3,3)));
     }
 
-    @Test
+    // Don't test normally as very resource-intensive!!
+  //  @Test
     public void testMemory() {
         System.setProperty("sampling.critical","0.8");
         final Runtime rt = Runtime.getRuntime();
