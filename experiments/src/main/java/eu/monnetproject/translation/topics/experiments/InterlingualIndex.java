@@ -81,13 +81,13 @@ public class InterlingualIndex {
         final Pattern langPattern = Pattern.compile(".*\\[\\[" + targetLanguage + ":([^\\]]+)\\]\\].*");
         final Scanner scanner;
         if(wikiFile.getName().endsWith(".bz2")) {
-            scanner = new Scanner(new BZip2CompressorInputStream(new FileInputStream(wikiFile))).useDelimiter("\r?\n");
+            scanner = new Scanner(new BZip2CompressorInputStream(new FileInputStream(wikiFile)));
         } else {
-            scanner = new Scanner(wikiFile).useDelimiter("\r?\n");
+            scanner = new Scanner(wikiFile);
         }
         String title = null;
-        while(scanner.hasNext()) {
-            final String line = scanner.next();
+        while(scanner.hasNextLine()) {
+            final String line = scanner.nextLine();
             final Matcher titleMatcher = titlePattern.matcher(line);
             final Matcher langMatcher = langPattern.matcher(line);
             
