@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.monnetproject.topics</groupId>
-    <artifactId>topics</artifactId>
+    <groupId>eu.monnetproject</groupId>
+    <artifactId>translation.topics</artifactId>
     <version>1.12.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -21,29 +21,9 @@
         </repository>
     </repositories>
     
-    <name>Monnet Topic Modelling Suite</name>
+    <name>eu.monnetproject.translation.topics</name>
 
     <dependencies>
-    <!--    <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math</artifactId>
-            <version>2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>eu.monnetproject</groupId>
-            <artifactId>framework.services</artifactId>
-            <version>${project.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

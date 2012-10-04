@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>eu.monnetproject.topics</groupId>
-      <artifactId>topics</artifactId>
+      <groupId>eu.monnetproject</groupId>
+      <artifactId>translation.topics</artifactId>
       <version>1.12.7-SNAPSHOT</version>
       <relativePath>..</relativePath>
     </parent>
-    <artifactId>common</artifactId>
+    <artifactId>translation.topics.common</artifactId>
     <packaging>bundle</packaging>
-    <name>Commons</name>
+    <name>eu.monnetproject.translation.topics.commons</name>
     <dependencies>
         <dependency>
             <groupId>it.unimi.dsi</groupId>

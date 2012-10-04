@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>eu.monnetproject.topics</groupId>
-      <artifactId>topics</artifactId>
+      <groupId>eu.monnetproject</groupId>
+      <artifactId>translation.topics</artifactId>
       <version>1.12.7-SNAPSHOT</version>
       <relativePath>..</relativePath>
     </parent>
-    <artifactId>monnet</artifactId>
+    <artifactId>translation.topics.monnet</artifactId>
     <packaging>bundle</packaging>
-    <name>Monnet Translate-Topic Integration</name>
+    <name>eu.monnetproject.translation.topics.monnet</name>
     <dependencies>
         <dependency>
             <groupId>eu.monnetproject</groupId>
@@ -24,12 +24,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>lda</artifactId>
+            <artifactId>translation.topics.lda</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>betalm</artifactId>
+            <artifactId>translation.topics.betalm</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
