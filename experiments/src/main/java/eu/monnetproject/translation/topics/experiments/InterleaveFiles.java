@@ -92,6 +92,9 @@ public class InterleaveFiles {
                     writeData(out, s2.substring(split2 + 1));
                     s1 = scanner1.hasNextLine() ? scanner1.nextLine() : null;
                     s2 = scanner2.hasNextLine() ? scanner2.nextLine() : null;
+                    if (++i % 10000 == 0) {
+                        System.err.print(".");
+                    }
                     continue;
                 }
             }
