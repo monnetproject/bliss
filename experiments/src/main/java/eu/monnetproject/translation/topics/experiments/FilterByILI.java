@@ -98,6 +98,8 @@ public class FilterByILI {
     public static HashMap<String, String> buildILI(File iliFile, boolean reverse) throws IOException {
         final Scanner scanner = new Scanner(fileAsInputStream(iliFile));
         final HashMap<String, String> ili = new HashMap<String, String>();
+        System.err.print("Load ILI");
+        int i = 0;
         while (scanner.hasNextLine()) {
             final String line = scanner.nextLine();
             if (line.matches("\\s*")) {
@@ -112,12 +114,18 @@ public class FilterByILI {
             } else {
                 ili.put(ss[0], ss[1]);
             }
+            if(++i % 10000 == 0) {
+                System.err.print(".");
+            }
         }
+        System.err.println();
         return ili;
     }
 
     public static void filter(File corpusFile, HashMap<String, String> ili, PrintWriter out, boolean translate) throws IOException {
         final Scanner scanner = new Scanner(fileAsInputStream(corpusFile));
+        System.err.print("Filtering");
+        int i = 0;
         while (scanner.hasNextLine()) {
             final String line = scanner.nextLine();
             final int n = line.lastIndexOf(":");
@@ -132,7 +140,11 @@ public class FilterByILI {
                     out.println(line);
                 }
             }
+            if(++i % 10000 == 0) {
+                System.err.print(".");
+            }
         }
+        System.err.println();
     }
 
     private static void fail(String message) {

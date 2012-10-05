@@ -8,6 +8,20 @@
     <version>1.12.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Monnet01 Repository</name>
+            <url>file:///var/www/mvn/</url>
+        </repository>
+        <snapshotRepository>
+            <id>internal.repo</id>
+            <name>Monnet01 Repository</name>
+            <url>file:///var/www/mvn/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
+    
     <repositories>
         <repository>
             <id>aduna</id>

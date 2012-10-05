@@ -11,7 +11,7 @@
     <artifactId>translation.topics.betalm</artifactId>
     <packaging>bundle</packaging>
     
-    <name>Beta-LM</name>
+    <name>eu.monnetproject.translation.topics.betalm</name>
     
     <dependencies>
         <dependency>
