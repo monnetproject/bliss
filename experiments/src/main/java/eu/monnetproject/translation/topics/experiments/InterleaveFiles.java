@@ -81,13 +81,15 @@ public class InterleaveFiles {
         int i = 0;
         String s1 = scanner1.nextLine(), s2 = scanner2.nextLine();
         while (s1 != null && s2 != null) {
+            final int split1 = s1.lastIndexOf(":");
+            final int split2 = s2.lastIndexOf(":");
 
-            if (s1.indexOf(":") != -1 && s2.indexOf(":") != -1) {
-                final String title1 = s1.substring(0, s1.indexOf(":"));
-                final String title2 = s2.substring(0, s2.indexOf(":"));
+            if (split1 != -1 && split2 != -1) {
+                final String title1 = s1.substring(0, split1);
+                final String title2 = s2.substring(0, split2);
                 if (title1.equals(title2)) {
-                    writeData(out, s1.substring(s1.indexOf(":") + 1));
-                    writeData(out, s2.substring(s2.indexOf(":") + 1));
+                    writeData(out, s1.substring(split1 + 1));
+                    writeData(out, s2.substring(split2 + 1));
                     s1 = scanner1.hasNextLine() ? scanner1.nextLine() : null;
                     s2 = scanner2.hasNextLine() ? scanner2.nextLine() : null;
                     continue;
