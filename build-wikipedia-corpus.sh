@@ -96,18 +96,18 @@ fi
 if [ ! -f ${SRCLANG}wiki.$SAMPLING.sort.gz ] && [ -f ${SRCLANG}wiki.$SAMPLING.filt.gz ]
 then 
    echo "Step 10. Sort ${SCRLANG} data"
-   LC_ALL=C sort ${SRCLANG}wiki.$SAMPLING.filt.gz > ${SRCLANG}wiki.$SAMPLING.sort.gz
+   zcat ${SRCLANG}wiki.$SAMPLING.filt.gz | LC_ALL=C sort | gzip > ${SRCLANG}wiki.$SAMPLING.sort.gz
 fi
 
 
 if [ ! -f ${TRGLANG}wiki.$SAMPLING.sort.gz ] && [ -f ${TRGLANG}wiki.$SAMPLING.filt.gz ]
 then 
    echo "Step 11. Sort ${SCRLANG} data"
-   LC_ALL=C sort ${TRGLANG}wiki.$SAMPLING.filt.gz > ${SRCLANG}wiki.$SAMPLING.sort.gz
+   zcat ${TRGLANG}wiki.$SAMPLING.filt.gz | LC_ALL=C sort | gzip > ${TRGLANG}wiki.$SAMPLING.sort.gz
 fi
 
 if [ ! -f ${SRCLANG}wiki.$SAMPLING.gz ] && [ -f ${TRGLANG}wiki.$SAMPLING.sort.gz ]
 then
    echo "Step 12. Interleave and binarize data"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${SRCLANG}wiki.$SAMPLING.sort.gz ${TRGLANG}wiki.$SAMPLING.sort.gz ${SRCLANG}wiki.$SAMPLING.gz"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${SRCLANG}wiki.$SAMPLING.sort.gz ${TRGLANG}wiki.$SAMPLING.sort.gz ${SRCLANG}-${TRGLANGwiki.$SAMPLING.gz"
 fi

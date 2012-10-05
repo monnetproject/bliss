@@ -78,6 +78,7 @@ public class InterleaveFiles {
     public static void interleave(File corpusFile1, File corpusFile2, DataOutputStream out) throws IOException {
         final Scanner scanner1 = new Scanner(FilterByILI.fileAsInputStream(corpusFile1));
         final Scanner scanner2 = new Scanner(FilterByILI.fileAsInputStream(corpusFile2));
+        int i = 0;
         String s1 = scanner1.nextLine(), s2 = scanner2.nextLine();
         while (s1 != null && s2 != null) {
 
@@ -101,16 +102,24 @@ public class InterleaveFiles {
                 s1 = scanner1.hasNextLine() ? scanner1.nextLine() : null;
                 s2 = scanner2.hasNextLine() ? scanner2.nextLine() : null;
             }
+            if (++i % 10000 == 0) {
+                System.err.print(".");
+            }
         }
+        System.err.println();
     }
 
     private static void writeData(DataOutputStream out, String dataStr) throws IOException {
         final String[] dataElemStrs = dataStr.split(" ");
-        for (String s : dataElemStrs) {
-            if (s.length() == 0) {
-                continue;
+        try {
+            for (String s : dataElemStrs) {
+                if (s.length() == 0) {
+                    continue;
+                }
+                out.writeInt(Integer.parseInt(s));
             }
-            out.writeInt(Integer.parseInt(s));
+        } catch (NumberFormatException x) {
+            System.err.println("Bad line: " + dataStr);
         }
         out.writeInt(0);
     }
