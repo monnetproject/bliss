@@ -78,13 +78,20 @@ public class IntCorpusToText {
         }
         final String[] invMap;
         {
-            final WordMap wordMap = WordMap.fromFile(wordMapFile);
+            System.err.println("Reading word map");
+            final WordMap wordMap = WordMap.fromFile(wordMapFile,true);
+            System.err.println("Inverting word map");
             invMap = new String[wordMap.size()+1];
+            int n = 0;
             final ObjectIterator<Entry<String>> wmIter = wordMap.object2IntEntrySet().fastIterator();
             while(wmIter.hasNext()) {
                 final Entry<String> entry = wmIter.next();
                 invMap[entry.getIntValue()] = entry.getKey();
+                if(++n % 10000 == 0) {
+                    System.err.print(".");
+                }
             }
+            System.err.println();
         }
         final InputStream corpusIn;
         if (corpusFile.getName().endsWith(".gz")) {

@@ -53,15 +53,26 @@ public class WordMap extends Object2IntOpenHashMap<String> {
      * @throws IOException If the file cannot be read
      */
     public static WordMap fromFile(File file) throws IOException {
+        return fromFile(file, false);
+    }
+    
+    public static WordMap fromFile(File file, boolean printProgress) throws IOException {
         final WordMap wordMap = new WordMap();
         final DataInputStream in = new DataInputStream(new FileInputStream(file));
+        int n = 0;
         try {
             while (in.available() > 0) {
                 final String key = in.readUTF();
                 final int idx = in.readInt();
                 wordMap.put(key, idx);
+                if(printProgress && (++n % 10000 == 0)) {
+                    System.err.print(".");
+                }
             }
         } finally {
+            if(printProgress) {
+                System.err.println();
+            }
             in.close();
         }
         return wordMap;
