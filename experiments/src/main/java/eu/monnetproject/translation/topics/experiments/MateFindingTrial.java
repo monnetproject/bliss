@@ -28,7 +28,13 @@ package eu.monnetproject.translation.topics.experiments;
 
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.lda.PolylingualGibbsData;
-import eu.monnetproject.translation.topics.sim.*;
+import eu.monnetproject.translation.topics.SimilarityMetric;
+import eu.monnetproject.translation.topics.sim.BetaLMImpl;
+import eu.monnetproject.translation.topics.clesa.CLESA;
+import eu.monnetproject.translation.topics.sim.LinearSurjection;
+import eu.monnetproject.translation.topics.sim.MinErrorSurjection;
+import eu.monnetproject.translation.topics.sim.ParallelReader;
+import eu.monnetproject.translation.topics.sim.WxWCLESA;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;

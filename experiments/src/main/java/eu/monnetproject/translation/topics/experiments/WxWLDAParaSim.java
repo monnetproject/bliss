@@ -30,7 +30,7 @@ import eu.monnetproject.translation.topics.lda.Estimator;
 import eu.monnetproject.translation.topics.lda.GibbsData;
 import eu.monnetproject.translation.topics.lda.PolylingualGibbsData;
 import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.sim.SimilarityMetric;
+import eu.monnetproject.translation.topics.SimilarityMetric;
 
 /**
  *

@@ -24,51 +24,21 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************************/
-package eu.monnetproject.translation.topics.experiments;
-
-import eu.monnetproject.translation.topics.lda.Estimator;
-import eu.monnetproject.translation.topics.lda.PolylingualGibbsData;
-import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.SimilarityMetric;
+package eu.monnetproject.translation.topics;
 
 /**
- *
+ * A cross-lingual similarity metric calculated in a transposed manner.
+ * In explicit topic modelling this refers to calculating by feeding each training 
+ * document in one-by-one and getting the appropriate sim score for each test
+ * vector
+ * 
  * @author John McCrae
  */
-public class LDAParaSim implements SimilarityMetric {
-    final PolylingualGibbsData polylingualGibbsData;
-    final int l1, l2;
-    final Estimator estimator = new Estimator();
+public interface TransposeSimilarityMetric {
 
-    public LDAParaSim(PolylingualGibbsData polylingualGibbsData, int l1, int l2) {
-        this.polylingualGibbsData = polylingualGibbsData;
-        this.l1 = l1;
-        this.l2 = l2;
-    }
+    double[] transposeSimVecSource(SparseArray corpusDoc);
     
-    @Override
-    public double[] simVecSource(SparseArray termVec) {
-        int[] d = toDocument(termVec);
-        return estimator.topics(d, l1, polylingualGibbsData, 100);
-    }
-
-    @Override
-    public double[] simVecTarget(SparseArray termVec) {
-        int[] d = toDocument(termVec);
-        return estimator.topics(d, l2, polylingualGibbsData, 100);
-    }
-
-    private int[] toDocument(SparseArray termVec) {
-        final int[] vec = new int[termVec.sum()];
-        int j = 0;
-        for(int w : termVec.keySet()) {
-            final int n = termVec.get(w);
-            for(int i = 0; i < n; i++) {
-                vec[j++] = w;
-            }
-        }
-        return vec;
-    }
-
-    public int W() { return polylingualGibbsData.W; }
+    double[] transposeSimVecTarget(SparseArray corpusDoc);
+    
+    int W();
 }

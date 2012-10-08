@@ -71,13 +71,13 @@ fi
 if [ ! -f ${SRCLANG}wiki.$SAMPLING.int.gz ] && [ -f ../${SRCLANG}wiki.xml.gz ]
 then 
   echo "Step 6. Integerize $SRCLANG Wikipedia"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${SRCLANG}wiki.xml.gz wordMap$SAMPLING ${SRCLANG}wiki.$SAMPLING.int.gz"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${SRCLANG}wiki.xml.gz wordMap ${SRCLANG}wiki.$SAMPLING.int.gz"
 fi
 
 if [ ! -f ${TRGLANG}wiki.$SAMPLING.int.gz ] && [ -f ../${TRGLANG}wiki.xml.gz ]
 then 
   echo "Step 7. Integerize $TRGLANG Wikipedia"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${TRGLANG}wiki.xml.gz wordMap$SAMPLING ${TRGLANG}wiki.$SAMPLING.int.gz"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${TRGLANG}wiki.xml.gz wordMap ${TRGLANG}wiki.$SAMPLING.int.gz"
 fi
 
 
@@ -111,3 +111,12 @@ then
    echo "Step 12. Interleave and binarize data"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${SRCLANG}wiki.$SAMPLING.sort.gz ${TRGLANG}wiki.$SAMPLING.sort.gz ${SRCLANG}-${TRGLANGwiki.$SAMPLING.gz"
 fi
+
+
+### Post-compile steps
+# Calc W
+# mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.WordMapSize" -Dexec.args="wordMap" 
+# Count frequencies
+# mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CountFrequencies" -Dexec.args="${SRCLANG}-${TRGLANG}wiki.$SAMPLING.gz 10985646 100 freqs" 
+# Clean corpus
+# mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CleanCorpus" -Dexec.args="wordMap 10985646 100 freqs" 

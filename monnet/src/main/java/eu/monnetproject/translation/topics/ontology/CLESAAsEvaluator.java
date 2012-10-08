@@ -29,7 +29,7 @@ package eu.monnetproject.translation.topics.ontology;
 import eu.monnetproject.translation.Translation;
 import eu.monnetproject.translation.eval.TranslationEvaluator;
 import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.sim.CLESA;
+import eu.monnetproject.translation.topics.clesa.CLESA;
 import java.util.List;
 
 /**

@@ -24,19 +24,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************************/
-package eu.monnetproject.translation.topics.sim;
+package eu.monnetproject.translation.topics;
 
 import eu.monnetproject.translation.topics.SparseArray;
 
 /**
- *
+ * A cross-lingual similarity metric
+ * 
  * @author John McCrae
  */
 public interface SimilarityMetric {
 
+    /**
+     * The vector representation of the document in the source language
+     * @param termVec The document as a term-frequency array
+     * @return The vector representation of this document
+     */
     double[] simVecSource(SparseArray termVec);
     
+    /**
+     * The vector representation of the document in the target language
+     * @param termVec The document as a term-frequency array
+     * @return The vector representation of this document
+     */
     double[] simVecTarget(SparseArray termVec);
     
+    /**
+     * The largest word index in the document
+     * @return The largest word index in the document
+     */
     int W();
 }

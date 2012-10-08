@@ -47,6 +47,7 @@
     
     <modules>
        <module>betalm</module>
+       <module>clesa</module>
        <module>common</module>
        <module>experiments</module>
        <module>lda</module>

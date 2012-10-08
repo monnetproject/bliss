@@ -27,9 +27,18 @@
 package eu.monnetproject.translation.topics.experiments;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
 /**
  *
@@ -46,7 +55,7 @@ public class CLIOpts {
     }
 
     /**
-     * Call this after calling all CLIOptss to verify the CLIOpts are valid
+     * Call this after calling all CLIOpts to verify the CLIOpts are valid
      * @param cl The class of the script
      * @return {@code true} if the CLIOpts are valid
      */
@@ -112,6 +121,7 @@ public class CLIOpts {
         if(args.isEmpty()) {
             arg.message = "Too few arguments: expected " + name;
             succeeded = false;
+            args.remove(0);
             return null;
         } else {
             final File file = new File(args.get(0));
@@ -132,6 +142,7 @@ public class CLIOpts {
         if(args.isEmpty()) {
             arg.message = "Too few arguments: expected " + name;
             succeeded = false;
+            args.remove(0);
             return 0;
         } else {
             final int i;
@@ -145,7 +156,38 @@ public class CLIOpts {
             args.remove(0);
             return i;
         }        
-        
+    }
+    
+    /**
+     * Return a file as an input stream, that unzips if the file ends in .gz or .bz2.
+     * @param file The file
+     * @return File as an input stream
+     * @throws IOException If the file is not found or is not a correct zipped file or some other reason
+     */
+    public static InputStream openInputAsMaybeZipped(File file) throws IOException {
+        if(file.getName().endsWith(".gz")) {
+            return new GZIPInputStream(new FileInputStream(file));
+        } else if(file.getName().endsWith(".bz2")) {
+            return new BZip2CompressorInputStream(new FileInputStream(file));
+        } else {
+            return new FileInputStream(file);
+        }
+    }
+    
+    /**
+     * Return a file as an output stream, that zips if the file ends in .gz or .bz2.
+     * @param file The file
+     * @return File as an output stream
+     * @throws IOException If the file is not found or some other reason
+     */
+    public static OutputStream openOutputAsMaybeZipped(File file) throws IOException {
+        if(file.getName().endsWith(".gz")) {
+            return new GZIPOutputStream(new FileOutputStream(file));
+        } else if(file.getName().endsWith(".bz2")) {
+            return new BZip2CompressorOutputStream(new FileOutputStream(file));
+        } else {
+            return new FileOutputStream(file);
+        }
     }
 
     private static final class Argument {

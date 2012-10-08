@@ -28,7 +28,7 @@ package eu.monnetproject.translation.topics.ontology;
 
 import eu.monnetproject.translation.eval.TranslationEvaluator;
 import eu.monnetproject.translation.eval.TranslationEvaluatorFactory;
-import eu.monnetproject.translation.topics.sim.CLESA;
+import eu.monnetproject.translation.topics.clesa.CLESA;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;

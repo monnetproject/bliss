@@ -24,9 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics.sim;
+package eu.monnetproject.translation.topics.clesa;
 
+import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.translation.topics.sim.ParallelReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

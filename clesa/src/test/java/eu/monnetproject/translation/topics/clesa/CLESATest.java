@@ -1,11 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package eu.monnetproject.translation.topics.sim;
+package eu.monnetproject.translation.topics.clesa;
 
 import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.SparseRealArray;
+import eu.monnetproject.translation.topics.sim.ParallelReader;
 import org.junit.*;
 import static org.junit.Assert.*;
 

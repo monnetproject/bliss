@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
+import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SparseArray;
 import java.io.File;
 import java.io.IOException;
