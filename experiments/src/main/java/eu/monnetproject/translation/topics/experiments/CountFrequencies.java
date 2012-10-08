@@ -105,7 +105,7 @@ public class CountFrequencies {
         int n = 0;
         try {
             DATA_LOOP:
-            while (dataIn.available() > 0) {
+            while (dataIn.available() > 3) {
                 if (++n % 100000 == 0) {
                     System.err.print(".");
                 }
