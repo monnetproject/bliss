@@ -1,5 +1,4 @@
-/**
- * *******************************************************************************
+/*********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,90 +25,83 @@
  */
 package eu.monnetproject.translation.topics.experiments;
 
-import eu.monnetproject.translation.topics.WordMap;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.zip.GZIPInputStream;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 /**
  *
  * @author John McCrae
  */
-public class IntCorpusToText {
+public class CountFrequencies {
 
     private static void fail(String message) {
         System.err.println(message);
         System.err.println("\nUsage:\n"
-                + "\tmvn exec:java -Dexec.mainClass=\"eu.monnetproject.translation.topics.experiments.IntCorpusToText\" -Dexec.args=\"wordMap W corpus[.gz|bz2] [outFile]\"");
+                + "\tmvn exec:java -Dexec.mainClass=\""+CountFrequencies.class.getName()+"\" -Dexec.args=\"corpus W\"");
         System.exit(-1);
     }
-
+    
     public static void main(String[] args) throws Exception {
-        if (args.length != 3 && args.length != 4) {
+        if(args.length != 3) {
             fail("Wrong number of arguments");
         }
-        final File wordMapFile = new File(args[0]);
-        if (!wordMapFile.exists() || !wordMapFile.canRead()) {
-            fail("Cannot access word map");
+        final File corpusFile = new File(args[0]);
+        
+        if(!corpusFile.exists() || !corpusFile.canRead()) {
+            fail("Cannot access corpusFile");
         }
-
+        
         final int W;
         try {
             W = Integer.parseInt(args[1]);
-        } catch (NumberFormatException x) {
+        } catch(NumberFormatException x) {
             fail("Not an integer " + args[1]);
             return;
         }
-
-
-        final File corpusFile = new File(args[2]);
-        if (!corpusFile.exists() || !corpusFile.canRead()) {
-            fail("Cannot access corpus");
+        
+        final File outFile = new File(args[2]);
+        
+        if(outFile.exists() && !outFile.canWrite()) {
+            fail("Cannot access outFile");
         }
-
-        final PrintStream out;
-        if (args.length == 4) {
-            final File outFile = new File(args[3]);
-            if (outFile.exists() && !outFile.canWrite()) {
-                fail("Cannot write to out file");
-            }
-            out = new PrintStream(outFile);
-        } else {
-            out = System.out;
-        }
-
-        final String[] invMap;
-        System.err.println("Reading word map");
-        invMap = WordMap.inverseFromFile(wordMapFile, W, true);
-
-        final InputStream corpusIn;
-        if (corpusFile.getName().endsWith(".gz")) {
-            corpusIn = new GZIPInputStream(new FileInputStream(corpusFile));
-        } else if (corpusFile.getName().endsWith(".bz2")) {
-            corpusIn = new BZip2CompressorInputStream(new FileInputStream(corpusFile));
-        } else {
-            corpusIn = new FileInputStream(corpusFile);
-        }
-
-        intCorpus2Text(invMap, corpusIn, out);
+        
+        final DataInputStream dataIn = new DataInputStream(new FileInputStream(corpusFile));
+        final int[] freqs = new int[W];
+        final DataOutputStream dataOut = new DataOutputStream(new FileOutputStream(outFile));
+        
+        calcFreqs(dataIn, freqs);
+        
+        printFreqs(freqs, dataOut);
     }
 
-    private static void intCorpus2Text(String[] invMap, InputStream corpusIn, PrintStream out) throws IOException {
-        final DataInputStream data = new DataInputStream(corpusIn);
-        while (data.available() > 0) {
-            int i = data.readInt();
-            if (i != 0) {
-                out.print(invMap[i]);
-                out.print(" ");
-            } else {
-                out.println();
+    private static void calcFreqs(DataInputStream dataIn, int[] freqs) throws IOException {
+        int n = 0;
+        try {
+            while(dataIn.available() > 0) {
+                int i = dataIn.readInt();
+                if(i != 0) {
+                    freqs[i]++;
+                }
+                if(++n % 100000 == 0) {
+                    System.err.print(".");
+                }
             }
+        } finally {
+            dataIn.close();
         }
-        data.close();
+    }
+
+    private static void printFreqs(int[] freqs, DataOutputStream dataOut) throws IOException {
+        try {
+            for(int i = 1; i < freqs.length; i++) {
+                dataOut.writeInt(freqs[i]);
+            }
+        } finally {
+            dataOut.close();
+        }
     }
 }
