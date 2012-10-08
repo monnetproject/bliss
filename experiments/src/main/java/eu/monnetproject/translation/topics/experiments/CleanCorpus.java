@@ -112,6 +112,7 @@ public class CleanCorpus {
         int loc = 0;
         int l1Size = 0;
         int l2Size = 0;
+        int n = 0;
         boolean l1doc = true;
         while(corpusIn.available() > 0) {
             try {
@@ -145,9 +146,15 @@ public class CleanCorpus {
                         }
                     }
                 }
+                if(++n % 100000 == 0) {
+                    System.err.print(".");
+                }
             } catch(EOFException x) {
                 break;
             }
         }
+        System.err.println();
+        corpusIn.close();
+        dataOut.close();
     }
 }
