@@ -53,7 +53,7 @@ public class IntCorpusToText {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 2 || args.length != 3) {
+        if (args.length != 2 && args.length != 3) {
             fail("Wrong number of arguments");
         }
         final File wordMapFile = new File(args[0]);
