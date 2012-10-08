@@ -26,19 +26,11 @@
  */
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.translation.topics.ParallelBinarizedReader;
 import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.lda.PolylingualGibbsData;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.sim.BetaLMImpl;
-import eu.monnetproject.translation.topics.clesa.CLESA;
-import eu.monnetproject.translation.topics.sim.LinearSurjection;
-import eu.monnetproject.translation.topics.sim.MinErrorSurjection;
-import eu.monnetproject.translation.topics.sim.ParallelReader;
-import eu.monnetproject.translation.topics.sim.WxWCLESA;
-import java.io.BufferedReader;
+import eu.monnetproject.translation.topics.SimilarityMetricFactory;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -51,90 +43,22 @@ public class MateFindingTrial {
 
     private static final Random random = new Random();
 
-    public static void compare(String trainFile, String testFile) throws Exception {
-        final SimilarityMetric parallelSimilarity;
-        
-        final String method = System.getProperty("paraSimMethod", "COS_SIM");
-        System.err.println("Metric = " + method);
-        System.err.println("Reading train data");
-        if (method.equals("CLESA")) {
-            parallelSimilarity = new CLESA(new File(trainFile));
-       // } else if (method.equals("OLDCLESA")) {
-       //     parallelSimilarity = new OLDCLESA(new File(trainFile));
-        } else if (method.equals("WXWCLESA")) {
-            parallelSimilarity = new WxWCLESA(new File(trainFile));
-        } else if(method.equals("LDA")) {
-            int l1 = Integer.parseInt(System.getProperty("ldaLang1", "0"));
-            int l2 = Integer.parseInt(System.getProperty("ldaLang2", "1"));
-            parallelSimilarity = new LDAParaSim(PolylingualGibbsData.read(new FileInputStream(trainFile)), l1, l2);
-        } else if(method.equals("WXWLDA")) {
-            int l1 = Integer.parseInt(System.getProperty("ldaLang1", "0"));
-            int l2 = Integer.parseInt(System.getProperty("ldaLang2", "1"));
-            parallelSimilarity = new WxWLDAParaSim(PolylingualGibbsData.read(new FileInputStream(trainFile)), l1, l2);
-      //  } else if(method.equals("SVD")) {
-      //      parallelSimilarity = new SVDParaSim(new File(trainFile));
-        } else if(method.equals("LIN_SURJ")) {
-            parallelSimilarity = new LinearSurjection(new File(trainFile));
-        } else if(method.equals("ME_SURJ")) {
-            parallelSimilarity = new MinErrorSurjection(new File(trainFile));
-        } else {
-            parallelSimilarity = new BetaLMImpl(new File(trainFile));
-        }
-        compare(parallelSimilarity, testFile);
+    public static void compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile) throws Exception {
+        final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile));
+        final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
+        final SimilarityMetricFactory smf = factoryClazz.newInstance();
+        final SimilarityMetric metric = smf.makeMetric(trainPBR, W);
+
+        compare(metric, W, testPBR);
     }
-    
-//    public static void compare(String srcTestFile, String trgTestFile, int W, String testFile) throws Exception {
-//        
-//        final SimilarityMetric parallelSimilarity;
-//        
-//        final String method = System.getProperty("paraSimMethod", "COS_SIM");
-//        System.err.println("Metric = " + method);
-//        System.err.println("Reading train data");
-//        if (method.equals("CLESA")) {
-//            throw new RuntimeException("TODO");
-//        } else if (method.equals("WXWCLESA")) {
-//            throw new RuntimeException("TODO");
-//        } else if(method.equals("LDA")) {
-//            throw new RuntimeException("TODO");
-//        } else if(method.equals("WXWLDA")) {
-//            throw new RuntimeException("TODO");
-//        } else if(method.equals("SVD")) {
-//            throw new RuntimeException("TODO");
-//        } else if(method.equals("LIN_SURJ")) {
-//            throw new RuntimeException("TODO");
-//        } else if(method.equals("ME_SURJ")) {
-//            throw new RuntimeException("TODO");
-//        } else {
-//            parallelSimilarity = new ParallelSimilarityOnDisk(new File(srcTestFile), new File(trgTestFile), W);
-//        }
-//        compare(parallelSimilarity, testFile);
-//    }
-//    
-    public static void compare(SimilarityMetric parallelSimilarity, String testFile) throws Exception {
+
+    public static void compare(SimilarityMetric parallelSimilarity, int W, ParallelBinarizedReader testFile) throws Exception {
         System.err.println("Reading test data");
-        final BufferedReader in = new BufferedReader(new FileReader(testFile));
         final List<SparseArray[]> docs = new ArrayList<SparseArray[]>();
-        String s;
+        SparseArray[] s;
         int W2 = 0;
-        while (!(s = in.readLine()).matches("\\s*")) {
-            final String[] ss = s.split("\\s+");
-            final int[] i1 = new int[ss.length];
-            for (int i = 0; i < ss.length; i++) {
-                i1[i] = Integer.parseInt(ss[i]);
-                if (i1[i] > W2) {
-                    W2 = i1[i];
-                }
-            }
-            s = in.readLine();
-            final String[] ss2 = s.split("\\s+");
-            final int[] i2 = new int[ss2.length];
-            for (int i = 0; i < ss2.length; i++) {
-                i2[i] = Integer.parseInt(ss2[i]);
-                if (i2[i] > W2) {
-                    W2 = i2[i];
-                }
-            }
-            docs.add(new SparseArray[]{ParallelReader.histogram(i1,parallelSimilarity.W()), ParallelReader.histogram(i2,parallelSimilarity.W())});
+        while ((s = testFile.nextFreqPair(W)) != null) {
+            docs.add(s);
         }
         System.err.println("Preparing data (" + docs.size() + ")");
         int idx = 0;
@@ -168,7 +92,7 @@ public class MateFindingTrial {
                     bestMatch = cosSim;
                     bestJ = j;
                 }
-                if(cosSim > rightScore) {
+                if (cosSim > rightScore) {
                     rank++;
                 }
                 //System.out.println(i+","+j+","+cosSim);
@@ -178,16 +102,16 @@ public class MateFindingTrial {
                 System.out.print("+");
             } else {
                 incorrect++;
-                if(rank < 10) {
+                if (rank < 10) {
                     System.out.print(rank);
                 } else {
                     System.out.print("-");
                 }
             }
-            if(rank <= 5) {
+            if (rank <= 5) {
                 correct5++;
             }
-            if(rank <= 10) {
+            if (rank <= 10) {
                 correct10++;
             }
             mrr += 1.0 / rank;
@@ -197,7 +121,7 @@ public class MateFindingTrial {
         System.out.println("Precision@5: " + correct5);
         System.out.println("Precision@10: " + correct10);
         System.out.println("MRR: " + (mrr / predicted.length));
-        
+
     }
 
     public static double cosSim(double[] vec1, double[] vec2) {
@@ -216,12 +140,20 @@ public class MateFindingTrial {
     }
 
     public static void main(String[] args) throws Exception {
-        if(args.length == 2) {
-            compare(args[0],args[1]);
-//        } else if(args.length == 4) {
-//            compare(args[0], args[1], Integer.parseInt(args[2]), args[3]);
-        } else {
-            throw new IllegalArgumentException();
+        final CLIOpts opts = new CLIOpts(args);
+
+        final File trainFile = opts.roFile("trainFile", "The training file");
+
+        final Class<SimilarityMetricFactory> factoryClazz = opts.clazz("metricFactory", SimilarityMetricFactory.class, "The factory for the cross-lingual similarity measure");
+
+        final int W = opts.intValue("W", "The total number of distinct tokens");
+
+        final File testFile = opts.roFile("testFile", "The test file");
+
+        if (!opts.verify(MateFindingTrial.class)) {
+            return;
         }
+
+        compare(trainFile, factoryClazz, W, testFile);
     }
 }

@@ -62,6 +62,11 @@ public class FilterAndSplitCorpus {
         
         filterAndSplitCorpus(corpusIn, trainOut, testOut, 
                 downsample*2/* two languages*/, testSetRatio);
+        
+        trainOut.flush();
+        trainOut.close();
+        testOut.flush();
+        testOut.close();
     }
 
     private static void filterAndSplitCorpus(DataInputStream corpusIn, DataOutputStream trainOut, DataOutputStream testOut, int downsample, int testSetRatio) throws IOException {

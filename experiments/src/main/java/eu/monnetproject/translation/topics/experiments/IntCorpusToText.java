@@ -28,13 +28,11 @@ package eu.monnetproject.translation.topics.experiments;
 
 import eu.monnetproject.translation.topics.WordMap;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.zip.GZIPInputStream;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 /**
  *
@@ -42,59 +40,26 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
  */
 public class IntCorpusToText {
 
-    private static void fail(String message) {
-        System.err.println(message);
-        System.err.println("\nUsage:\n"
-                + "\tmvn exec:java -Dexec.mainClass=\"eu.monnetproject.translation.topics.experiments.IntCorpusToText\" -Dexec.args=\"wordMap W corpus[.gz|bz2] [outFile]\"");
-        System.exit(-1);
-    }
-
     public static void main(String[] args) throws Exception {
-        if (args.length != 3 && args.length != 4) {
-            fail("Wrong number of arguments");
-        }
-        final File wordMapFile = new File(args[0]);
-        if (!wordMapFile.exists() || !wordMapFile.canRead()) {
-            fail("Cannot access word map");
-        }
+        final CLIOpts opts = new CLIOpts(args);
+        
+        final File wordMapFile = opts.roFile("wordMap[.gz|bz2]", "The map from words to integer IDs");
+        
+        final int W = opts.intValue("W", "The number of distinct tokens in the corpus");
 
-        final int W;
-        try {
-            W = Integer.parseInt(args[1]);
-        } catch (NumberFormatException x) {
-            fail("Not an integer " + args[1]);
+        final File corpusFile = opts.roFile("corpusFile[.gz|bz2]", "The corpus");
+
+        final PrintStream out = opts.outFileOrStdout();
+
+        if(!opts.verify(IntCorpusToText.class)) {
             return;
         }
-
-
-        final File corpusFile = new File(args[2]);
-        if (!corpusFile.exists() || !corpusFile.canRead()) {
-            fail("Cannot access corpus");
-        }
-
-        final PrintStream out;
-        if (args.length == 4) {
-            final File outFile = new File(args[3]);
-            if (outFile.exists() && !outFile.canWrite()) {
-                fail("Cannot write to out file");
-            }
-            out = new PrintStream(outFile);
-        } else {
-            out = System.out;
-        }
-
+        
         final String[] invMap;
         System.err.println("Reading word map");
         invMap = WordMap.inverseFromFile(wordMapFile, W, true);
 
-        final InputStream corpusIn;
-        if (corpusFile.getName().endsWith(".gz")) {
-            corpusIn = new GZIPInputStream(new FileInputStream(corpusFile));
-        } else if (corpusFile.getName().endsWith(".bz2")) {
-            corpusIn = new BZip2CompressorInputStream(new FileInputStream(corpusFile));
-        } else {
-            corpusIn = new FileInputStream(corpusFile);
-        }
+        final InputStream corpusIn = CLIOpts.openInputAsMaybeZipped(corpusFile);
 
         intCorpus2Text(invMap, corpusIn, out);
     }
@@ -102,12 +67,17 @@ public class IntCorpusToText {
     private static void intCorpus2Text(String[] invMap, InputStream corpusIn, PrintStream out) throws IOException {
         final DataInputStream data = new DataInputStream(corpusIn);
         while (data.available() > 0) {
-            int i = data.readInt();
-            if (i != 0) {
-                out.print(invMap[i]);
-                out.print(" ");
-            } else {
-                out.println();
+            try {
+                int i = data.readInt();
+                if (i != 0) {
+                    out.print(invMap[i]);
+                    out.print(" ");
+                } else {
+                    out.println();
+                    out.println();
+                }
+            } catch(EOFException x) {
+                break;
             }
         }
         data.close();

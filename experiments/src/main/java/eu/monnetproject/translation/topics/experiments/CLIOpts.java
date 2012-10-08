@@ -28,10 +28,12 @@ package eu.monnetproject.translation.topics.experiments;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,12 +58,13 @@ public class CLIOpts {
 
     /**
      * Call this after calling all CLIOpts to verify the CLIOpts are valid
+     *
      * @param cl The class of the script
      * @return {@code true} if the CLIOpts are valid
      */
     public boolean verify(Class<?> cl) {
         if (!succeeded || !args.isEmpty()) {
-            if(!args.isEmpty()) {
+            if (!args.isEmpty()) {
                 System.err.println("Too many arguments");
             }
             for (Argument argObj : argObjs) {
@@ -71,23 +74,23 @@ public class CLIOpts {
             }
             System.err.print("\nUsage:\n"
                     + "\tmvn exec:java -Dexec.mainClass=\"" + cl.getName() + "\" -Dexec.args=\"");
-            for(int i = 0; i < argObjs.size(); i++) {
-                if(argObjs.get(i).optional) {
+            for (int i = 0; i < argObjs.size(); i++) {
+                if (argObjs.get(i).optional) {
                     System.err.print("[");
                 }
-                if(argObjs.get(i).flag != null) {
+                if (argObjs.get(i).flag != null) {
                     System.err.print("-" + argObjs.get(i).flag + " ");
                 }
                 System.err.print(argObjs.get(i).name);
-                if(argObjs.get(i).optional) {
+                if (argObjs.get(i).optional) {
                     System.err.print("]");
                 }
-                if(i + 1 != argObjs.size()) {
+                if (i + 1 != argObjs.size()) {
                     System.err.print(" ");
                 }
             }
             System.err.println("\"");
-            for(Argument argObj : argObjs) {
+            for (Argument argObj : argObjs) {
                 System.err.println("\t  * " + argObj.name + ": " + argObj.description);
             }
             return false;
@@ -95,7 +98,7 @@ public class CLIOpts {
             return true;
         }
     }
-    
+
     public File roFile(String name, String description) {
         final Argument arg = new Argument(name, null, description, false);
         argObjs.add(arg);
@@ -105,85 +108,141 @@ public class CLIOpts {
             return null;
         } else {
             final File file = new File(args.get(0));
-            if(!file.exists() || !file.canRead())  {
+            if (!file.exists() || !file.canRead()) {
                 arg.message = "Cannot access [" + file.getPath() + "] for " + name;
                 succeeded = false;
+                args.remove(0);
                 return null;
             }
             args.remove(0);
             return file;
         }
     }
-    
+
     public File woFile(String name, String description) {
         final Argument arg = new Argument(name, null, description, false);
         argObjs.add(arg);
-        if(args.isEmpty()) {
+        if (args.isEmpty()) {
             arg.message = "Too few arguments: expected " + name;
             succeeded = false;
-            args.remove(0);
             return null;
         } else {
             final File file = new File(args.get(0));
-            if(file.exists() && !file.canWrite())  {
+            if (file.exists() && !file.canWrite()) {
                 arg.message = "Cannot access [" + file.getPath() + "] for " + name;
                 succeeded = false;
+                args.remove(0);
                 return null;
             }
             args.remove(0);
             return file;
         }
-        
     }
     
+    public PrintStream outFileOrStdout()  {
+        final Argument arg = new Argument("out", null, "The out file or nothing to use STDOUT", true);
+        argObjs.add(arg);
+        if (args.isEmpty()) {;
+            return System.out;
+        } else {
+            final File file = new File(args.get(0));
+            if (file.exists() && !file.canWrite()) {
+                arg.message = "Cannot access [" + file.getPath() + "] for out";
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            args.remove(0);
+            try {
+                return new PrintStream(file);
+            } catch(FileNotFoundException x) {
+                return null;
+            }
+        }
+    }
+
     public int intValue(String name, String description) {
         final Argument arg = new Argument(name, null, description, false);
         argObjs.add(arg);
-        if(args.isEmpty()) {
+        if (args.isEmpty()) {
             arg.message = "Too few arguments: expected " + name;
             succeeded = false;
-            args.remove(0);
             return 0;
         } else {
             final int i;
             try {
                 i = Integer.parseInt(args.get(0));
-            } catch(NumberFormatException x) {
+            } catch (NumberFormatException x) {
                 arg.message = "Not an integer " + args.get(0) + " for " + name;
                 succeeded = false;
+                args.remove(0);
                 return 0;
             }
             args.remove(0);
             return i;
-        }        
+        }
     }
-    
+
+    @SuppressWarnings("unchecked")
+    public <C> Class<C> clazz(String name, Class<C> interfase, String description) {
+        final Argument arg = new Argument(name, null, description, false);
+        argObjs.add(arg);
+        if (args.isEmpty()) {
+            arg.message = "Too few arguments: expected " + name;
+            succeeded = false;
+            return null;
+        } else {
+            final Class<?> clazz;
+            try {
+                clazz = Class.forName(args.get(0));
+            } catch (ClassNotFoundException x) {
+                arg.message = "Class not found: " + args.get(0);
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            if (!interfase.isAssignableFrom(clazz)) {
+                arg.message = clazz.getName() + " must implement " + interfase.getName();
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            args.remove(0);
+            return (Class<C>)clazz;
+        }
+    }
+
     /**
-     * Return a file as an input stream, that unzips if the file ends in .gz or .bz2.
+     * Return a file as an input stream, that unzips if the file ends in .gz or
+     * .bz2.
+     *
      * @param file The file
      * @return File as an input stream
-     * @throws IOException If the file is not found or is not a correct zipped file or some other reason
+     * @throws IOException If the file is not found or is not a correct zipped
+     * file or some other reason
      */
     public static InputStream openInputAsMaybeZipped(File file) throws IOException {
-        if(file.getName().endsWith(".gz")) {
+        if (file.getName().endsWith(".gz")) {
             return new GZIPInputStream(new FileInputStream(file));
-        } else if(file.getName().endsWith(".bz2")) {
+        } else if (file.getName().endsWith(".bz2")) {
             return new BZip2CompressorInputStream(new FileInputStream(file));
         } else {
             return new FileInputStream(file);
         }
     }
-    
+
     /**
-     * Return a file as an output stream, that zips if the file ends in .gz or .bz2.
+     * Return a file as an output stream, that zips if the file ends in .gz or
+     * .bz2.
+     *
      * @param file The file
      * @return File as an output stream
      * @throws IOException If the file is not found or some other reason
      */
     public static OutputStream openOutputAsMaybeZipped(File file) throws IOException {
-        if(file.getName().endsWith(".gz")) {
+        if (file.getName().endsWith(".gz")) {
             return new GZIPOutputStream(new FileOutputStream(file));
-        } else if(file.getName().endsWith(".bz2")) {
+        } else if (file.getName().endsWith(".bz2")) {
             return new BZip2CompressorOutputStream(new FileOutputStream(file));
         } else {
             return new FileOutputStream(file);

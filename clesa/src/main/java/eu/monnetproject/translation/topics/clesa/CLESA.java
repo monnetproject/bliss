@@ -71,8 +71,10 @@ public class CLESA implements SimilarityMetric {
         this.n_f = new int[J];
         this.xt = transpose(x);
         this.words = new HashMap<String, Integer>();
-        for (int i = 0; i < words.length; i++) {
-            this.words.put(words[i], i);
+        if(words != null) {
+            for (int i = 0; i < words.length; i++) {
+                this.words.put(words[i], i);
+            }
         }
         this.df = new double[W];
         this.df_f = new double[W];
