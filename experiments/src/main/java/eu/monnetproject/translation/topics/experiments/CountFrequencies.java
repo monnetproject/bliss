@@ -28,6 +28,7 @@ package eu.monnetproject.translation.topics.experiments;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -91,10 +92,10 @@ public class CountFrequencies {
         }
         final int[] freqs = new int[W];
         final DataOutputStream dataOut = new DataOutputStream(new FileOutputStream(outFile));
-        
+
         final int freqThresh = calcFreqs(dataIn, freqs, topN);
-        
-        System.out.println("Top "+topN+" words frequency > " + freqThresh);
+
+        System.out.println("Top " + topN + " words frequency > " + freqThresh);
 
         printFreqs(freqs, dataOut);
     }
@@ -105,34 +106,38 @@ public class CountFrequencies {
         int n = 0;
         try {
             DATA_LOOP:
-            while (dataIn.available() > 3) {
+            while (dataIn.available() > 0) {
                 if (++n % 100000 == 0) {
                     System.err.print(".");
                 }
-                int i = dataIn.readInt();
-                if (i != 0) {
-                    freqs[i]++;
-                    for (int j = 0; j < topN; j++) {
-                        if (topNkeys[j] == i) {
-                            topNvalues[j]++;
-                            continue DATA_LOOP;
+                try {
+                    int i = dataIn.readInt();
+                    if (i != 0) {
+                        freqs[i]++;
+                        for (int j = 0; j < topN; j++) {
+                            if (topNkeys[j] == i) {
+                                topNvalues[j]++;
+                                continue DATA_LOOP;
+                            }
+                        }
+                        for (int j = 0; j < topN; j++) {
+                            if (freqs[i] > topNvalues[j]) {
+                                topNvalues[j] = freqs[i];
+                                topNkeys[j] = i;
+                                continue DATA_LOOP;
+                            }
                         }
                     }
-                    for (int j = 0; j < topN; j++) {
-                        if(freqs[i] > topNvalues[j]) {
-                            topNvalues[j] = freqs[i];
-                            topNkeys[j] = i;
-                            continue DATA_LOOP;
-                        }
-                    }
+                } catch (EOFException x) {
+                    break;
                 }
             }
         } finally {
             dataIn.close();
         }
         int freqThresh = Integer.MAX_VALUE;
-        for(int j = 0; j < topN; j++) {
-            freqThresh = Math.min(freqThresh,topNvalues[j]);
+        for (int j = 0; j < topN; j++) {
+            freqThresh = Math.min(freqThresh, topNvalues[j]);
         }
         return freqThresh;
     }
@@ -147,4 +152,3 @@ public class CountFrequencies {
         }
     }
 }
- 
