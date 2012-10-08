@@ -48,51 +48,48 @@ public class IntCorpusToText {
     private static void fail(String message) {
         System.err.println(message);
         System.err.println("\nUsage:\n"
-                + "\tmvn exec:java -Dexec.mainClass=\"eu.monnetproject.translation.topics.experiments.IntCorpusToText\" -Dexec.args=\"wordMap corpus[.gz|bz2] [outFile]\"");
+                + "\tmvn exec:java -Dexec.mainClass=\"eu.monnetproject.translation.topics.experiments.IntCorpusToText\" -Dexec.args=\"wordMap W corpus[.gz|bz2] [outFile]\"");
         System.exit(-1);
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 2 && args.length != 3) {
+        if (args.length != 3 && args.length != 4) {
             fail("Wrong number of arguments");
         }
         final File wordMapFile = new File(args[0]);
-        if(!wordMapFile.exists() || !wordMapFile.canRead()) {
+        if (!wordMapFile.exists() || !wordMapFile.canRead()) {
             fail("Cannot access word map");
         }
-        
-        final File corpusFile = new File(args[1]);
-        if(!corpusFile.exists() || !corpusFile.canRead()) {
+
+        final int W;
+        try {
+            W = Integer.parseInt(args[1]);
+        } catch (NumberFormatException x) {
+            fail("Not an integer " + args[1]);
+            return;
+        }
+
+
+        final File corpusFile = new File(args[2]);
+        if (!corpusFile.exists() || !corpusFile.canRead()) {
             fail("Cannot access corpus");
         }
-        
+
         final PrintStream out;
-        if(args.length == 3) {
-            final File outFile = new File(args[2]);
-            if(outFile.exists() && !outFile.canWrite()) {
+        if (args.length == 4) {
+            final File outFile = new File(args[3]);
+            if (outFile.exists() && !outFile.canWrite()) {
                 fail("Cannot write to out file");
             }
             out = new PrintStream(outFile);
         } else {
             out = System.out;
         }
+
         final String[] invMap;
-        {
-            System.err.println("Reading word map");
-            final WordMap wordMap = WordMap.fromFile(wordMapFile,true);
-            System.err.println("Inverting word map");
-            invMap = new String[wordMap.size()+1];
-            int n = 0;
-            final ObjectIterator<Entry<String>> wmIter = wordMap.object2IntEntrySet().fastIterator();
-            while(wmIter.hasNext()) {
-                final Entry<String> entry = wmIter.next();
-                invMap[entry.getIntValue()] = entry.getKey();
-                if(++n % 10000 == 0) {
-                    System.err.print(".");
-                }
-            }
-            System.err.println();
-        }
+        System.err.println("Reading word map");
+        invMap = WordMap.inverseFromFile(corpusFile, W, true);
+
         final InputStream corpusIn;
         if (corpusFile.getName().endsWith(".gz")) {
             corpusIn = new GZIPInputStream(new FileInputStream(corpusFile));
@@ -101,15 +98,15 @@ public class IntCorpusToText {
         } else {
             corpusIn = new FileInputStream(corpusFile);
         }
-         
-        intCorpus2Text(invMap,corpusIn,out);
+
+        intCorpus2Text(invMap, corpusIn, out);
     }
 
     private static void intCorpus2Text(String[] invMap, InputStream corpusIn, PrintStream out) throws IOException {
         final DataInputStream data = new DataInputStream(corpusIn);
-        while(data.available() > 0) {
+        while (data.available() > 0) {
             int i = data.readInt();
-            if(i != 0) {
+            if (i != 0) {
                 out.print(invMap[i]);
                 out.print(" ");
             } else {

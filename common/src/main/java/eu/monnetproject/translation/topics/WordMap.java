@@ -77,6 +77,31 @@ public class WordMap extends Object2IntOpenHashMap<String> {
         }
         return wordMap;
     }
+    
+    public static String[] inverseFromFile(File file, int W, boolean printProgress) throws IOException {
+        final String[] invMap = new String[W];
+        final DataInputStream in = new DataInputStream(new FileInputStream(file));
+        int n = 0;
+        try {
+            while(in.available() > 0) {
+                final String key = in.readUTF();
+                final int idx = in.readInt();
+                if(idx >= W) {
+                    System.err.println("Skipped key over W: " + key);
+                }
+                invMap[idx] = key;
+                if(printProgress && (++n % 10000 == 0)) {
+                    System.err.print(".");
+                }
+            }
+        } finally {
+            if(printProgress) {
+                System.err.println();
+            }
+            in.close();
+        }
+        return invMap;
+    }
 
     /**
      * Write a word map to a file

@@ -67,7 +67,7 @@ public class WordMapSize {
         }
         data.close();
         System.err.println();
-        System.out.print("W=" + (W+1));
+        System.out.println("W=" + (W+1));
     }
 }
 
