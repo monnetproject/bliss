@@ -88,7 +88,7 @@ public class IntCorpusToText {
 
         final String[] invMap;
         System.err.println("Reading word map");
-        invMap = WordMap.inverseFromFile(corpusFile, W, true);
+        invMap = WordMap.inverseFromFile(wordMapFile, W, true);
 
         final InputStream corpusIn;
         if (corpusFile.getName().endsWith(".gz")) {
