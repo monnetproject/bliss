@@ -72,6 +72,7 @@ public class PTBTokenizer implements Tokenizer {
         replaceAll(sb,"\\.\\.\\."," ... ");
         replaceAll(sb,"([,;:@#$%&])"," \\1 ");
         replaceAll(sb,"([^\\.])\\.([\\]\\)\\}\\>\"'\\s])","\\1 . \\2 ");
+        replaceAll(sb,"([^\\.])\\.$","\\1 .");
         replaceAll(sb,"([\\?\\!])"," \\1 ");
         replaceAll(sb,"([\\]\\[\\(\\)\\{\\}\\<\\>])"," \\1 ");
         replaceAll(sb,"--"," -- ");
@@ -93,7 +94,7 @@ public class PTBTokenizer implements Tokenizer {
         replaceAll(sb,"([Gg])imme ","\\1im me ");
         replaceAll(sb,"([Gg])onna ","\\1on na ");
         replaceAll(sb,"([Gg])otta ","\\1ot ta ");
-        replaceAll(sb,"([Ll])emma ","\\1em me ");
+        replaceAll(sb,"([Ll])emme ","\\1em me ");
         replaceAll(sb,"([Mm])ore'n ","\\1ore 'n ");
         replaceAll(sb,"'([Tt])is ","'\\1 is ");
         replaceAll(sb,"'([Tt])was ","'\\1 was ");

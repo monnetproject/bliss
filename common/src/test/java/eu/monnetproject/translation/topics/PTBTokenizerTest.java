@@ -67,7 +67,22 @@ public class PTBTokenizerTest {
         }
         assertFalse(tokIter.hasNext());
         assertFalse(expIter.hasNext());
-        
+    }
+    
+    @Test
+    public void testTokenize2() {
+        System.out.println("tokenize2");
+        String input = "Why are there tokens. with a full.stop at the end.";
+        PTBTokenizer instance = new PTBTokenizer();
+        List<String> expResult = Arrays.asList("Why","are","there","tokens",".","with","a","full.stop","at","the","end",".");
+        List<String> result = instance.tokenize(input);
+        final Iterator<String> tokIter = result.iterator();
+        final Iterator<String> expIter = expResult.iterator();
+        while(tokIter.hasNext() && expIter.hasNext()) {
+            assertEquals(expIter.next(),tokIter.next());
+        }
+        assertFalse(tokIter.hasNext());
+        assertFalse(expIter.hasNext());
     }
 
     /**
