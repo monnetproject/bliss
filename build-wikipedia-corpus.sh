@@ -5,14 +5,13 @@ die () {
     exit 1
 }
 
+if [ $# -ne 2 ] 
+then
+  die "Required two argument SRCLANG and TRGLANG"
+fi
+
 SRCLANG=$1
 TRGLANG=$2
-if [ "$#" -eq 3 ]
-then
-  SAMPLING=$3
-else
-  SAMPLING=1
-fi
 
 if [ ! -f wiki/$SRCLANG-$TRGLANG/ ];
 then
@@ -23,7 +22,7 @@ if [ ! -f "WikiExtractor.py" ];
 then
   echo "Obtaining UniPisa WikiExtract Script"
   wget -q http://medialab.di.unipi.it/Project/SemaWiki/Tools/WikiExtractor.py || die "Please download WikiExtract.py script"
-  chmod a+x WikiExtract.py
+  chmod a+x WikiExtractor.py
 fi
 
 if [ ! -d experiments/target/ ];
@@ -62,61 +61,71 @@ fi
 
 cd wiki/$SRCLANG-$TRGLANG/
 
-if [ ! -f ili ] && [ -f wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 ]
+if [ ! -f ili ] && [ -f ../${SRCLANG}wiki-latest-pages-articles.xml.bz2 ]
 then
    echo "Step 5. Build Interlingual Index"
    mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterlingualIndex" -Dexec.args="../${SRCLANG}wiki-latest-pages-articles.xml.bz2 $TRGLANG ili"
 fi
 
-if [ ! -f ${SRCLANG}wiki.$SAMPLING.int.gz ] && [ -f ../${SRCLANG}wiki.xml.gz ]
+if [ ! -f ${SRCLANG}wiki.int.gz ] && [ -f ../${SRCLANG}wiki.xml.gz ]
 then 
   echo "Step 6. Integerize $SRCLANG Wikipedia"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${SRCLANG}wiki.xml.gz wordMap ${SRCLANG}wiki.$SAMPLING.int.gz"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="../${SRCLANG}wiki.xml.gz wordMap ${SRCLANG}wiki.int.gz"
 fi
 
-if [ ! -f ${TRGLANG}wiki.$SAMPLING.int.gz ] && [ -f ../${TRGLANG}wiki.xml.gz ]
+if [ ! -f ${TRGLANG}wiki.int.gz ] && [ -f ../${TRGLANG}wiki.xml.gz ]
 then 
   echo "Step 7. Integerize $TRGLANG Wikipedia"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="-s $SAMPLING ../${TRGLANG}wiki.xml.gz wordMap ${TRGLANG}wiki.$SAMPLING.int.gz"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.IntegerizeCorpus" -Dexec.args="../${TRGLANG}wiki.xml.gz wordMap ${TRGLANG}wiki.int.gz"
 fi
 
 
-if [ ! -f ${SRCLANG}wiki.$SAMPLING.filt.gz ] && [ -f ${SRCLANG}wiki.$SAMPLING.int.gz ] && [ -f ili ]
+if [ ! -f ${SRCLANG}wiki.filt.gz ] && [ -f ${SRCLANG}wiki.int.gz ] && [ -f ili ]
 then
    echo "Step  8. Filter/translate $SRCLANG by ILI"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterByILI" -Dexec.args="${SRCLANG}wiki.$SAMPLING.int.gz ili ${SRCLANG}wiki.$SAMPLING.filt.gz src-trans"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterByILI" -Dexec.args="${SRCLANG}wiki.int.gz ili ${SRCLANG}wiki.filt.gz src-trans"
 fi
 
-if [ ! -f ${TRGLANG}wiki.$SAMPLING.filt.gz ]
+if [ ! -f ${TRGLANG}wiki.filt.gz ]
 then
    echo "Step  9. Filter $TRGLANG by ILI"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterByILI" -Dexec.args="${TRGLANG}wiki.$SAMPLING.int.gz ili ${TRGLANG}wiki.$SAMPLING.filt.gz trg"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterByILI" -Dexec.args="${TRGLANG}wiki.int.gz ili ${TRGLANG}wiki.filt.gz trg"
 fi
 
-if [ ! -f ${SRCLANG}wiki.$SAMPLING.sort.gz ] && [ -f ${SRCLANG}wiki.$SAMPLING.filt.gz ]
+if [ ! -f ${SRCLANG}wiki.sort.gz ] && [ -f ${SRCLANG}wiki.filt.gz ]
 then 
    echo "Step 10. Sort ${SCRLANG} data"
-   zcat ${SRCLANG}wiki.$SAMPLING.filt.gz | LC_ALL=C sort | gzip > ${SRCLANG}wiki.$SAMPLING.sort.gz
+   zcat ${SRCLANG}wiki.filt.gz | LC_ALL=C sort | gzip > ${SRCLANG}wiki.sort.gz
 fi
 
 
-if [ ! -f ${TRGLANG}wiki.$SAMPLING.sort.gz ] && [ -f ${TRGLANG}wiki.$SAMPLING.filt.gz ]
+if [ ! -f ${TRGLANG}wiki.sort.gz ] && [ -f ${TRGLANG}wiki.filt.gz ]
 then 
    echo "Step 11. Sort ${SCRLANG} data"
-   zcat ${TRGLANG}wiki.$SAMPLING.filt.gz | LC_ALL=C sort | gzip > ${TRGLANG}wiki.$SAMPLING.sort.gz
+   zcat ${TRGLANG}wiki.filt.gz | LC_ALL=C sort | gzip > ${TRGLANG}wiki.sort.gz
 fi
 
-if [ ! -f ${SRCLANG}wiki.$SAMPLING.gz ] && [ -f ${TRGLANG}wiki.$SAMPLING.sort.gz ]
+if [ ! -f ${SRCLANG}-${TRGLANG}.wiki.gz ] && [ -f ${SRCLANG}wiki.sort.gz ]&& [ -f ${TRGLANG}wiki.sort.gz ]
 then
    echo "Step 12. Interleave and binarize data"
-   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${SRCLANG}wiki.$SAMPLING.sort.gz ${TRGLANG}wiki.$SAMPLING.sort.gz ${SRCLANG}-${TRGLANGwiki.$SAMPLING.gz"
+   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.InterleaveFiles" -Dexec.args="${SRCLANG}wiki.sort.gz ${TRGLANG}wiki.sort.gz ${SRCLANG}-${TRGLANG}.wiki.gz"
 fi
 
+if [ -f wordMap ]
+then
+   echo "Step 13. Counting W"
+   W=`java -cp ../../experiments/target/classes/ eu.monnetproject.translation.topics.experiments.WordMapSize wordMap`
+   echo "W=$W"
+fi
 
-### Post-compile steps
-# Calc W
-# mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.WordMapSize" -Dexec.args="wordMap" 
-# Count frequencies
-# mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CountFrequencies" -Dexec.args="${SRCLANG}-${TRGLANG}wiki.$SAMPLING.gz 10985646 100 freqs" 
-# Clean corpus
-# mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CleanCorpus" -Dexec.args="wordMap 10985646 100 freqs" 
+if [ ! -f freqs ] && [ -f ${SRCLANG}-${TRGLANG}.wiki.gz ]
+then
+  echo "Step 14. Counting frequencies"
+  mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CountFrequencies" -Dexec.args="${SRCLANG}-${TRGLANG}.wiki.gz $W 100 freqs" 
+fi
+
+if [ ! -f ${SRCLANG}-${TRGLANG}.wiki.gz ] && [ -f freqs ]
+then
+  echo "Step 15. Filtering corpus"
+  mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CleanCorpus" -Dexec.args="wordMap $W freqs 5 100 ${SRCLANG}-${TRGLANG}.wiki.clean.gz" 
+fi
