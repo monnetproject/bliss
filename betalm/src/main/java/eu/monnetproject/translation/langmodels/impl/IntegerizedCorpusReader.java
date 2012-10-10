@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +27,8 @@
 package eu.monnetproject.translation.langmodels.impl;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.nio.IntBuffer;
 
 /**
  *
@@ -36,46 +37,53 @@ import java.nio.IntBuffer;
 public class IntegerizedCorpusReader {
 
     private final DataInputStream corpus;
-    public final static int CAPACITY = Integer.parseInt(System.getProperty("integer.corpus.max","262144"));
-    private final IntBuffer buffer = IntBuffer.allocate(CAPACITY);
-    
-            
+    public final static int CAPACITY = Integer.parseInt(System.getProperty("integer.corpus.max", "262144"));
+    private final int[] buffer = new int[CAPACITY];
+    private int loc;
+
     public IntegerizedCorpusReader(DataInputStream corpus) {
         this.corpus = corpus;
     }
-    
-    public int nextToken() throws IOException {
+
+    public int nextToken() throws IOException, EOFException {
         int tk = corpus.readInt();
-        if(tk == 0) {
-            buffer.clear();
-        } else { 
-            buffer.put(tk);
+        if (tk == 0) {
+            loc = 0;
+        } else {
+            if (loc < CAPACITY) {
+                buffer[loc++] = tk;
+            }
         }
         return tk;
     }
-    
+
     public boolean nextDocument() throws IOException {
-        if(corpus.available() == 0) {
+        if (corpus.available() == 0) {
             return false;
         }
-        buffer.clear();
+        loc = 0;
         int tk;
-        while((tk = corpus.readInt()) != 0 && corpus.available() != 0 && buffer.remaining() > 0) {
-            buffer.put(tk);
+        try {
+            while ((tk = corpus.readInt()) != 0 && corpus.available() != 0) {
+                if (loc < CAPACITY) {
+                    buffer[loc++] = tk;
+                }
+            }
+        } catch (EOFException x) {
+            return true;
         }
         return true;
     }
-    
+
     public boolean hasNext() throws IOException {
-        // > 1 as we assume that the last document is \0-terminated 
-        return corpus.available() > 1;
+        return corpus.available() > 0;
     }
-    
+
     public int getBufferSize() {
-        return buffer.position();
+        return loc;
     }
-    
+
     public int[] getBuffer() {
-        return buffer.array();
+        return buffer;
     }
 }

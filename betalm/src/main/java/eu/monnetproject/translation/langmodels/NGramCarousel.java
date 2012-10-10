@@ -94,6 +94,9 @@ public class NGramCarousel {
         if(n > N || n > b) {
             throw new IllegalArgumentException("NGram not in carousel");
         }
+        if(n < 0) {
+            throw new IllegalArgumentException("Negative n");
+        }
         return new NGram(Arrays.copyOfRange(carousel, b-n, b));
     }
 }

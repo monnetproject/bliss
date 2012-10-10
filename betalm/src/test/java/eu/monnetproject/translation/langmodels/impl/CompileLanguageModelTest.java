@@ -116,11 +116,12 @@ public class CompileLanguageModelTest {
         System.out.println("writeModel");
         final StringWriter sw = new StringWriter();
         PrintWriter out = new PrintWriter(sw);
-        WordMap wordMap = new WordMap();
-        wordMap.offer("a");
-        wordMap.offer("b");
-        wordMap.offer("c");
-        wordMap.offer("d");
+        String[] invWordMap = new String[] { null,"a","b","c","d" };
+//        WordMap wordMap = new WordMap();
+//        wordMap.offer("a");
+  //      wordMap.offer("b");
+    //    wordMap.offer("c");
+      //  wordMap.offer("d");
         int N = 2;
         NGramCountSet countSet = new NGramCountSetImpl(N);
         countSet.ngramCount(1).put(new NGram(new int[]{1}), 4);
@@ -147,7 +148,7 @@ public class CompileLanguageModelTest {
         countSet.inc(2);
         countSet.inc(2);
         CompileLanguageModel instance = new CompileLanguageModel();
-        instance.writeModel(out, wordMap, countSet.asWeightedSet());
+        instance.writeModel(out, invWordMap, countSet.asWeightedSet());
         final String ls = System.getProperty("line.separator");
         final String expResult = "\\data\\" + ls
                 + "ngram 1=4" + ls

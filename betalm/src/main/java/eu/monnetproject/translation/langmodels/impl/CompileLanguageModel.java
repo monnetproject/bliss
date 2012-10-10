@@ -30,6 +30,7 @@ import eu.monnetproject.translation.langmodels.LossyCounter;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.topics.CLIOpts;
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.WordMap;
 import eu.monnetproject.translation.topics.sim.BetaLMImpl;
@@ -37,9 +38,11 @@ import eu.monnetproject.translation.topics.sim.BetaSimFunction;
 import eu.monnetproject.translation.topics.sim.Metrics;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +54,7 @@ import java.util.Arrays;
 public class CompileLanguageModel {
 
     public enum SourceType {
+
         SIMPLE,
         INTERLEAVED_USE_FIRST,
         INTERLEAVED_USE_SECOND
@@ -61,30 +65,63 @@ public class CompileLanguageModel {
         long read = 0;
         boolean inDoc = type != SourceType.INTERLEAVED_USE_SECOND;
         while (reader.hasNext()) {
-            final int tk = reader.nextToken();
-            if (tk == 0) {
-                if (type == SourceType.SIMPLE) {
-                    counter.docEnd();
-                } else {
-                    if (inDoc) {
+            try {
+                final int tk = reader.nextToken();
+                if (tk == 0) {
+                    if (type == SourceType.SIMPLE) {
                         counter.docEnd();
-                        inDoc = false;
                     } else {
-                        inDoc = true;
+                        if (inDoc) {
+                            counter.docEnd();
+                            inDoc = false;
+                        } else {
+                            inDoc = true;
+                        }
                     }
+                } else if (inDoc) {
+                    counter.offer(tk);
                 }
-            } else if (inDoc) {
-                counter.offer(tk);
-            }
-            if (++read % 1048576 == 0) {
-                System.err.print(".");
+                if (++read % 1048576 == 0) {
+                    System.err.print(".");
+                }
+            } catch (EOFException x) {
+                System.err.println("EOF");
+                break;
             }
         }
         return counter.counts();
     }
 
-    public void writeModel(PrintWriter out, WordMap wordMap, WeightedNGramCountSet countSet) {
-        final String[] inverseWordMap = wordMap.invert();
+    public void writeModel(PrintStream out, String[] inverseWordMap, WeightedNGramCountSet countSet) {
+        out.println("\\data\\");
+        for (int i = 1; i <= countSet.N(); i++) {
+            out.println("ngram " + i + "=" + countSet.ngramCount(i).size());
+        }
+        out.println();
+        for (int i = 1; i <= countSet.N(); i++) {
+            double l = countSet.sum(i);
+            out.println("\\" + i + "-grams:");
+            for (Object2DoubleMap.Entry<NGram> entry : countSet.ngramCount(i).object2DoubleEntrySet()) {
+                double p = entry.getDoubleValue();
+                p = Math.log10(p / l);
+                out.print(p + "\t");
+                final int[] ng = entry.getKey().ngram;
+                for (int j = 0; j < ng.length; j++) {
+                    out.print(inverseWordMap[ng[j]]);
+                    if (j + 1 != ng.length) {
+                        out.print(" ");
+                    }
+                }
+                out.println();
+            }
+            out.println();
+        }
+        out.println("\\end\\");
+        out.flush();
+        out.close();
+    }
+    
+    public void writeModel(PrintWriter out, String[] inverseWordMap, WeightedNGramCountSet countSet) {
         out.println("\\data\\");
         for (int i = 1; i <= countSet.N(); i++) {
             out.println("ngram " + i + "=" + countSet.ngramCount(i).size());
@@ -143,112 +180,75 @@ public class CompileLanguageModel {
     }
 
     public static void main(String[] _args) throws Exception {
+        final CLIOpts opts = new CLIOpts(_args);
+
+
         final ArrayList<String> args = new ArrayList<String>(Arrays.asList(_args));
 
-        SourceType sourceType = SourceType.SIMPLE;
-        BetaLMImpl.Method betaMethod = null;
-        File queryFile = null;
-        double selectivity = 1.0;
-        for (int i = 0; i < args.size() - 1; i++) {
-            if (args.get(i).equals("-t")) {
-                try {
-                    sourceType = SourceType.valueOf(args.get(i + 1));
-                } catch (IllegalArgumentException x) {
-                    fail("Bad source type: please use SIMPLE, INTERLEAVED_USE_FIRST or INTERLEAVED_USE_SECOND");
-                    return;
-                }
-                args.remove(i);
-                args.remove(i--);
-            } else if (args.get(i).equals("-b")) {
-                try {
-                    betaMethod = BetaLMImpl.Method.valueOf(args.get(i + 1));
-                } catch(IllegalArgumentException x) {
-                    StringBuilder errMsg = new StringBuilder("Bad BetaLM method, choose one of: ");
-                    for(BetaLMImpl.Method method : BetaLMImpl.Method.values()) {
-                        errMsg.append(method.name()).append(" ");
-                    }
-                    fail(errMsg.toString());
-                }
-                args.remove(i);
-                args.remove(i--);
-            } else if (args.get(i).equals("-f")) {
-                queryFile = new File(args.get(i + 1));
-                args.remove(i);
-                args.remove(i--);
-            } else if (args.get(i).equals("-s")) {
-                try {
-                    selectivity = Double.parseDouble(args.get(i+1));
-                } catch(NumberFormatException x) {
-                    fail("Bad value for selectivity (not a number)");
-                }
-                args.remove(i);
-                args.remove(i--);
-            }
-        }
-        if (args.size() != 4) {
-            fail("Wrong number of arguments");
-        }
+        final SourceType sourceType = opts.enumOptional("t", SourceType.class, SourceType.SIMPLE, "The type of source: SIMPLE, INTERLEAVED_USE_FIRST or INTERLEAVED_USE_SECOND");
 
-        final File inFile = new File(args.get(0));
-        if (!inFile.exists() || !inFile.canRead()) {
-            fail("Cannot access corpus file");
+        StringBuilder betalmString = new StringBuilder("The BetaLM method: ");
+        for (BetaLMImpl.Method method : BetaLMImpl.Method.values()) {
+            betalmString.append(method.name()).append(" ");
         }
-        final int N;
-        try {
-            N = Integer.parseInt(args.get(1));
-        } catch (NumberFormatException x) {
-            fail("Non-number for N");
+        final BetaLMImpl.Method betaMethod = opts.enumOptional("b", BetaLMImpl.Method.class, null, betalmString.toString());
+        
+        final File queryFile = opts.roFile("f", "The query file (ontology)", null);
+        
+        final double smoothness = opts.doubleValue("s", 1.0, "The smoothing parameter");
+        
+        final File inFile = opts.roFile("corpus[.gz|.bz2]", "The corpus file");
+        
+        final int N = opts.nonNegIntValue("N", "The largest n-gram to calculate");
+        
+        final File wordMapFile = opts.roFile("wordMap", "The word map file");
+        
+        final int W = opts.nonNegIntValue("W", "The number of distinct tokens in corpus");
+
+        final PrintStream out = opts.outFileOrStdout();
+        
+        if(!opts.verify(CompileLanguageModel.class)) {
             return;
         }
-        if (N <= 0) {
-            fail("Non-positive N value");
-        }
-        final File wordMapFile = new File(args.get(2));
-        if (!wordMapFile.exists() || !wordMapFile.canRead()) {
-            fail("Cannot access word map file");
-        }
-        final File outFile = new File(args.get(3));
-        if (outFile.exists() && !outFile.canWrite()) {
-            fail("Cannot write to out file");
-        }
+        
         final CompileLanguageModel compiler = betaMethod == null
                 ? new CompileLanguageModel() : new CompileBetaModel();
-        
-        if(queryFile != null && (!queryFile.exists() || !queryFile.canRead())) {
+
+        if (queryFile != null && (!queryFile.exists() || !queryFile.canRead())) {
             fail("Cannot read query file");
         }
-        final WordMap wordMap = WordMap.fromFile(wordMapFile);
         final BetaSimFunction betaSimFunction;
-        if(betaMethod != null) {
+        if (betaMethod != null) {
             final PrecomputedValues precomp;
-            if(PrecomputedValues.isNecessary(betaMethod)) {
+            if (PrecomputedValues.isNecessary(betaMethod)) {
                 System.err.println("Methodology requires pre-scan of the corpus");
-                precomp = PrecomputedValues.precompute(inFile,wordMap.size()+1,sourceType);
+                precomp = PrecomputedValues.precompute(inFile, W, sourceType);
             } else {
                 precomp = null;
             }
-            if(queryFile == null) {
+            if (queryFile == null) {
                 fail("BetaLM does not work without a query");
             }
             final SparseArray binQuery = SparseArray.fromBinary(queryFile, Integer.MAX_VALUE);
-            if(selectivity == 1.0) {
-                betaSimFunction = betaSimFunction(betaMethod, binQuery, precomp); 
-            } else{
-                betaSimFunction = Metrics.selective(betaSimFunction(betaMethod, binQuery, precomp), selectivity);
+            if (smoothness == 1.0) {
+                betaSimFunction = betaSimFunction(betaMethod, binQuery, precomp);
+            } else {
+                betaSimFunction = Metrics.selective(betaSimFunction(betaMethod, binQuery, precomp), smoothness);
             }
-           
+
         } else {
             betaSimFunction = null;
         }
-        
+
         System.err.println("Compiling corpus");
         final WeightedNGramCountSet countSet;
         if (betaMethod == null) {
-            countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(new FileInputStream(inFile))), sourceType).asWeightedSet();
+            countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType).asWeightedSet();
         } else {
-            countSet = ((CompileBetaModel) compiler).doCount(N, new IntegerizedCorpusReader(new DataInputStream(new FileInputStream(inFile))), sourceType, betaSimFunction);
+            countSet = ((CompileBetaModel) compiler).doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType, betaSimFunction);
         }
-        final PrintWriter out = new PrintWriter(outFile);
+        System.err.print("Loading word map:");
+        final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
         System.err.println("Writing model");
         compiler.writeModel(out, wordMap, countSet);
         out.flush();

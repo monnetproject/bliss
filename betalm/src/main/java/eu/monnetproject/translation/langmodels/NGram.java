@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,14 +30,16 @@ import java.util.Arrays;
 
 /**
  * Really just an int array, but has a proper hashCode() and equals()
- * 
+ *
  * @author John McCrae
  */
 public class NGram {
+
     public final int[] ngram;
 
     public NGram(int[] ngram) {
         this.ngram = ngram;
+        assert ngramNonnegative(ngram);
     }
 
     @Override
@@ -64,5 +67,14 @@ public class NGram {
     @Override
     public String toString() {
         return "NGram{" + "ngram=" + Arrays.toString(ngram) + '}';
+    }
+
+    public final boolean ngramNonnegative(int[] ngram) {
+        for (int i : ngram) {
+            if (i < 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }
