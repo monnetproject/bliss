@@ -1,5 +1,4 @@
-/**
- * *******************************************************************************
+/*********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,65 +23,35 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.langmodels;
+package eu.monnetproject.translation.langmodels.smoothing;
 
-import java.util.Arrays;
+import eu.monnetproject.translation.langmodels.NGram;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
 /**
- * Really just an int array, but has a proper hashCode() and equals()
  *
  * @author John McCrae
  */
-public class NGram {
+public class KneserNeySmoothing {
 
-    public final int[] ngram;
+    private final Object2ObjectMap<NGram,int[]> histories;
+    private final double[][] d;
 
-    public NGram(int[] ngram) {
-        this.ngram = ngram;
-        assert ngramNonnegative(ngram);
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 5;
-        hash = 61 * hash + Arrays.hashCode(this.ngram);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final NGram other = (NGram) obj;
-        if (!Arrays.equals(this.ngram, other.ngram)) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "NGram{" + "ngram=" + Arrays.toString(ngram) + '}';
+    public KneserNeySmoothing(Object2ObjectMap<NGram, int[]> histories, int[][] CoC) {
+        this(histories, CoC, 3);
     }
     
-    public NGram history() {
-        return new NGram(Arrays.copyOfRange(ngram, 0, ngram.length-1));
-    }
-    
-    public NGram future() {
-        return new NGram(Arrays.copyOfRange(ngram, 1, ngram.length));
-    }
-
-    private final boolean ngramNonnegative(int[] ngram) {
-        for (int i : ngram) {
-            if (i < 0) {
-                return false;
+    public KneserNeySmoothing(Object2ObjectMap<NGram, int[]> histories, int[][] CoC, int D) {
+        this.histories = histories;
+        this.d = new double[CoC.length/*don't snigger*/][D];
+        for(int i = 0; i < CoC.length; i++) {
+            double y = (double)CoC[i][0] / (double)(CoC[i][0] + 2 * CoC[i][1]);
+            assert(CoC[i].length > D+1);
+            for(int j = 0; j < D; j++) {
+                d[i][j] = j + 1 - (j + 2) * CoC[i][j+1] / CoC[i][j];
             }
         }
-        return true;
     }
+    
+    
 }

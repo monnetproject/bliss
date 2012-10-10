@@ -94,10 +94,13 @@ public class LossyCounterWithHistory implements Counter {
         for (int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
             final NGram history;
+            final NGram future;
             if (i > 1) {
                 history = ngram.history();
+                future = ngram.future();
             } else {
                 history = null;
+                future = null;
             }
             final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             nGramCountSet.inc(i);
@@ -105,19 +108,28 @@ public class LossyCounterWithHistory implements Counter {
                 final int count = ngcs.getInt(ngram);
                 if (i > 1) {
                     if (count < H) {
-                        histories.get(history)[count - 1]--;
-                        histories.get(history)[count]++;
+                        final int[] h = histories.get(history);
+                        h[count - 1]--;
+                        h[count]++;
+                        final int[] f = histories.get(future);
+                        f[H + count - 1]--;
+                        f[H + count]++;
                     } else {
                         histories.get(history)[H - 1]++;
+                        histories.get(future)[2*H - 1]++;
                     }
                 }
                 ngcs.put(ngram, count + 1);
             } else {
                 if (i > 1) {
                     if (!histories.containsKey(history)) {
-                        histories.put(history, new int[H]);
+                        histories.put(history, new int[2*H]);
+                    }
+                    if (!histories.containsKey(future)) {
+                        histories.put(future, new int[2*H]);
                     }
                     histories.get(history)[0]++;
+                    histories.get(future)[H]++;
                 }
                 ngcs.put(ngram, 1);
             }
