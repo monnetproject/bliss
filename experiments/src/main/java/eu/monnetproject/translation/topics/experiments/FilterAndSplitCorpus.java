@@ -25,6 +25,7 @@
  */
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.translation.topics.CLIOpts;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;

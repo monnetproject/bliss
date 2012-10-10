@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.translation.topics.CLIOpts;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -65,8 +66,6 @@ public class CleanCorpus {
 
         final int freqMin = opts.intValue("freqMin", "The minimum frequency to accept");
 
-        final int freqMax = opts.intValue("freqMax", "The maximum frequency to accept");
-
         final int lenMin = opts.intValue("lenMin", "The minimum document length to accept");
 
         final File outFile = opts.woFile("out[.gz|.bz2]", "The file to write to");
@@ -75,6 +74,8 @@ public class CleanCorpus {
             return;
         }
         int[] freqArray = readFreqs(freqFile, W);
+        
+        final int freqMax = freqArray[0];
 
         final DataInputStream corpusIn;
         if (corpusFile.getName().endsWith(".gz")) {
@@ -97,10 +98,15 @@ public class CleanCorpus {
         cleanCorpus(corpusIn, dataOut, freqArray, freqMin, freqMax, lenMin);
     }
 
+    /**
+     * @param freqFile
+     * @param W
+     * @return The frequency array, note [0] is the maximum threshold
+     */
     public static int[] readFreqs(final File freqFile, final int W) throws FileNotFoundException, IOException {
         final DataInputStream freqIn = new DataInputStream(new FileInputStream(freqFile));
         int[] freqArray = new int[W];
-        for (int i = 1; i < W; i++) {
+        for (int i = 0; i < W; i++) {
             freqArray[i] = freqIn.readInt();
         }
         freqIn.close();

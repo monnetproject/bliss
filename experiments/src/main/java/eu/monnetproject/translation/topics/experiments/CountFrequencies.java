@@ -97,7 +97,7 @@ public class CountFrequencies {
 
         System.out.println("Top " + topN + " words frequency > " + freqThresh);
 
-        printFreqs(freqs, dataOut);
+        printFreqs(freqThresh, freqs, dataOut);
     }
 
     private static int calcFreqs(DataInputStream dataIn, int[] freqs, int topN) throws IOException {
@@ -142,8 +142,9 @@ public class CountFrequencies {
         return freqThresh;
     }
 
-    private static void printFreqs(int[] freqs, DataOutputStream dataOut) throws IOException {
+    private static void printFreqs(int freqThresh, int[] freqs, DataOutputStream dataOut) throws IOException {
         try {
+            dataOut.writeInt(freqThresh);
             for (int i = 1; i < freqs.length; i++) {
                 dataOut.writeInt(freqs[i]);
             }

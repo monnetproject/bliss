@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.translation.topics.CLIOpts;
 import eu.monnetproject.translation.topics.ParallelBinarizedReader;
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.SimilarityMetric;
