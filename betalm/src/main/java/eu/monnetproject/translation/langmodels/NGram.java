@@ -68,8 +68,12 @@ public class NGram {
     public String toString() {
         return "NGram{" + "ngram=" + Arrays.toString(ngram) + '}';
     }
+    
+    public NGram history() {
+        return new NGram(Arrays.copyOfRange(ngram, 0, ngram.length-1));
+    }
 
-    public final boolean ngramNonnegative(int[] ngram) {
+    private final boolean ngramNonnegative(int[] ngram) {
         for (int i : ngram) {
             if (i < 0) {
                 return false;

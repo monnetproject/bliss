@@ -103,7 +103,12 @@ public class CompileLanguageModel {
             out.println("\\" + i + "-grams:");
             for (Object2DoubleMap.Entry<NGram> entry : countSet.ngramCount(i).object2DoubleEntrySet()) {
                 double p = entry.getDoubleValue();
-                p = Math.log10(p / l);
+                if(i == 1) {
+                    p = Math.log10(p / l);
+                } else {
+                    double p2 = countSet.ngramCount(i-1).getDouble(entry.getKey().history());
+                    p = Math.log10(p / p2);
+                }
                 out.print(p + "\t");
                 final int[] ng = entry.getKey().ngram;
                 for (int j = 0; j < ng.length; j++) {
