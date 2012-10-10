@@ -47,7 +47,7 @@ public class LossyCounterWithHistory implements Counter {
     private final int N, H;
     private final NGramCarousel carousel;
     private final NGramCountSetImpl nGramCountSet;
-    private final Object2ObjectOpenHashMap<NGram, double[]> histories;
+    private final Object2ObjectOpenHashMap<NGram, int[]> histories;
     private int b;
     /**
      * Number of tokens read
@@ -70,7 +70,7 @@ public class LossyCounterWithHistory implements Counter {
         this.p = 0;
         this.carousel = new NGramCarousel(N);
         this.nGramCountSet = new NGramCountSetImpl(N);
-        this.histories = new Object2ObjectOpenHashMap<NGram, double[]>();
+        this.histories = new Object2ObjectOpenHashMap<NGram, int[]>();
     }
 
     /**
@@ -115,7 +115,7 @@ public class LossyCounterWithHistory implements Counter {
             } else {
                 if (i > 1) {
                     if (!histories.containsKey(history)) {
-                        histories.put(history, new double[H]);
+                        histories.put(history, new int[H]);
                     }
                     histories.get(history)[0]++;
                 }
@@ -138,14 +138,12 @@ public class LossyCounterWithHistory implements Counter {
             b++;
             for (int i = 1; i <= N; i++) {
                 final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
-                final ObjectIterator<Entry<NGram, double[]>> iter2 = histories.object2ObjectEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2IntMap.Entry<NGram> entry = iter.next();
-                    iter2.next();
                     if (entry.getValue() < b) {
                         nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();
-                        iter2.remove();
+                        histories.remove(entry.getKey());
                     }
                 }
             }
@@ -163,7 +161,7 @@ public class LossyCounterWithHistory implements Counter {
         return nGramCountSet;
     }
     
-    public Object2ObjectMap<NGram,double[]> histories() {
+    public Object2ObjectMap<NGram,int[]> histories() {
         return histories;
     }
 }
