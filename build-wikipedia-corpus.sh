@@ -124,8 +124,8 @@ then
   mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CountFrequencies" -Dexec.args="${SRCLANG}-${TRGLANG}.wiki.gz $W 100 freqs" 
 fi
 
-if [ ! -f ${SRCLANG}-${TRGLANG}.wiki.gz ] && [ -f freqs ]
+if [ ! -f ${SRCLANG}-${TRGLANG}.wiki.clean.gz ] && [ -f freqs ]
 then
   echo "Step 15. Filtering corpus"
-  mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CleanCorpus" -Dexec.args="wordMap $W freqs 5 100 ${SRCLANG}-${TRGLANG}.wiki.clean.gz" 
+  mvn -f ../../experiments/pom.xml exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.CleanCorpus" -Dexec.args="${SRCLANG}-${TRGLANG}.wiki.gz $W freqs 5 100 ${SRCLANG}-${TRGLANG}.wiki.clean.gz" 
 fi

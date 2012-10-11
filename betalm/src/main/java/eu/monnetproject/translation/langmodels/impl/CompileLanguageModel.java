@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.langmodels.impl;
 
+import eu.monnetproject.translation.langmodels.Counter;
 import eu.monnetproject.translation.langmodels.LossyCounter;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
@@ -33,6 +34,7 @@ import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
 import eu.monnetproject.translation.langmodels.smoothing.AddAlphaSmoothing;
 import eu.monnetproject.translation.langmodels.smoothing.GoodTuringSmoothing;
 import eu.monnetproject.translation.langmodels.smoothing.KneserNeySmoothing;
+import eu.monnetproject.translation.langmodels.smoothing.LossyCounterWithHistory;
 import eu.monnetproject.translation.langmodels.smoothing.NGramHistories;
 import eu.monnetproject.translation.langmodels.smoothing.NGramScorer;
 import eu.monnetproject.translation.langmodels.smoothing.SimpleNGramScorer;
@@ -73,8 +75,10 @@ public class CompileLanguageModel {
         KNESER_NEY
     };
 
-    public NGramCountSet doCount(int N, IntegerizedCorpusReader reader, SourceType type) throws IOException {
-        final LossyCounter counter = new LossyCounter(N);
+    protected NGramHistories histories;
+    
+    public NGramCountSet doCount(int N, IntegerizedCorpusReader reader, SourceType type, Smoothing smoothing) throws IOException {
+        final Counter counter = smoothing == Smoothing.KNESER_NEY ? new LossyCounterWithHistory(N) : new LossyCounter(N);
         long read = 0;
         boolean inDoc = type != SourceType.INTERLEAVED_USE_SECOND;
         while (reader.hasNext()) {
@@ -98,9 +102,11 @@ public class CompileLanguageModel {
                     System.err.print(".");
                 }
             } catch (EOFException x) {
-                System.err.println("EOF");
                 break;
             }
+        }
+        if(counter instanceof LossyCounterWithHistory) {
+            histories = ((LossyCounterWithHistory)counter).histories();
         }
         return counter.counts();
     }
@@ -142,7 +148,9 @@ public class CompileLanguageModel {
         out.close();
     }
 
-    protected int[][] countOfCounts(WeightedNGramCountSet countset) {
+    protected static int[][] countOfCounts(WeightedNGramCountSet countset) {
+        System.err.print("Counting counts");
+        int n = 0;
         final int[][] CoC = new int[countset.N()][];
         for (int i = 0; i < countset.N(); i++) {
             final Object2DoubleMap<NGram> ngramCount = countset.ngramCount(i + 1);
@@ -153,13 +161,17 @@ public class CompileLanguageModel {
                     counts.add(0);
                 }
                 counts.set(ci, counts.get(ci) + 1);
+                if (++n % 100000 == 0) {
+                    System.err.print(".");
+                }
             }
             CoC[i] = counts.toIntArray();
         }
+        System.err.println();
         return CoC;
     }
 
-    protected NGramScorer getScorer(Smoothing smoothing, WeightedNGramCountSet countset, NGramHistories histories) {
+    protected static NGramScorer getScorer(Smoothing smoothing, WeightedNGramCountSet countset, NGramHistories histories) {
         switch (smoothing) {
             case NONE:
                 return new SimpleNGramScorer();
@@ -186,7 +198,8 @@ public class CompileLanguageModel {
                 final int[][] CoC = countOfCounts(countset);
                 return new KneserNeySmoothing(histories, CoC, countset.N());
             }
-            default: throw new IllegalArgumentException();
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
@@ -275,17 +288,21 @@ public class CompileLanguageModel {
             betaSimFunction = null;
         }
 
-        System.err.println("Counting corpus");
+        System.err.print("Counting corpus");
         final WeightedNGramCountSet countSet;
         if (betaMethod == null) {
-            countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType).asWeightedSet();
+            countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType,smoothing).asWeightedSet();
         } else {
-            countSet = ((CompileBetaModel) compiler).doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType, betaSimFunction);
+            countSet = ((CompileBetaModel) compiler).doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType, betaSimFunction, smoothing);
         }
+        
         System.err.print("Loading word map:");
         final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
-        System.err.println("Writing model");
-        compiler.writeModel(out, wordMap, countSet, new SimpleNGramScorer());
+        
+        final NGramScorer scorer = getScorer(smoothing, countSet, compiler.histories);
+        
+        System.err.print("Writing model");
+        compiler.writeModel(out, wordMap, countSet, scorer);
         out.flush();
         out.close();
     }

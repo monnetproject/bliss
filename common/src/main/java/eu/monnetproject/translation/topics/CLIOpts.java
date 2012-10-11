@@ -41,7 +41,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
-import org.hamcrest.Description;
 
 /**
  *
@@ -121,7 +120,7 @@ public class CLIOpts {
     }
 
     public File roFile(String name, String description, File defaultValue) {
-        final Argument arg = new Argument(name, null, description, true);
+        final Argument arg = new Argument(name, name, description, true);
         argObjs.add(arg);
         if (args.isEmpty()) {
             return defaultValue;
@@ -257,7 +256,7 @@ public class CLIOpts {
     }
 
     public double doubleValue(String name, double defaultValue, String description) {
-        final Argument arg = new Argument(name, null, description, false);
+        final Argument arg = new Argument(name, name, description, true);
         argObjs.add(arg);
         if (args.isEmpty()) {
             return defaultValue;

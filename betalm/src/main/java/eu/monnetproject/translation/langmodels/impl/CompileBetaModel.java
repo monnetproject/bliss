@@ -27,7 +27,11 @@
 package eu.monnetproject.translation.langmodels.impl;
 
 import eu.monnetproject.translation.langmodels.LossyWeightedCounter;
+import eu.monnetproject.translation.langmodels.WeightedCounter;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.langmodels.smoothing.CounterWithHistory;
+import eu.monnetproject.translation.langmodels.smoothing.LossyCounterWithHistory;
+import eu.monnetproject.translation.langmodels.smoothing.LossyWeightedCounterWithHistory;
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.sim.BetaSimFunction;
 import java.io.IOException;
@@ -39,8 +43,8 @@ import java.util.Arrays;
  */
 public class CompileBetaModel extends CompileLanguageModel {
     
-    public WeightedNGramCountSet doCount(int N, IntegerizedCorpusReader reader, CompileLanguageModel.SourceType type, BetaSimFunction beta) throws IOException {
-        final LossyWeightedCounter counter = new LossyWeightedCounter(N);
+    public WeightedNGramCountSet doCount(int N, IntegerizedCorpusReader reader, CompileLanguageModel.SourceType type, BetaSimFunction beta, Smoothing smoothing) throws IOException {
+        final WeightedCounter counter = smoothing == Smoothing.KNESER_NEY ? new LossyWeightedCounterWithHistory(N) : new LossyWeightedCounter(N);
         long read = 0;
         boolean inDoc = type != CompileLanguageModel.SourceType.INTERLEAVED_USE_SECOND;
         while (reader.nextDocument()) {
@@ -65,6 +69,9 @@ public class CompileBetaModel extends CompileLanguageModel {
                     System.err.print(".");
                 }
             }
+        }
+        if(counter instanceof CounterWithHistory) {
+            histories = ((CounterWithHistory)counter).histories();
         }
         return counter.counts();
     }

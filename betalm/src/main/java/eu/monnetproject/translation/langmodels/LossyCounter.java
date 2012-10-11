@@ -82,11 +82,11 @@ public class LossyCounter implements Counter {
             } else {
                 ngcs.put(ngram, 1);
             }
-            
+
             if (i > 1) {
-                final Object2IntMap<NGram> hcs = nGramCountSet.historyCount(i-1);
+                final Object2IntMap<NGram> hcs = nGramCountSet.historyCount(i - 1);
                 final NGram history = ngram.history();
-                if(hcs.containsKey(history)) { 
+                if (hcs.containsKey(history)) {
                     hcs.put(history, hcs.getInt(history) + 1);
                 } else {
                     hcs.put(history, 1);
@@ -112,10 +112,11 @@ public class LossyCounter implements Counter {
                 while (iter.hasNext()) {
                     final Object2IntMap.Entry<NGram> entry = iter.next();
                     if (entry.getValue() < b) {
+                        final NGram key = entry.getKey();
                         nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();
-                        if(i != N) {
-                            nGramCountSet.ngramCount(i).remove(entry.getKey());
+                        if (i != N) {
+                            nGramCountSet.historyCount(i).remove(key);
                         }
                     }
                 }

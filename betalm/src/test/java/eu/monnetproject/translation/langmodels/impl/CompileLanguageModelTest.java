@@ -99,7 +99,7 @@ public class CompileLanguageModelTest {
         expResult.historyCount(1).put(new NGram(new int[]{1}), 3);
         expResult.historyCount(1).put(new NGram(new int[]{2}), 1);
         expResult.historyCount(1).put(new NGram(new int[]{3}), 1);
-        NGramCountSet result = instance.doCount(N, reader, type);
+        NGramCountSet result = instance.doCount(N, reader, type, CompileLanguageModel.Smoothing.NONE);
         for (int i = 1; i <= N; i++) {
             final Object2IntMap<NGram> ngramExp = expResult.ngramCount(i);
             final Object2IntMap<NGram> ngramRes = result.ngramCount(i);

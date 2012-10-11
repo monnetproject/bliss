@@ -1,5 +1,4 @@
-/**
- * *******************************************************************************
+/*********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,12 +25,12 @@
  */
 package eu.monnetproject.translation.langmodels.smoothing;
 
-import eu.monnetproject.translation.langmodels.Counter;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCarousel;
-import eu.monnetproject.translation.langmodels.NGramCountSet;
-import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import eu.monnetproject.translation.langmodels.WeightedCounter;
+import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.langmodels.WeightedNGramCountSetImpl;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
@@ -40,13 +39,13 @@ import java.util.Random;
  *
  * @author John McCrae
  */
-public class LossyCounterWithHistory implements Counter, CounterWithHistory {
-
-    private final int N, H;
+public class LossyWeightedCounterWithHistory implements WeightedCounter, CounterWithHistory {
+private final int N, H;
     private final NGramCarousel carousel;
-    private final NGramCountSetImpl nGramCountSet;
+    private final WeightedNGramCountSetImpl nGramCountSet;
     private final NGramHistories histories;
     private int b;
+    private double bStep = 1.0;
     /**
      * Number of tokens read
      */
@@ -61,13 +60,13 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
      * @param H The largest history to store
      */
     @SuppressWarnings("unchecked")
-    public LossyCounterWithHistory(int N, int H) {
+    public LossyWeightedCounterWithHistory(int N, int H) {
         this.N = N;
         this.H = H;
         this.b = 1;
         this.p = 0;
         this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new NGramCountSetImpl(N);
+        this.nGramCountSet = new WeightedNGramCountSetImpl(N);
         this.histories = new NGramHistoriesImpl(N);
     }
 
@@ -77,7 +76,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
      * @param N The largest n-gram to count
      * @param H The largest history to store
      */
-    public LossyCounterWithHistory(int N) {
+    public LossyWeightedCounterWithHistory(int N) {
         this(N, 3);
     }
 
@@ -87,7 +86,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
     }
 
     @Override
-    public void offer(int w) {
+    public void offer(int w, double v) {
         carousel.offer(w);
         for (int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
@@ -103,10 +102,10 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                 future = null;
                 historySet = null;
             }
-            final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            nGramCountSet.inc(i);
+            final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
+            nGramCountSet.add(i,v);
             if (ngcs.containsKey(ngram)) {
-                final int count = ngcs.getInt(ngram);
+                final int count = (int)Math.ceil(ngcs.getDouble(ngram));
                 if (i > 1) {
                     if (count < H) {
                         final double[] h = historySet.get(history);
@@ -120,7 +119,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                         historySet.get(future)[2 * H - 1]++;
                     }
                 }
-                ngcs.put(ngram, count + 1);
+                ngcs.put(ngram, ngcs.getDouble(ngram) + v);
             } else {
                 if (i > 1) {
                     if (!historySet.containsKey(history)) {
@@ -132,19 +131,21 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                     historySet.get(history)[0]++;
                     historySet.get(future)[H]++;
                 }
-                ngcs.put(ngram, 1);
+                ngcs.put(ngram, v);
             }
 
             if (i > 1) {
-                final Object2IntMap<NGram> hcs = nGramCountSet.historyCount(i - 1);
+                final Object2DoubleMap<NGram> hcs = nGramCountSet.historyCount(i - 1);
                 if (hcs.containsKey(history)) {
-                    hcs.put(history, hcs.getInt(history) + 1);
+                    hcs.put(history, hcs.getDouble(history) + v);
                 } else {
-                    hcs.put(history, 1);
+                    hcs.put(history, v);
                 }
             }
         }
         p++;
+        bStep *= (double) (p - 1) / (double) p;
+        bStep += v / p;
         if (p % 1000 == 0 && memoryCritical()) {
             prune();
         }
@@ -157,14 +158,14 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
 
     protected void prune() {
         do {
-            b++;
+            final double thresh = bStep * b;
             for (int i = 1; i <= N; i++) {
-                final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
+                final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();
                 while (iter.hasNext()) {
-                    final Object2IntMap.Entry<NGram> entry = iter.next();
-                    if (entry.getValue() < b) {
+                    final Object2DoubleMap.Entry<NGram> entry = iter.next();
+                    if (entry.getValue() < thresh) {
                         final NGram key = entry.getKey();
-                        nGramCountSet.sub(i, entry.getIntValue());
+                        nGramCountSet.sub(i, entry.getDoubleValue());
                         iter.remove();
                         histories.histories(key.ngram.length).remove(key);
                         if (i != N) {
@@ -183,7 +184,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
     }
 
     @Override
-    public NGramCountSet counts() {
+    public WeightedNGramCountSet counts() {
         return nGramCountSet;
     }
 

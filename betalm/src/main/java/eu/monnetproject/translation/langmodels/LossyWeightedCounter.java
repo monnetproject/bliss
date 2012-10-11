@@ -77,12 +77,22 @@ public class LossyWeightedCounter implements WeightedCounter {
         for (int i = 1; i <= carousel.maxNGram(); i++) {
             final NGram ngram = carousel.ngram(i);
             final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
+            nGramCountSet.add(i, v);
             if (ngcs.containsKey(ngram)) {
                 ngcs.put(ngram, ngcs.getDouble(ngram) + v);
             } else {
                 ngcs.put(ngram, v);
             }
-            nGramCountSet.add(i, v);
+
+            if (i > 1) {
+                final Object2DoubleMap<NGram> hcs = nGramCountSet.historyCount(i - 1);
+                final NGram history = ngram.history();
+                if (hcs.containsKey(history)) {
+                    hcs.put(history, hcs.getDouble(history) + v);
+                } else {
+                    hcs.put(history, v);
+                }
+            }
         }
         p++;
         bStep *= (double) (p - 1) / (double) p;
@@ -106,8 +116,12 @@ public class LossyWeightedCounter implements WeightedCounter {
                 while (iter.hasNext()) {
                     final Object2DoubleMap.Entry<NGram> entry = iter.next();
                     if (entry.getValue() < thresh) {
-                        iter.remove();
+                        final NGram key = entry.getKey();
                         nGramCountSet.sub(i, entry.getDoubleValue());
+                        iter.remove();
+                        if (i != N) {
+                            nGramCountSet.historyCount(i).remove(key);
+                        }
                     }
                 }
             }
