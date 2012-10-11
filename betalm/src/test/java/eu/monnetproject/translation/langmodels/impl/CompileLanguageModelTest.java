@@ -96,6 +96,9 @@ public class CompileLanguageModelTest {
         expResult.inc(2);
         expResult.inc(2);
         expResult.inc(2);
+        expResult.historyCount(1).put(new NGram(new int[]{1}), 3);
+        expResult.historyCount(1).put(new NGram(new int[]{2}), 1);
+        expResult.historyCount(1).put(new NGram(new int[]{3}), 1);
         NGramCountSet result = instance.doCount(N, reader, type);
         for (int i = 1; i <= N; i++) {
             final Object2IntMap<NGram> ngramExp = expResult.ngramCount(i);
@@ -106,6 +109,18 @@ public class CompileLanguageModelTest {
                 final Entry<NGram> expEntry = expIter.next();
                 final Entry<NGram> nextEntry = resIter.next();
                 assertEquals(expEntry, nextEntry);
+            }
+            if (i != N) {
+                final Object2IntMap<NGram> histExp = expResult.historyCount(i);
+                final Object2IntMap<NGram> histRes = result.historyCount(i);
+                final ObjectIterator<Entry<NGram>> expHistIter = histExp.object2IntEntrySet().iterator();
+                final ObjectIterator<Entry<NGram>> resHistIter = histRes.object2IntEntrySet().iterator();
+                while (expHistIter.hasNext()) {
+                    final Entry<NGram> expEntry = expHistIter.next();
+                    final Entry<NGram> nextEntry = resHistIter.next();
+                    assertEquals(expEntry, nextEntry);
+                }
+
             }
             assertFalse(resIter.hasNext());
         }
@@ -119,12 +134,12 @@ public class CompileLanguageModelTest {
         System.out.println("writeModel");
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(baos);
-        String[] invWordMap = new String[] { null,"a","b","c","d" };
+        String[] invWordMap = new String[]{null, "a", "b", "c", "d"};
 //        WordMap wordMap = new WordMap();
 //        wordMap.offer("a");
-  //      wordMap.offer("b");
-    //    wordMap.offer("c");
-      //  wordMap.offer("d");
+        //      wordMap.offer("b");
+        //    wordMap.offer("c");
+        //  wordMap.offer("d");
         int N = 2;
         NGramCountSet countSet = new NGramCountSetImpl(N);
         countSet.ngramCount(1).put(new NGram(new int[]{1}), 4);
@@ -150,6 +165,9 @@ public class CompileLanguageModelTest {
         countSet.inc(2);
         countSet.inc(2);
         countSet.inc(2);
+        countSet.historyCount(1).put(new NGram(new int[]{1}), 3);
+        countSet.historyCount(1).put(new NGram(new int[]{2}), 1);
+        countSet.historyCount(1).put(new NGram(new int[]{3}), 1);
         CompileLanguageModel instance = new CompileLanguageModel();
         instance.writeModel(out, invWordMap, countSet.asWeightedSet(), new SimpleNGramScorer());
         final String ls = System.getProperty("line.separator");
@@ -161,14 +179,14 @@ public class CompileLanguageModelTest {
                 + "-0.6532125137753437\tb" + ls
                 + "-0.9542425094393249\td" + ls
                 + "-0.6532125137753437\tc" + ls
-                + "-0.35218251811136253\ta" + ls 
+                + "-0.35218251811136253\ta" + ls
                 + ls
                 + "\\2-grams:" + ls
                 + "0.0\tb c" + ls
                 + "-0.47712125471966244\ta b" + ls
                 + "-0.47712125471966244\ta a" + ls
                 + "0.0\tc d" + ls
-                + "-0.47712125471966244\ta c" + ls 
+                + "-0.47712125471966244\ta c" + ls
                 + ls
                 + "\\end\\" + ls;
         assertEquals(expResult, new String(baos.toByteArray()));

@@ -33,8 +33,6 @@ import eu.monnetproject.translation.langmodels.NGramCountSet;
 import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
 
@@ -136,6 +134,15 @@ public class LossyCounterWithHistory implements Counter {
                 }
                 ngcs.put(ngram, 1);
             }
+            
+            if (i > 1) {
+                final Object2IntMap<NGram> hcs = nGramCountSet.historyCount(i-1);
+                if(hcs.containsKey(history)) { 
+                    hcs.put(history, hcs.getInt(history) + 1);
+                } else {
+                    hcs.put(history, 1);
+                }
+            }
         }
         p++;
         if (p % 1000 == 0 && memoryCritical()) {
@@ -159,6 +166,9 @@ public class LossyCounterWithHistory implements Counter {
                         nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();
                         histories.histories(entry.getKey().ngram.length).remove(entry.getKey());
+                        if(i != N) {
+                            nGramCountSet.historyCount(i).remove(entry.getKey());
+                        }
                     }
                 }
             }

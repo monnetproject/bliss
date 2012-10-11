@@ -48,6 +48,13 @@ public interface NGramCountSet {
     Object2IntMap<NGram> ngramCount(int n);
     
     /**
+     * The counts of n-gram
+     * @param n The length of n-grams
+     * @return A map giving an integer count for each n-gram
+     */
+    Object2IntMap<NGram> historyCount(int n);
+    
+    /**
      * The total value of all n-gram
      * @param n The length of n-grams
      * @return Sum of all n-gram counts

@@ -1,5 +1,4 @@
-/**
- * *******************************************************************************
+/*********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +25,43 @@
  */
 package eu.monnetproject.translation.langmodels;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap.Entry;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 /**
- * The obvious method for counting: never throw away anything, never make an
- * error.
  *
  * @author John McCrae
  */
-public class ExhaustiveCounter implements Counter {
-
+public class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
     private final int N;
-    private final NGramCarousel carousel;
-    private final NGramCountSetImpl nGramCountSet;
+    private final Object2DoubleOpenHashMap<NGram>[] counts;
+    private final Object2DoubleOpenHashMap<NGram>[] historyCounts;
+    private final double[] sums;
 
-    public ExhaustiveCounter(int N) {
+    @SuppressWarnings(value = "unchecked")
+    public WeightedNGramCountSetImpl(int N) {
         this.N = N;
-        this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new NGramCountSetImpl(N);
+        counts = new Object2DoubleOpenHashMap[N];
+        historyCounts = new Object2DoubleOpenHashMap[N - 1];
+        for (int i = 0; i < N; i++) {
+            counts[i] = new Object2DoubleOpenHashMap<NGram>();
+            if (i > 0) {
+                historyCounts[i - 1] = new Object2DoubleOpenHashMap<NGram>();
+            }
+        }
+        sums = new double[N];
+    }
+
+    @Override
+    public Object2DoubleMap<NGram> ngramCount(int n) {
+        return counts[n - 1];
+    }
+
+    @Override
+    public Object2DoubleMap<NGram> historyCount(int n) {
+        return historyCounts[n - 1];
     }
 
     @Override
@@ -52,36 +70,27 @@ public class ExhaustiveCounter implements Counter {
     }
 
     @Override
-    public void offer(int w) {
-        carousel.offer(w);
-        for (int i = 1; i <= carousel.maxNGram(); i++) {
-            final NGram ngram = carousel.ngram(i);
-            final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            nGramCountSet.inc(i);
-            if (ngcs.containsKey(ngram)) {
-                ngcs.put(ngram, ngcs.getInt(ngram) + 1);
-            } else {
-                ngcs.put(ngram, 1);
-            }
-            if (i > 1) {
-                final Object2IntMap<NGram> hcs = nGramCountSet.historyCount(i-1);
-                final NGram history = ngram.history();
-                if(hcs.containsKey(history)) { 
-                    hcs.put(history, hcs.getInt(history) + 1);
-                } else {
-                    hcs.put(history, 1);
-                }
-            }
+    public double sum(NGram history) {
+        if (history.ngram.length == 0) {
+            return sums[0];
+        } else {
+            return historyCounts[history.ngram.length-1].getDouble(history);
         }
     }
 
     @Override
-    public void docEnd() {
-        carousel.reset();
+    public double total(int n) {
+        return sums[n - 1];
     }
 
     @Override
-    public NGramCountSet counts() {
-        return nGramCountSet;
+    public void add(int n, double v) {
+        sums[n - 1] += v;
     }
+
+    @Override
+    public void sub(int n, double v) {
+        sums[n - 1] -= v;
+    }
+
 }

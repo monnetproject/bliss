@@ -30,6 +30,10 @@ import eu.monnetproject.translation.langmodels.LossyCounter;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.langmodels.smoothing.AddAlphaSmoothing;
+import eu.monnetproject.translation.langmodels.smoothing.GoodTuringSmoothing;
+import eu.monnetproject.translation.langmodels.smoothing.KneserNeySmoothing;
+import eu.monnetproject.translation.langmodels.smoothing.NGramHistories;
 import eu.monnetproject.translation.langmodels.smoothing.NGramScorer;
 import eu.monnetproject.translation.langmodels.smoothing.SimpleNGramScorer;
 import eu.monnetproject.translation.topics.CLIOpts;
@@ -38,14 +42,13 @@ import eu.monnetproject.translation.topics.WordMap;
 import eu.monnetproject.translation.topics.sim.BetaLMImpl;
 import eu.monnetproject.translation.topics.sim.BetaSimFunction;
 import eu.monnetproject.translation.topics.sim.Metrics;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -60,6 +63,14 @@ public class CompileLanguageModel {
         SIMPLE,
         INTERLEAVED_USE_FIRST,
         INTERLEAVED_USE_SECOND
+    };
+
+    public enum Smoothing {
+
+        NONE,
+        ADD_ALPHA,
+        GOOD_TURING,
+        KNESER_NEY
     };
 
     public NGramCountSet doCount(int N, IntegerizedCorpusReader reader, SourceType type) throws IOException {
@@ -113,15 +124,15 @@ public class CompileLanguageModel {
                         out.print(" ");
                     }
                 }
-                if(scores.length > 1) {
+                if (scores.length > 1) {
                     out.print("\t");
                     out.print(scores[1]);
                 }
                 out.println();
-                if(++n % 1000 == 0) {
+                if (++n % 10000 == 0) {
                     System.err.print(".");
                 }
-                
+
             }
             System.err.println();
             out.println();
@@ -131,12 +142,52 @@ public class CompileLanguageModel {
         out.close();
     }
 
+    protected int[][] countOfCounts(WeightedNGramCountSet countset) {
+        final int[][] CoC = new int[countset.N()][];
+        for (int i = 0; i < countset.N(); i++) {
+            final Object2DoubleMap<NGram> ngramCount = countset.ngramCount(i + 1);
+            final IntArrayList counts = new IntArrayList();
+            for (Object2DoubleMap.Entry<NGram> e : ngramCount.object2DoubleEntrySet()) {
+                final int ci = (int) Math.ceil(e.getDoubleValue());
+                while (counts.size() <= ci) {
+                    counts.add(0);
+                }
+                counts.set(ci, counts.get(ci) + 1);
+            }
+            CoC[i] = counts.toIntArray();
+        }
+        return CoC;
+    }
 
-    private static void fail(String message) {
-        System.err.println(message);
-        System.err.println();
-        System.err.println("Usage:");
-        System.err.println("\tmvn exec:java -Dexec.MainClass=\"" + CompileLanguageModel.class.getName() + "\" -Dexec.args=\"[-t sourceType] [-b betaFunction -f queryFile] [-s selectivity] in N wordMap out\"");
+    protected NGramScorer getScorer(Smoothing smoothing, WeightedNGramCountSet countset, NGramHistories histories) {
+        switch (smoothing) {
+            case NONE:
+                return new SimpleNGramScorer();
+            case ADD_ALPHA: {
+                final int[] v = new int[countset.N()];
+                final double[] C = new double[countset.N()];
+                for (int i = 1; i <= countset.N(); i++) {
+                    v[i - 1] = countset.ngramCount(i).size();
+                    C[i - 1] = countset.total(i);
+                }
+                return new AddAlphaSmoothing(v, C);
+            }
+            case GOOD_TURING: {
+                final int[] v = new int[countset.N()];
+                final double[] C = new double[countset.N()];
+                final int[][] CoC = countOfCounts(countset);
+                for (int i = 1; i <= countset.N(); i++) {
+                    v[i - 1] = countset.ngramCount(i).size();
+                    C[i - 1] = countset.total(i);
+                }
+                return new GoodTuringSmoothing(C, CoC, v);
+            }
+            case KNESER_NEY: {
+                final int[][] CoC = countOfCounts(countset);
+                return new KneserNeySmoothing(histories, CoC, countset.N());
+            }
+            default: throw new IllegalArgumentException();
+        }
     }
 
     private static BetaSimFunction betaSimFunction(BetaLMImpl.Method method, SparseArray query, PrecomputedValues precomp) {
@@ -177,6 +228,8 @@ public class CompileLanguageModel {
         }
         final BetaLMImpl.Method betaMethod = opts.enumOptional("b", BetaLMImpl.Method.class, null, betalmString.toString());
 
+        final Smoothing smoothing = opts.enumOptional("smooth", Smoothing.class, Smoothing.NONE, "The type of smoothing: NONE, ADD_ALPHA, GOOD_TURING, KNESER_NEY");
+
         final File queryFile = opts.roFile("f", "The query file (ontology)", null);
 
         final double smoothness = opts.doubleValue("s", 1.0, "The smoothing parameter");
@@ -198,9 +251,6 @@ public class CompileLanguageModel {
         final CompileLanguageModel compiler = betaMethod == null
                 ? new CompileLanguageModel() : new CompileBetaModel();
 
-        if (queryFile != null && (!queryFile.exists() || !queryFile.canRead())) {
-            fail("Cannot read query file");
-        }
         final BetaSimFunction betaSimFunction;
         if (betaMethod != null) {
             final PrecomputedValues precomp;
@@ -211,7 +261,8 @@ public class CompileLanguageModel {
                 precomp = null;
             }
             if (queryFile == null) {
-                fail("BetaLM does not work without a query");
+                System.err.println("BetaLM needs a query file");
+                return;
             }
             final SparseArray binQuery = SparseArray.fromBinary(queryFile, Integer.MAX_VALUE);
             if (smoothness == 1.0) {
@@ -224,7 +275,7 @@ public class CompileLanguageModel {
             betaSimFunction = null;
         }
 
-        System.err.println("Couting corpus");
+        System.err.println("Counting corpus");
         final WeightedNGramCountSet countSet;
         if (betaMethod == null) {
             countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType).asWeightedSet();

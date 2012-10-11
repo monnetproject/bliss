@@ -41,13 +41,18 @@ public class NGramCountSetImpl implements NGramCountSet {
 
     private final int N;
     private final Object2IntOpenHashMap<NGram>[] counts;
+    private final Object2IntOpenHashMap<NGram>[] historyCounts;
     private final long[] sums;
 
     public NGramCountSetImpl(int N) {
         this.N = N;
         counts = new Object2IntOpenHashMap[N];
+        historyCounts = new Object2IntOpenHashMap[N - 1];
         for (int i = 0; i < N; i++) {
             counts[i] = new Object2IntOpenHashMap<NGram>();
+            if (i > 0) {
+                historyCounts[i - 1] = new Object2IntOpenHashMap<NGram>();
+            }
         }
         sums = new long[N];
     }
@@ -58,6 +63,11 @@ public class NGramCountSetImpl implements NGramCountSet {
     }
 
     @Override
+    public Object2IntMap<NGram> historyCount(int n) {
+        return historyCounts[n - 1];
+    }
+    
+    @Override
     public int N() {
         return N;
     }
@@ -67,7 +77,8 @@ public class NGramCountSetImpl implements NGramCountSet {
         if (history.ngram.length == 0) {
             return sums[0];
         } else {
-            long s = 0;
+            return historyCounts[history.ngram.length-1].getInt(history);
+            /*long s = 0;
             final Object2IntOpenHashMap<NGram> futureCounts = counts[history.ngram.length];
             final ObjectIterator<Object2IntMap.Entry<NGram>> futureIter = futureCounts.object2IntEntrySet().iterator();
             while (futureIter.hasNext()) {
@@ -76,7 +87,7 @@ public class NGramCountSetImpl implements NGramCountSet {
                     s += e.getIntValue();
                 }
             }
-            return s;
+            return s;*/
         }
     }
 
@@ -113,8 +124,20 @@ public class NGramCountSetImpl implements NGramCountSet {
         }
 
         @Override
+        public Object2DoubleMap<NGram> historyCount(int n) {
+            return new Object2IntAsDoubleMap<NGram>(historyCounts[n-1]);
+        }
+        
+        
+
+        @Override
         public double sum(NGram history) {
             return NGramCountSetImpl.this.sum(history);
+        }
+
+        @Override
+        public double total(int n) {
+            return sums[n - 1];
         }
 
         @Override

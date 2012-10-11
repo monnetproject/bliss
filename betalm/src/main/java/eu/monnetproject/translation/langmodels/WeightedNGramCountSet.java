@@ -47,12 +47,28 @@ public interface WeightedNGramCountSet {
      */
     Object2DoubleMap<NGram> ngramCount(int n);
     
+    
+    /**
+     * The history count given as 
+     * {@code historyCount(w_1...w_n) = Sum_w(w_1...w_n w)}
+     * @param n The length of n-grams
+     * @return A map giving an integer count for each history n-gram
+     */
+    Object2DoubleMap<NGram> historyCount(int n);
+    
     /**
      * The total value of all n-grams by history
      * @param history The previous n-gram
      * @return Sum of all n-gram counts
      */
     double sum(NGram history);
+    
+    /**
+     * The sum of all values of length n
+     * @param n The length of the n-grams
+     * @return the sum
+     */
+    double total(int n);
     
     /**
      * Increment the total count of n-grams
