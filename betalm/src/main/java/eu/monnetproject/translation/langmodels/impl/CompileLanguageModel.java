@@ -99,16 +99,11 @@ public class CompileLanguageModel {
         }
         out.println();
         for (int i = 1; i <= countSet.N(); i++) {
-            double l = countSet.sum(i);
             out.println("\\" + i + "-grams:");
             for (Object2DoubleMap.Entry<NGram> entry : countSet.ngramCount(i).object2DoubleEntrySet()) {
+                double l = countSet.sum(entry.getKey().history());
                 double p = entry.getDoubleValue();
-                if(i == 1) {
-                    p = Math.log10(p / l);
-                } else {
-                    double p2 = countSet.ngramCount(i-1).getDouble(entry.getKey().history());
-                    p = Math.log10(p / p2);
-                }
+                p = Math.log10(p / l);
                 out.print(p + "\t");
                 final int[] ng = entry.getKey().ngram;
                 for (int j = 0; j < ng.length; j++) {
@@ -125,7 +120,7 @@ public class CompileLanguageModel {
         out.flush();
         out.close();
     }
-    
+
     public void writeModel(PrintWriter out, String[] inverseWordMap, WeightedNGramCountSet countSet) {
         out.println("\\data\\");
         for (int i = 1; i <= countSet.N(); i++) {
@@ -133,9 +128,9 @@ public class CompileLanguageModel {
         }
         out.println();
         for (int i = 1; i <= countSet.N(); i++) {
-            double l = countSet.sum(i);
             out.println("\\" + i + "-grams:");
             for (Object2DoubleMap.Entry<NGram> entry : countSet.ngramCount(i).object2DoubleEntrySet()) {
+                double l = countSet.sum(entry.getKey().history());
                 double p = entry.getDoubleValue();
                 p = Math.log10(p / l);
                 out.print(p + "\t");
@@ -197,25 +192,25 @@ public class CompileLanguageModel {
             betalmString.append(method.name()).append(" ");
         }
         final BetaLMImpl.Method betaMethod = opts.enumOptional("b", BetaLMImpl.Method.class, null, betalmString.toString());
-        
+
         final File queryFile = opts.roFile("f", "The query file (ontology)", null);
-        
+
         final double smoothness = opts.doubleValue("s", 1.0, "The smoothing parameter");
-        
+
         final File inFile = opts.roFile("corpus[.gz|.bz2]", "The corpus file");
-        
+
         final int N = opts.nonNegIntValue("N", "The largest n-gram to calculate");
-        
+
         final File wordMapFile = opts.roFile("wordMap", "The word map file");
-        
+
         final int W = opts.nonNegIntValue("W", "The number of distinct tokens in corpus");
 
         final PrintStream out = opts.outFileOrStdout();
-        
-        if(!opts.verify(CompileLanguageModel.class)) {
+
+        if (!opts.verify(CompileLanguageModel.class)) {
             return;
         }
-        
+
         final CompileLanguageModel compiler = betaMethod == null
                 ? new CompileLanguageModel() : new CompileBetaModel();
 

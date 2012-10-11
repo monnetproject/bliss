@@ -27,12 +27,13 @@
 package eu.monnetproject.translation.langmodels.smoothing;
 
 import eu.monnetproject.translation.langmodels.NGram;
+import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
 
 /**
  *
  * @author John McCrae
  */
-public interface Smoothing {
+public interface NGramScorer {
 
     /**
      * Calculate the smoothed scores
@@ -43,5 +44,5 @@ public interface Smoothing {
      * @param historyProb
      * @return 
      */
-    double[] smoothedScores(NGram nGram, double nGramCount, double totalCount, int[] distinctCounts, double historyProb);
+    double[] ngramScores(NGram nGram, WeightedNGramCountSet countSet);
 }

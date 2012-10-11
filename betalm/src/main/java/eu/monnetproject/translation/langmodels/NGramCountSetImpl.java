@@ -29,6 +29,8 @@ package eu.monnetproject.translation.langmodels;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import java.util.Map.Entry;
 
 /**
  * Std NGram count set (implemented by Array of HashMaps)
@@ -61,8 +63,21 @@ public class NGramCountSetImpl implements NGramCountSet {
     }
 
     @Override
-    public long sum(int n) {
-        return sums[n - 1];
+    public long sum(NGram history) {
+        if (history.ngram.length == 0) {
+            return sums[0];
+        } else {
+            long s = 0;
+            final Object2IntOpenHashMap<NGram> futureCounts = counts[history.ngram.length];
+            final ObjectIterator<Object2IntMap.Entry<NGram>> futureIter = futureCounts.object2IntEntrySet().iterator();
+            while (futureIter.hasNext()) {
+                final Object2IntMap.Entry<NGram> e = futureIter.next();
+                if (e.getKey().history().equals(history)) {
+                    s += e.getIntValue();
+                }
+            }
+            return s;
+        }
     }
 
     @Override
@@ -98,8 +113,8 @@ public class NGramCountSetImpl implements NGramCountSet {
         }
 
         @Override
-        public double sum(int n) {
-            return sums[n - 1];
+        public double sum(NGram history) {
+            return NGramCountSetImpl.this.sum(history);
         }
 
         @Override

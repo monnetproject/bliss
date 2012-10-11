@@ -26,16 +26,17 @@
  */
 package eu.monnetproject.translation.langmodels.smoothing;
 
+import eu.monnetproject.translation.langmodels.NGram;
+import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
 import org.apache.commons.math.stat.regression.OLSMultipleLinearRegression;
 
 /**
  *
  * @author John McCrae
  */
-public class GoodTuringSmoothing {
+public class GoodTuringSmoothing implements NGramScorer {
 
-    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob","1e-6"));
-    
+    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob", "1e-6"));
     ///////////////////////////////////////////////////////////////////////////
     //   p(w_n...) = (c + 1) / C_n * f(c+1) / f(c)
     // where
@@ -89,7 +90,7 @@ public class GoodTuringSmoothing {
 
                 double beta = Math.max(1 - sum, 0.0);
 
-                gamma[i-1] = beta / (Math.pow(v[0], i + 1) - v[i]);
+                gamma[i - 1] = beta / (Math.pow(v[0], i + 1) - v[i]);
             }
         }
     }
@@ -99,11 +100,19 @@ public class GoodTuringSmoothing {
     }
 
     public double[] smooth(double c, int n) {
-        final double p = Math.max((c + 1) * f(c + 1, n - 1) / f(c, n - 1) / C[n-1],MIN_PROB);
+        final double p = Math.max((c + 1) * f(c + 1, n - 1) / f(c, n - 1) / C[n - 1], MIN_PROB);
         if (n == gamma.length) {
             return new double[]{p};
         } else {
-            return new double[]{p, gamma[n-1] / p};
+            return new double[]{p, gamma[n - 1] / p};
         }
+    }
+
+    @Override
+    public double[] ngramScores(NGram nGram, WeightedNGramCountSet countSet) {
+        final int n = nGram.ngram.length;
+        final double c = countSet.ngramCount(n).getDouble(nGram);
+        final double l = countSet.sum(nGram.history());
+        return smooth(c, n);
     }
 }

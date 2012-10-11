@@ -52,7 +52,7 @@ public interface NGramCountSet {
      * @param n The length of n-grams
      * @return Sum of all n-gram counts
      */
-    long sum(int n);
+    long sum(NGram history);
     
     /**
      * Increment the total count of n-grams

@@ -60,20 +60,20 @@ public class LossyCounterWithHistoryTest {
         instance.offer(2);
         instance.offer(4);
         instance.offer(3);
-        final Object2ObjectOpenHashMap<NGram, int[]> expHistories = new Object2ObjectOpenHashMap<NGram, int[]>();
-        expHistories.put(ng(1), new int[] { 1,1,0,2,0,0 });
-        expHistories.put(ng(2), new int[] { 3,0,0,1,1,0 });
-        expHistories.put(ng(3), new int[] { 2,0,0,1,1,0 });
-        expHistories.put(ng(4), new int[] { 1,1,0,3,0,0 });
-        final Object2ObjectMap<NGram, int[]> histories = instance.histories();
+        final Object2ObjectOpenHashMap<NGram, double[]> expHistories = new Object2ObjectOpenHashMap<NGram, double[]>();
+        expHistories.put(ng(1), new double[] { 1,1,0,2,0,0 });
+        expHistories.put(ng(2), new double[] { 3,0,0,1,1,0 });
+        expHistories.put(ng(3), new double[] { 2,0,0,1,1,0 });
+        expHistories.put(ng(4), new double[] { 1,1,0,3,0,0 });
+        final Object2ObjectMap<NGram, double[]> histories = instance.histories().histories(1);
         assertEquals(expHistories.size(),histories.size());
-        final ObjectIterator<Entry<NGram, int[]>> iter1 = expHistories.entrySet().iterator();
-        final ObjectIterator<Entry<NGram, int[]>> iter2 = histories.entrySet().iterator();
+        final ObjectIterator<Entry<NGram, double[]>> iter1 = expHistories.entrySet().iterator();
+        final ObjectIterator<Entry<NGram, double[]>> iter2 = histories.entrySet().iterator();
         while(iter1.hasNext()) {
-            final Entry<NGram, int[]> e1 = iter1.next();
-            final Entry<NGram, int[]> e2 = iter2.next();
+            final Entry<NGram, double[]> e1 = iter1.next();
+            final Entry<NGram, double[]> e2 = iter2.next();
             assertEquals(e1.getKey(),e2.getKey());
-            assertArrayEquals(e1.getValue(), e2.getValue());
+            assertArrayEquals(e1.getValue(), e2.getValue(),0.0);
         }
     }
 

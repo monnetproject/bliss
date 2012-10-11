@@ -27,6 +27,7 @@
 package eu.monnetproject.translation.langmodels;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
@@ -130,6 +131,7 @@ public class LossyWeightedCounter implements WeightedCounter {
         private final Object2DoubleOpenHashMap<NGram>[] counts;
         private final double[] sums;
 
+        @SuppressWarnings("unchecked")
         public WeightedNGramCountSetImpl(int N) {
             this.N = N;
             counts = new Object2DoubleOpenHashMap[N];
@@ -150,8 +152,21 @@ public class LossyWeightedCounter implements WeightedCounter {
         }
 
         @Override
-        public double sum(int n) {
-            return sums[n - 1];
+        public double sum(NGram history) {
+            if (history.ngram.length == 0) {
+                return sums[0];
+            } else {
+                double s = 0;
+                final Object2DoubleOpenHashMap<NGram> futureCounts = counts[history.ngram.length + 1];
+                final ObjectIterator<Entry<NGram>> futureIter = futureCounts.object2DoubleEntrySet().iterator();
+                while (futureIter.hasNext()) {
+                    final Object2DoubleMap.Entry<NGram> e = futureIter.next();
+                    if (e.getKey().history().equals(history)) {
+                        s += e.getDoubleValue();
+                    }
+                }
+                return s;
+            }
         }
 
         @Override

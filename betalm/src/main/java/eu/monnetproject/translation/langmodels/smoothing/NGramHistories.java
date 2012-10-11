@@ -24,15 +24,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************************/
-package eu.monnetproject.translation.langmodels;
+package eu.monnetproject.translation.langmodels.smoothing;
 
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import eu.monnetproject.translation.langmodels.NGram;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
 /**
  *
  * @author John McCrae
  */
-public interface WeightedNGramCountSet {
+public interface NGramHistories {
 
     /**
      * The length of the longest n-gram
@@ -40,31 +41,5 @@ public interface WeightedNGramCountSet {
      */
     int N();
     
-    /**
-     * The counts of n-gram
-     * @param n The length of n-grams
-     * @return A map giving an integer count for each n-gram
-     */
-    Object2DoubleMap<NGram> ngramCount(int n);
-    
-    /**
-     * The total value of all n-grams by history
-     * @param history The previous n-gram
-     * @return Sum of all n-gram counts
-     */
-    double sum(NGram history);
-    
-    /**
-     * Increment the total count of n-grams
-     * @param n At length n
-     * @param v The amount to increase the count
-     */
-    void add(int n, double v);
-    
-    /**
-     * Remove a number of counts (due to pruning)
-     * @param n At length n
-     * @param v counts
-     */
-    void sub(int n, double v);
+    Object2ObjectMap<NGram,double[]> histories(int n);
 }

@@ -47,7 +47,7 @@ public class LossyCounterWithHistory implements Counter {
     private final int N, H;
     private final NGramCarousel carousel;
     private final NGramCountSetImpl nGramCountSet;
-    private final Object2ObjectOpenHashMap<NGram, int[]> histories;
+    private final NGramHistories histories;
     private int b;
     /**
      * Number of tokens read
@@ -70,7 +70,7 @@ public class LossyCounterWithHistory implements Counter {
         this.p = 0;
         this.carousel = new NGramCarousel(N);
         this.nGramCountSet = new NGramCountSetImpl(N);
-        this.histories = new Object2ObjectOpenHashMap<NGram, int[]>();
+        this.histories = new NGramHistoriesImpl(N);
     }
 
     /**
@@ -95,12 +95,15 @@ public class LossyCounterWithHistory implements Counter {
             final NGram ngram = carousel.ngram(i);
             final NGram history;
             final NGram future;
+            final Object2ObjectMap<NGram, double[]> historySet;
             if (i > 1) {
                 history = ngram.history();
                 future = ngram.future();
+                historySet = histories.histories(i-1);
             } else {
                 history = null;
                 future = null;
+                historySet = null;
             }
             final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             nGramCountSet.inc(i);
@@ -108,28 +111,28 @@ public class LossyCounterWithHistory implements Counter {
                 final int count = ngcs.getInt(ngram);
                 if (i > 1) {
                     if (count < H) {
-                        final int[] h = histories.get(history);
+                        final double[] h = historySet.get(history);
                         h[count - 1]--;
                         h[count]++;
-                        final int[] f = histories.get(future);
+                        final double[] f = historySet.get(future);
                         f[H + count - 1]--;
                         f[H + count]++;
                     } else {
-                        histories.get(history)[H - 1]++;
-                        histories.get(future)[2*H - 1]++;
+                        historySet.get(history)[H - 1]++;
+                        historySet.get(future)[2*H - 1]++;
                     }
                 }
                 ngcs.put(ngram, count + 1);
             } else {
                 if (i > 1) {
-                    if (!histories.containsKey(history)) {
-                        histories.put(history, new int[2*H]);
+                    if (!historySet.containsKey(history)) {
+                        historySet.put(history, new double[2*H]);
                     }
-                    if (!histories.containsKey(future)) {
-                        histories.put(future, new int[2*H]);
+                    if (!historySet.containsKey(future)) {
+                        historySet.put(future, new double[2*H]);
                     }
-                    histories.get(history)[0]++;
-                    histories.get(future)[H]++;
+                    historySet.get(history)[0]++;
+                    historySet.get(future)[H]++;
                 }
                 ngcs.put(ngram, 1);
             }
@@ -155,7 +158,7 @@ public class LossyCounterWithHistory implements Counter {
                     if (entry.getValue() < b) {
                         nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();
-                        histories.remove(entry.getKey());
+                        histories.histories(entry.getKey().ngram.length).remove(entry.getKey());
                     }
                 }
             }
@@ -173,7 +176,7 @@ public class LossyCounterWithHistory implements Counter {
         return nGramCountSet;
     }
     
-    public Object2ObjectMap<NGram,int[]> histories() {
+    public NGramHistories histories() {
         return histories;
     }
 }
