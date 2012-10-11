@@ -41,9 +41,9 @@ public class AddAlphaSmoothingTest {
         int[] v = { 4,4 };
         double[] C = { 12,11 };
         AddAlphaSmoothing instance = new AddAlphaSmoothing(v, C);
-        assertArrayEquals(new double[] { 0.25, 0.21127 }, instance.smooth(3, 1), 0.01);
-        assertArrayEquals(new double[] { 0.0950 }, instance.smooth(3, 2), 0.01);
-        assertArrayEquals(new double[] { 0.0810 }, instance.smooth(2, 2), 0.01);
+        assertArrayEquals(new double[] { Math.log10(0.25), Math.log10(0.21127) }, instance.smooth(3, 1), 0.01);
+        assertArrayEquals(new double[] { Math.log10(0.0950) }, instance.smooth(3, 2), 0.01);
+        assertArrayEquals(new double[] { Math.log10(0.0810) }, instance.smooth(2, 2), 0.01);
     }
 
 }

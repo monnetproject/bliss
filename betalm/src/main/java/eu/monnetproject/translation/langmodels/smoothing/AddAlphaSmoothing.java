@@ -82,9 +82,9 @@ public class AddAlphaSmoothing implements NGramScorer {
     public double[] smooth(double c, int n) {
             final double p = (c + alpha) * loss[n - 1];
         if (n == gamma.length) {
-            return new double[]{p};
+            return new double[]{Math.log10(p)};
         } else {
-            return new double[]{p, gamma[n] / p};
+            return new double[]{Math.log10(p), Math.log10(gamma[n] / p)};
         }
     }
 }

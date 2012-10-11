@@ -65,7 +65,7 @@ public class KneserNeySmoothing implements NGramScorer {
         final double l = countSet.sum(nGram.history());
         int ci = Math.min((int) Math.ceil(c), d[n].length - 1);
         if (n == N) {
-            return new double[]{(c - d[n][ci]) / l};
+            return new double[]{Math.log10((c - d[n][ci]) / l)};
         } else {
             final double[] history = histories.histories(n).get(nGram);
             assert (history != null);
@@ -84,7 +84,7 @@ public class KneserNeySmoothing implements NGramScorer {
             
             bo /= countSet.sum(nGram);
             
-            return new double [] { p, bo };
+            return new double [] { Math.log10(p), Math.log10(bo) };
         }
     }
 

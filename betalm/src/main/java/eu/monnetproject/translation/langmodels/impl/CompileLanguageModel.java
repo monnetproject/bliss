@@ -30,6 +30,8 @@ import eu.monnetproject.translation.langmodels.LossyCounter;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import eu.monnetproject.translation.langmodels.smoothing.NGramScorer;
+import eu.monnetproject.translation.langmodels.smoothing.SimpleNGramScorer;
 import eu.monnetproject.translation.topics.CLIOpts;
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.WordMap;
@@ -92,7 +94,7 @@ public class CompileLanguageModel {
         return counter.counts();
     }
 
-    public void writeModel(PrintStream out, String[] inverseWordMap, WeightedNGramCountSet countSet) {
+    public void writeModel(PrintStream out, String[] inverseWordMap, WeightedNGramCountSet countSet, NGramScorer scorer) {
         out.println("\\data\\");
         for (int i = 1; i <= countSet.N(); i++) {
             out.println("ngram " + i + "=" + countSet.ngramCount(i).size());
@@ -100,11 +102,10 @@ public class CompileLanguageModel {
         out.println();
         for (int i = 1; i <= countSet.N(); i++) {
             out.println("\\" + i + "-grams:");
+            int n = 0;
             for (Object2DoubleMap.Entry<NGram> entry : countSet.ngramCount(i).object2DoubleEntrySet()) {
-                double l = countSet.sum(entry.getKey().history());
-                double p = entry.getDoubleValue();
-                p = Math.log10(p / l);
-                out.print(p + "\t");
+                final double[] scores = scorer.ngramScores(entry.getKey(), countSet);
+                out.print(scores[0] + "\t");
                 final int[] ng = entry.getKey().ngram;
                 for (int j = 0; j < ng.length; j++) {
                     out.print(inverseWordMap[ng[j]]);
@@ -112,8 +113,17 @@ public class CompileLanguageModel {
                         out.print(" ");
                     }
                 }
+                if(scores.length > 1) {
+                    out.print("\t");
+                    out.print(scores[1]);
+                }
                 out.println();
+                if(++n % 1000 == 0) {
+                    System.err.print(".");
+                }
+                
             }
+            System.err.println();
             out.println();
         }
         out.println("\\end\\");
@@ -121,32 +131,6 @@ public class CompileLanguageModel {
         out.close();
     }
 
-    public void writeModel(PrintWriter out, String[] inverseWordMap, WeightedNGramCountSet countSet) {
-        out.println("\\data\\");
-        for (int i = 1; i <= countSet.N(); i++) {
-            out.println("ngram " + i + "=" + countSet.ngramCount(i).size());
-        }
-        out.println();
-        for (int i = 1; i <= countSet.N(); i++) {
-            out.println("\\" + i + "-grams:");
-            for (Object2DoubleMap.Entry<NGram> entry : countSet.ngramCount(i).object2DoubleEntrySet()) {
-                double l = countSet.sum(entry.getKey().history());
-                double p = entry.getDoubleValue();
-                p = Math.log10(p / l);
-                out.print(p + "\t");
-                final int[] ng = entry.getKey().ngram;
-                for (int j = 0; j < ng.length; j++) {
-                    out.print(inverseWordMap[ng[j]]);
-                    if (j + 1 != ng.length) {
-                        out.print(" ");
-                    }
-                }
-                out.println();
-            }
-            out.println();
-        }
-        out.println("\\end\\");
-    }
 
     private static void fail(String message) {
         System.err.println(message);
@@ -240,7 +224,7 @@ public class CompileLanguageModel {
             betaSimFunction = null;
         }
 
-        System.err.println("Compiling corpus");
+        System.err.println("Couting corpus");
         final WeightedNGramCountSet countSet;
         if (betaMethod == null) {
             countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType).asWeightedSet();
@@ -250,7 +234,7 @@ public class CompileLanguageModel {
         System.err.print("Loading word map:");
         final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
         System.err.println("Writing model");
-        compiler.writeModel(out, wordMap, countSet);
+        compiler.writeModel(out, wordMap, countSet, new SimpleNGramScorer());
         out.flush();
         out.close();
     }

@@ -4,12 +4,15 @@ import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.NGramCountSet;
 import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
 import eu.monnetproject.translation.langmodels.impl.CompileLanguageModel.SourceType;
+import eu.monnetproject.translation.langmodels.smoothing.SimpleNGramScorer;
 import eu.monnetproject.translation.topics.WordMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.junit.After;
@@ -114,8 +117,8 @@ public class CompileLanguageModelTest {
     @Test
     public void testWriteModel() {
         System.out.println("writeModel");
-        final StringWriter sw = new StringWriter();
-        PrintWriter out = new PrintWriter(sw);
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(baos);
         String[] invWordMap = new String[] { null,"a","b","c","d" };
 //        WordMap wordMap = new WordMap();
 //        wordMap.offer("a");
@@ -148,7 +151,7 @@ public class CompileLanguageModelTest {
         countSet.inc(2);
         countSet.inc(2);
         CompileLanguageModel instance = new CompileLanguageModel();
-        instance.writeModel(out, invWordMap, countSet.asWeightedSet());
+        instance.writeModel(out, invWordMap, countSet.asWeightedSet(), new SimpleNGramScorer());
         final String ls = System.getProperty("line.separator");
         final String expResult = "\\data\\" + ls
                 + "ngram 1=4" + ls
@@ -168,7 +171,6 @@ public class CompileLanguageModelTest {
                 + "-0.47712125471966244\ta c" + ls 
                 + ls
                 + "\\end\\" + ls;
-
-        assertEquals(expResult, sw.toString());
+        assertEquals(expResult, new String(baos.toByteArray()));
     }
 }

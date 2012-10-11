@@ -41,6 +41,6 @@ public class SimpleNGramScorer implements NGramScorer {
         final double c = countSet.ngramCount(n).getDouble(nGram);
         final double l = countSet.sum(nGram.history());
 
-        return new double[]{c / l};
+        return new double[]{Math.log10(c / l)};
     }
 }

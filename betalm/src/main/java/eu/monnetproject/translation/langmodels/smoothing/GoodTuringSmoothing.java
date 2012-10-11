@@ -102,9 +102,9 @@ public class GoodTuringSmoothing implements NGramScorer {
     public double[] smooth(double c, int n) {
         final double p = Math.max((c + 1) * f(c + 1, n - 1) / f(c, n - 1) / C[n - 1], MIN_PROB);
         if (n == gamma.length) {
-            return new double[]{p};
+            return new double[]{Math.log10(p)};
         } else {
-            return new double[]{p, gamma[n - 1] / p};
+            return new double[]{Math.log10(p), Math.log10(gamma[n - 1] / p)};
         }
     }
 
