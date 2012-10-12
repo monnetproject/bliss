@@ -32,11 +32,15 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 /**
- *
+ * Smoothing by means of the modified Kneser-Ney method
+ * 
+ * See Koehn: "Statistical Machine Translation", pp. 201--203
+ * 
  * @author John McCrae
  */
 public class KneserNeySmoothing implements NGramScorer {
 
+    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob", "1e-6"));
     private final NGramHistories histories;
     private final double[][] d;
     private final int N;
@@ -51,21 +55,31 @@ public class KneserNeySmoothing implements NGramScorer {
         this.d = new double[CoC.length/*don't snigger*/][D];
         for (int i = 0; i < CoC.length; i++) {
             double y = (double) CoC[i][0] / (double) (CoC[i][0] + 2 * CoC[i][1]);
-            assert (CoC[i].length > D + 1);
+            assert (CoC[i].length > D);
             for (int j = 0; j < D; j++) {
-                d[i][j] = j + 1 - (j + 2) * CoC[i][j + 1] / CoC[i][j];
+                if(CoC[i][j] != 0) {
+                    d[i][j] = j + 1 - (y * (j + 2) * CoC[i][j + 1]) / (double)CoC[i][j];
+                }
             }
         }
     }
 
+    private static double log10(double d) {
+        if(d <= 0 || Double.isNaN(d)) {
+            return Math.log10(MIN_PROB);
+        } else {
+            return Math.log10(d);
+        }
+    }
+    
     @Override
     public double[] ngramScores(NGram nGram, WeightedNGramCountSet countSet) {
         final int n = nGram.ngram.length;
         final double c = countSet.ngramCount(n).getDouble(nGram);
-        final double l = countSet.sum(nGram.history());
-        int ci = Math.min((int) Math.ceil(c), d[n].length - 1);
+        int ci = Math.min((int) Math.ceil(c)-1, d[n-1].length - 1);
         if (n == N) {
-            return new double[]{Math.log10((c - d[n][ci]) / l)};
+            final double l = countSet.sum(nGram.history());
+            return new double[]{log10((c - d[n-1][ci]) / l)};
         } else {
             final double[] history = histories.histories(n).get(nGram);
             assert (history != null);
@@ -74,23 +88,23 @@ public class KneserNeySmoothing implements NGramScorer {
             for (int i = H; i < 2 * H; i++) {
                 p += history[i];
             }
-            p -= d[n][ci];
-            p /= sumHistory(nGram, H);
+            p -= d[n-1][ci];
+            p /= sumHistory(nGram.history(), H);
             
             double bo = 0.0;
-            for(int i = 0; i < d[n].length; i++) {
-                bo += d[n][i] * history[i];
+            for(int i = 0; i < d[n-1].length; i++) {
+                bo += d[n-1][i] * history[i];
             }
             
             bo /= countSet.sum(nGram);
             
-            return new double [] { Math.log10(p), Math.log10(bo) };
+            return new double [] { log10(p), log10(bo) };
         }
     }
 
     private double sumHistory(NGram nGram, int H) {
         double s = 0.0;
-        final ObjectIterator<Entry<NGram, double[]>> iterator = histories.histories(nGram.ngram.length).object2ObjectEntrySet().iterator();
+        final ObjectIterator<Entry<NGram, double[]>> iterator = histories.histories(nGram.ngram.length+1).object2ObjectEntrySet().iterator();
         while (iterator.hasNext()) {
             final Entry<NGram, double[]> e = iterator.next();
             if (e.getKey().future().equals(nGram)) {

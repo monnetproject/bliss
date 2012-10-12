@@ -51,14 +51,15 @@ public class PTBTokenizerTest {
                 + "(and maybe a note). And I'll say I'm gonna test somethings like "
                 + "you're and you've and don't and I'LL, I'M, YOU'RE, DON'T. And some garbage: "
                 + "Gimme, gonna, gotta, 'twas, 'tis, more'n, whaddya, whatcha. "
-                + "Finally,    we   add   some    exageratted    spacing!";
+                + "Finally,    we   add   some    exageratted    spacing! "
+                + "\u00abFrench quotes\u00bb \u201eGerman quotes\u201f";
         PTBTokenizer instance = new PTBTokenizer();
         List<String> expResult = Arrays.asList("So","in","``","this","''","test",",","we","wish","to","check","everything",";","that",
                 "is","in","the","PTB","Guidelines",".","So","...",",","a","question","?","A","statement","!",
                 "(","and","maybe","a","note",")",".","And","I","'ll","say","I","'m","gon","na","test","somethings","like",
                 "you","'re","and","you","'ve","and","do","n't","and","I","'LL",",","I","'M",",","YOU","'RE",",","DO","N'T",".","And","some","garbage",":",
                 "Gim","me",",","gon","na",",","got","ta",",","'t","was",",","'t","is",",","more","'n",",","wha","dd","ya",",","wha","t","cha",".",
-                "Finally",",","we","add","some","exageratted","spacing","!");
+                "Finally",",","we","add","some","exageratted","spacing","!","\u00ab","French","quotes","\u00bb","\u201e","German","quotes","\u201f");
         List<String> result = instance.tokenize(input);
         final Iterator<String> tokIter = result.iterator();
         final Iterator<String> expIter = expResult.iterator();

@@ -67,7 +67,7 @@ public class PTBTokenizer implements Tokenizer {
     public List<String> tokenize(String input) {
         final StringBuilder sb = new StringBuilder(input);
         // Generic Latin Charset rules
-        replaceAll(sb,"^\"","``");
+        replaceAll(sb,"^\"","`` ");
         replaceAll(sb,"(?<=[ \\(\\[\\{\\<])\"","`` ");
         replaceAll(sb,"\\.\\.\\."," ... ");
         replaceAll(sb,"([,;:@#$%&])"," \\1 ");
@@ -101,6 +101,14 @@ public class PTBTokenizer implements Tokenizer {
         replaceAll(sb,"([Ww])anna ","\\1an na ");
         replaceAll(sb,"([Ww])haddya ","\\1ha dd ya ");
         replaceAll(sb,"([Ww])hatcha ","\\1ha t cha ");
+        
+        // Extra Unicode rules
+        replaceAll(sb,"\\s([\\p{Ps}\\p{Pi}])(\\S)"," \\1 \\2");
+        replaceAll(sb,"^([\\p{Ps}\\p{Pi}])(\\S)","\\1 \\2");
+        replaceAll(sb,"\\s([\\p{Ps}\\p{Pi}])$"," \\1");
+        replaceAll(sb,"(\\S)([\\p{Pe}\\p{Pf}\u201f])\\s","\\1 \\2 ");
+        replaceAll(sb,"^([\\p{Pe}\\p{Pf}\u201f])\\s","\\1 ");
+        replaceAll(sb,"(\\S)([\\p{Pe}\\p{Pf}\u201f])$","\\1 \\2");
         
         // Clean up extra
         replaceAll(sb,"\\s{2,}"," ");

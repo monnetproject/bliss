@@ -42,11 +42,16 @@ public class GoodTuringSmoothingTest {
             {0,1,2,1},
             {6,2}
         }, new int[] { 4, 8 });
-        assertArrayEquals(new double[] { Math.log10(0.44444), Math.log10(0.1907) }, instance.smooth(3, 1), 0.01);
-        assertArrayEquals(new double[] { Math.log10(0.52083), Math.log10(0.1627) }, instance.smooth(4, 1),0.01);
-        assertArrayEquals(new double[] { Math.log10(0.374), Math.log10(0.2260) }, instance.smooth(2, 1),0.01);
-        assertArrayEquals(new double[] { Math.log10(1e-6) }, instance.smooth(2, 2),0.01);
-        assertArrayEquals(new double[] { Math.log10(0.07954) }, instance.smooth(1, 2),0.01);
+        System.out.println(instance.smooth(3, 1)[0] +" "+ instance.smooth(3, 1)[1]);
+        System.out.println(instance.smooth(4, 1)[0] +" "+ instance.smooth(4, 1)[1]);
+        System.out.println(instance.smooth(2, 1)[0] +" "+ instance.smooth(2, 1)[1]);
+        System.out.println(instance.smooth(2, 2)[0]);
+        System.out.println(instance.smooth(1, 2)[0]);
+        assertArrayEquals(new double[] { -0.6913213504586012, -0.810024305687282 }, instance.smooth(3, 1), 0.01);
+        assertArrayEquals(new double[] { -0.7602646410189646, -0.7410810151269186 }, instance.smooth(4, 1),0.01);
+        assertArrayEquals(new double[] { -0.7560729519019886, -0.7452727042438946 }, instance.smooth(2, 1),0.01);
+        assertArrayEquals(new double[] { -0.9680642204187359 }, instance.smooth(2, 2),0.01);
+        assertArrayEquals(new double[] { -1.0517996465995412 }, instance.smooth(1, 2),0.01);
     }
 
 }

@@ -36,11 +36,12 @@ import org.apache.commons.math.stat.regression.OLSMultipleLinearRegression;
  */
 public class GoodTuringSmoothing implements NGramScorer {
 
-    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob", "1e-6"));
+    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob", "1e-10"));
+    private static final int MAX_LR = Integer.parseInt(System.getProperty("lm.goodturing.lrmax", "10000"));
     ///////////////////////////////////////////////////////////////////////////
     //   p(w_n...) = (c + 1) / C_n * f(c+1) / f(c)
     // where
-    //    f(c) is a linear model on c ~ CoC_n(c)
+    //    f(c) is a linear model on c ~ log(CoC_n(c) + 1)
     //
     //   1 - beta_n = Sum_i((ci+1) / C_n * f(c+1) / f(c))
     //              = 1/C_n * Sum_c[CoC_n(c) * (1 + c) * f(c + 1) / f(c)]
@@ -67,36 +68,42 @@ public class GoodTuringSmoothing implements NGramScorer {
         this.intercept = new double[n];
         this.gamma = new double[n];
         for (int i = 0; i < n; i++) {
-            double[][] x = new double[CoC[i].length + 1][1];
-            for (int j = 1; j <= CoC[i].length; j++) {
-                x[j][0] = j;
+            final int M = Math.min(CoC[i].length,MAX_LR) - (i == 0 ? 1 : 0);
+            double[][] x = new double[M + 1][1];
+            for (int j = 1; j <= M; j++) {
+                x[j][0] = j - (i == 0 ? 1 : 0); // (N_0 is not meaningful for unigrams)
             }
-            double[] y = new double[CoC[i].length + 1];
-            y[0] = (int) Math.pow(v[0], i + 1) - v[i];
-            for (int j = 1; j <= CoC[i].length; j++) {
-                y[j] = CoC[i][j - 1];
+            double[] y = new double[M + 1];
+            if(i != 0) {
+                y[0] = Math.log(Math.pow(v[0], i + 1) - v[i] + 1);
+            }
+            for (int j = 1; j <= M; j++) {
+                y[j - (i == 0 ? 1 : 0)] = Math.log(CoC[i][j - 1] + 1);
             }
             final OLSMultipleLinearRegression lr = new OLSMultipleLinearRegression();
             lr.newSampleData(y, x);
             gradient[i] = lr.estimateRegressionParameters()[1];
             intercept[i] = lr.estimateRegressionParameters()[0];
+            System.err.println("y = " + gradient[i] + " \u00d7 x + " + intercept[i]);
 
             if (i > 0) {
                 double sum = 0.0;
                 for (int j = 0; j < CoC[i].length; j++) {
                     sum += CoC[i][j] * (2 + j) * f(j + 2, i) / f(j + 1, i);
                 }
+                System.err.println("sum=" + sum + "/" + C[i]);
                 sum /= C[i];
 
                 double beta = Math.max(1 - sum, 0.0);
 
                 gamma[i - 1] = beta / (Math.pow(v[0], i + 1) - v[i]);
+                System.err.println("gamma[i - 1]=" + gamma[i - 1]);
             }
         }
     }
 
     private double f(double c, int n) {
-        return c * gradient[n] + intercept[n];
+        return Math.exp(c * gradient[n] + intercept[n]) - 1;
     }
 
     public double[] smooth(double c, int n) {
