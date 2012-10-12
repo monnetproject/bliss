@@ -86,9 +86,9 @@ public class QRAlgorithm {
         // d = (t_{n-1,n-1} - t_{nn}) /2
         double d = (alpha[o + n - 2] - alpha[o + n - 1]) / 2;
         // \mu = t_{nn} - t^2_{n,n-1} / (d + sign(d) * \sqrt{d^2 + t^2_{n,n-1}})
-        double mu = alpha[o + n - 1] - beta[o + n - 2] * beta[o + n - 2] / (d + Math.signum(d) * Math.sqrt(d * d + beta[o + n - 2] * beta[o + n - 2]));
+        double mu = alpha[o + n - 1] - beta[o + n - 2] * beta[o + n - 2] / (d + (d == 0.0 ? 1 : Math.signum(d)) * Math.sqrt(d * d + beta[o + n - 2] * beta[o + n - 2]));
         // x = t_{11} - mu
-        double x = alpha[o + 1] - mu;
+        double x = alpha[o + 0] - mu;
         // z = t_{21}
         double z = beta[o + 0];
         // for k = 1:n-1
@@ -182,7 +182,7 @@ public class QRAlgorithm {
                     if (!qFound) {
                         q++;
                     } else {
-                        p = i;
+                        p = i+1;
                         break;
                     }
                 } else {
@@ -192,6 +192,10 @@ public class QRAlgorithm {
                 }
             }
 
+            if(p == q) { // The first and last zero are the same
+                p = 0;
+            }
+            
             if (q < n) {
                 if (n - p - q >= 2) {
                     wilkinsonShift(tridiag.alpha(), tridiag.beta(), p, n - p - q);

@@ -93,6 +93,14 @@ public class TrivialEigenvalues<N extends Number> {
         this.filter = filter;
     }
 
+    public boolean isTrivial() {
+        for(boolean trivial : filter) {
+            if(trivial)
+                return true;
+        }
+        return false;
+    }
+    
     /**
      * For the matrix compute the columns with trivial eigenvalues. This is
      * defined as the columns for which there is only one non-zero value (i.e.,

@@ -145,7 +145,12 @@ public class QRAlgorithmTest {
         final double[] l6 = QRAlgorithm.qrSolve(0.001, A6, TrivialEigenvalues.find(A6, true));
         Arrays.sort(l6);
         Assert.assertArrayEquals(new double[]{-2.7720019, -0.8284271, 4.8284271, 5.7720019}, l6,0.01);
-
+        
+        final TridiagonalMatrix A7 = new TridiagonalMatrix(new double[]{1, 4, 0, 0}, new double[]{3,4,4});
+        final double[] l7 = QRAlgorithm.qrSolve(0.001, A7, TrivialEigenvalues.find(A7, true));
+        Arrays.sort(l7);
+        Assert.assertArrayEquals(new double[]{-5.1698172, -0.67563241, 2.8727617, 7.9726879}, l7,0.01);
+       
         final Random random = new Random();
         for (int n = 0; n < 10; n++) {
             //final SparseMatrix<Double> arr = new SparseMatrix<Double>(4, 4, Vectors.AS_REALS);
@@ -170,6 +175,10 @@ public class QRAlgorithmTest {
             }
             System.err.println("Matrix:" + arr.toString());
             final TrivialEigenvalues<Double> trivial = TrivialEigenvalues.find(arr, true);
+            if(trivial.isTrivial()) {
+                n--;
+                continue;
+            }
             final double[] result = QRAlgorithm.qrSolve(0.001, arr, trivial);
             final double[] expected = new EigenDecompositionImpl(matrix, 0.001).getRealEigenvalues();
             Arrays.sort(expected);
@@ -203,7 +212,12 @@ public class QRAlgorithmTest {
                 n--;
                 continue;
             }
-            final double[] result = QRAlgorithm.qrSolve(0.001, arr, TrivialEigenvalues.find(arr, true));
+            final TrivialEigenvalues<Double> trivial = TrivialEigenvalues.find(arr, true);
+            if(trivial.isTrivial()) {
+                n--;
+                continue;
+            }
+            final double[] result = QRAlgorithm.qrSolve(0.001, arr, trivial);
             final double[] expected = new EigenDecompositionImpl(matrix, 0.001).getRealEigenvalues();
             Arrays.sort(expected);
             Arrays.sort(result);
