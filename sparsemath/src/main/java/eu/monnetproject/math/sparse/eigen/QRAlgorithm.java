@@ -31,6 +31,7 @@ import eu.monnetproject.math.sparse.SparseMatrix;
 import eu.monnetproject.math.sparse.SparseRealArray;
 import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +82,7 @@ public class QRAlgorithm {
      * @param o The offset
      * @param n The size of the sub-matrix to consider
      */
-    public static void wilkinsonShift(double[] alpha, double[] beta, int o, int n) {
+    public static void wilkinsonShift(double[] alpha, double[] beta, int o, int n, SequenceOfGivens givensSeq) {
         //int n = alpha.length;
         // d = (t_{n-1,n-1} - t_{nn}) /2
         double d = (alpha[o + n - 2] - alpha[o + n - 1]) / 2;
@@ -97,7 +98,8 @@ public class QRAlgorithm {
             final double[] cs = givens(x, z);
             final double c = cs[0];
             final double s = cs[1];
-
+            givensSeq.add(k, k+1, c, s);
+            
             // T = G_k^T T G_k where G_k = G(k,k+1,c,s)
             // t00 is T_{k-1,k-1}
             double t01 = k > 0 ? c * beta[o + k - 1] - s * z : 0;
@@ -132,7 +134,7 @@ public class QRAlgorithm {
      * @param epsilon The error rate
      * @return The eigenvalues of the matrix
      */
-    public static double[] qrSolve(SparseMatrix<Double> A, double epsilon) {
+    public static QRSolution qrSolve(SparseMatrix<Double> A, double epsilon) {
         assert (A.rows() == A.cols());
         assert (A.isSymmetric());
         
@@ -140,17 +142,17 @@ public class QRAlgorithm {
         // on the first pass
         final TrivialEigenvalues<Double> trivial = TrivialEigenvalues.find(A, true);
         if(trivial.nonTrivial == null) {
-            return trivial.eigenvalues;
+            return new QRSolution(trivial.eigenvalues, new SequenceOfGivens());
         }
         
         final TridiagonalMatrix tridiag = LanczosAlgorithm.lanczos(trivial.nonTrivial).tridiagonal();
         return qrSolve(epsilon, tridiag, trivial);
     }
     
-    public static <N extends Number> double[] qrSolve(double epsilon, TridiagonalMatrix tridiag, TrivialEigenvalues<N> trivial) {
+    public static <N extends Number> QRSolution qrSolve(double epsilon, TridiagonalMatrix tridiag, TrivialEigenvalues<N> trivial) {
         final int n = tridiag.rows();
         if(n == 0) {
-            return trivial.eigenvalues;
+            return new QRSolution(trivial.eigenvalues, new SequenceOfGivens());
         } else if(n == 1) {
             throw new RuntimeException("Trivial reduction failed");
         } else if(n == 2) {
@@ -163,8 +165,19 @@ public class QRAlgorithm {
             System.arraycopy(trivial.eigenvalues, 0, eigenvalues, 2, trivial.eigenvalues.length);
             eigenvalues[0] = lambda1;
             eigenvalues[1] = lambda2;
-            return eigenvalues;
+            // ( a1 b ) ( c s )   ( c -s) ( l1 x )
+            // ( b a2 ) (-s c ) = ( s c ) ( 0 l2 )
+            // => b * c - a2 * s = l1 * s
+            //    c = s * (l1 + a2) / b = s * u
+            // c^2 + s^2 = 1 
+            // =>   c = sqrt(1/(1+u^2)
+            double u = (lambda1 + tridiag.alpha()[1]) / tridiag.beta()[0];
+            double c = Math.sqrt(1.0 / (1.0 + u * u ));
+            double s = c / u;
+            return new QRSolution(eigenvalues, new SequenceOfGivens().add(0, 1, c, s));
         }
+        final SequenceOfGivens givensSeq = new SequenceOfGivens();
+        
         int p = 0;
         int q = 0;
         int iterTotal = 0;
@@ -198,7 +211,7 @@ public class QRAlgorithm {
             
             if (q < n) {
                 if (n - p - q >= 2) {
-                    wilkinsonShift(tridiag.alpha(), tridiag.beta(), p, n - p - q);
+                    wilkinsonShift(tridiag.alpha(), tridiag.beta(), p, n - p - q, givensSeq);
                 } else {
                     q++;
                 }
@@ -210,12 +223,12 @@ public class QRAlgorithm {
         }
 
         if (trivial.eigenvalues.length == 0) {
-            return tridiag.alpha();
+            return new QRSolution(tridiag.alpha(), givensSeq);
         } else {
             double[] eigenvalues = new double[n+trivial.eigenvalues.length];
             System.arraycopy(tridiag.alpha(), 0, eigenvalues, 0, n);
             System.arraycopy(trivial.eigenvalues, 0, eigenvalues, n, trivial.eigenvalues.length);
-            return eigenvalues;
+            return new QRSolution(eigenvalues, givensSeq);
         }
     }
 
@@ -291,6 +304,50 @@ public class QRAlgorithm {
         } else {
             // If we have a singular column all non-zero below this
             eigenvector[i] = 1.0;
+        }
+    }
+    
+    public static class QRSolution {
+        private final double[] values;
+        private final SequenceOfGivens givensSeq;
+
+        public QRSolution(double[] values, SequenceOfGivens givensSeq) {
+            this.values = values;
+            this.givensSeq = givensSeq;
+        }
+
+        public SequenceOfGivens givensSeq() {
+            return givensSeq;
+        }
+
+        public double[] values() {
+            return values;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 23 * hash + Arrays.hashCode(this.values);
+            hash = 23 * hash + (this.givensSeq != null ? this.givensSeq.hashCode() : 0);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final QRSolution other = (QRSolution) obj;
+            if (!Arrays.equals(this.values, other.values)) {
+                return false;
+            }
+            if (this.givensSeq != other.givensSeq && (this.givensSeq == null || !this.givensSeq.equals(other.givensSeq))) {
+                return false;
+            }
+            return true;
         }
     }
 }

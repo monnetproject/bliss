@@ -80,7 +80,7 @@ public class QRAlgorithmTest {
         double[] beta = {1, 1, .01};
         double[] expAlpha = {.5000, 1.785, 3.7140, 4.002497};
         double[] expBeta = {.5916, .1808, .0000044};
-        QRAlgorithm.wilkinsonShift(alpha, beta, 0, 4);
+        QRAlgorithm.wilkinsonShift(alpha, beta, 0, 4, new SequenceOfGivens());
         assertArrayEquals(expAlpha, alpha, 0.01);
         assertArrayEquals(expBeta, beta, 0.01);
     }
@@ -95,7 +95,7 @@ public class QRAlgorithmTest {
                     {0, 0, 3, 0},
                     {0, 0, 0, 3}
                 });
-        final double[] l1 = QRAlgorithm.qrSolve(A1, 0.01);
+        final double[] l1 = QRAlgorithm.qrSolve(A1, 0.01).values();
         Arrays.sort(l1);
         Assert.assertArrayEquals(new double[]{2, 3, 3, 5}, l1, 0.01);
 
@@ -106,7 +106,7 @@ public class QRAlgorithmTest {
                     {2, 2, 1, 0},
                     {0, 1, 0, 0}
                 });
-        final double[] l2 = QRAlgorithm.qrSolve(A2, 0.01);
+        final double[] l2 = QRAlgorithm.qrSolve(A2, 0.01).values();
         Arrays.sort(l2);
         Assert.assertArrayEquals(new double[]{-1, -0.0514, 3.517, 5.534}, l2, 0.01);
 
@@ -116,7 +116,7 @@ public class QRAlgorithmTest {
                     {0, 0, 1, 3},
                     {0, 3, 3, 1}
                 });
-        final double[] l3 = QRAlgorithm.qrSolve(A3, 0.01);
+        final double[] l3 = QRAlgorithm.qrSolve(A3, 0.01).values();
         Arrays.sort(l3);
         Assert.assertArrayEquals(new double[]{-3.533, 0.507, 2, 5.026}, l3, 0.01);
 
@@ -126,7 +126,7 @@ public class QRAlgorithmTest {
                     {0, 0, 3, 0},
                     {0, 2, 0, 5}
                 });
-        final double[] l4 = QRAlgorithm.qrSolve(A4, 0.01);
+        final double[] l4 = QRAlgorithm.qrSolve(A4, 0.01).values();
         Arrays.sort(l4);
         Assert.assertArrayEquals(new double[]{2, 3, 3, 7}, l4, 0.01);
 
@@ -137,17 +137,17 @@ public class QRAlgorithmTest {
                     {1, 0, 0, 3},
                     {0, 3, 3, 0}
                 });
-        final double[] l5 = QRAlgorithm.qrSolve(A5, 0.01);
+        final double[] l5 = QRAlgorithm.qrSolve(A5, 0.01).values();
         Arrays.sort(l5);
         Assert.assertArrayEquals(new double[]{-4.3028, -0.6972, 0.6972, 4.3028}, l5, 0.01);
 
         final TridiagonalMatrix A6 = new TridiagonalMatrix(new double[]{0, 3, 4, 0}, new double[]{4, 0, 2});
-        final double[] l6 = QRAlgorithm.qrSolve(0.001, A6, TrivialEigenvalues.find(A6, true));
+        final double[] l6 = QRAlgorithm.qrSolve(0.001, A6, TrivialEigenvalues.find(A6, true)).values();
         Arrays.sort(l6);
         Assert.assertArrayEquals(new double[]{-2.7720019, -0.8284271, 4.8284271, 5.7720019}, l6,0.01);
         
         final TridiagonalMatrix A7 = new TridiagonalMatrix(new double[]{1, 4, 0, 0}, new double[]{3,4,4});
-        final double[] l7 = QRAlgorithm.qrSolve(0.001, A7, TrivialEigenvalues.find(A7, true));
+        final double[] l7 = QRAlgorithm.qrSolve(0.001, A7, TrivialEigenvalues.find(A7, true)).values();
         Arrays.sort(l7);
         Assert.assertArrayEquals(new double[]{-5.1698172, -0.67563241, 2.8727617, 7.9726879}, l7,0.01);
        
@@ -179,7 +179,7 @@ public class QRAlgorithmTest {
                 n--;
                 continue;
             }
-            final double[] result = QRAlgorithm.qrSolve(0.001, arr, trivial);
+            final double[] result = QRAlgorithm.qrSolve(0.001, arr, trivial).values();
             final double[] expected = new EigenDecompositionImpl(matrix, 0.001).getRealEigenvalues();
             Arrays.sort(expected);
             Arrays.sort(result);
@@ -217,7 +217,7 @@ public class QRAlgorithmTest {
                 n--;
                 continue;
             }
-            final double[] result = QRAlgorithm.qrSolve(0.001, arr, trivial);
+            final double[] result = QRAlgorithm.qrSolve(0.001, arr, trivial).values();
             final double[] expected = new EigenDecompositionImpl(matrix, 0.001).getRealEigenvalues();
             Arrays.sort(expected);
             Arrays.sort(result);
