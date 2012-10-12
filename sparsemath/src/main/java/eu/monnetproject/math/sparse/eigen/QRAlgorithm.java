@@ -134,7 +134,7 @@ public class QRAlgorithm {
      * @param epsilon The error rate
      * @return The eigenvalues of the matrix
      */
-    public static QRSolution qrSolve(SparseMatrix<Double> A, double epsilon) {
+    public static Solution qrSolve(SparseMatrix<Double> A, double epsilon) {
         assert (A.rows() == A.cols());
         assert (A.isSymmetric());
         
@@ -142,17 +142,17 @@ public class QRAlgorithm {
         // on the first pass
         final TrivialEigenvalues<Double> trivial = TrivialEigenvalues.find(A, true);
         if(trivial.nonTrivial == null) {
-            return new QRSolution(trivial.eigenvalues, new SequenceOfGivens());
+            return new Solution(trivial.eigenvalues, new SequenceOfGivens());
         }
         
         final TridiagonalMatrix tridiag = LanczosAlgorithm.lanczos(trivial.nonTrivial).tridiagonal();
         return qrSolve(epsilon, tridiag, trivial);
     }
     
-    public static <N extends Number> QRSolution qrSolve(double epsilon, TridiagonalMatrix tridiag, TrivialEigenvalues<N> trivial) {
+    public static <N extends Number> Solution qrSolve(double epsilon, TridiagonalMatrix tridiag, TrivialEigenvalues<N> trivial) {
         final int n = tridiag.rows();
         if(n == 0) {
-            return new QRSolution(trivial.eigenvalues, new SequenceOfGivens());
+            return new Solution(trivial.eigenvalues, new SequenceOfGivens());
         } else if(n == 1) {
             throw new RuntimeException("Trivial reduction failed");
         } else if(n == 2) {
@@ -174,7 +174,7 @@ public class QRAlgorithm {
             double u = (lambda1 + tridiag.alpha()[1]) / tridiag.beta()[0];
             double c = Math.sqrt(1.0 / (1.0 + u * u ));
             double s = c / u;
-            return new QRSolution(eigenvalues, new SequenceOfGivens().add(0, 1, c, s));
+            return new Solution(eigenvalues, new SequenceOfGivens().add(0, 1, c, s));
         }
         final SequenceOfGivens givensSeq = new SequenceOfGivens();
         
@@ -223,12 +223,12 @@ public class QRAlgorithm {
         }
 
         if (trivial.eigenvalues.length == 0) {
-            return new QRSolution(tridiag.alpha(), givensSeq);
+            return new Solution(tridiag.alpha(), givensSeq);
         } else {
             double[] eigenvalues = new double[n+trivial.eigenvalues.length];
             System.arraycopy(tridiag.alpha(), 0, eigenvalues, 0, n);
             System.arraycopy(trivial.eigenvalues, 0, eigenvalues, n, trivial.eigenvalues.length);
-            return new QRSolution(eigenvalues, givensSeq);
+            return new Solution(eigenvalues, givensSeq);
         }
     }
 
@@ -307,11 +307,11 @@ public class QRAlgorithm {
         }
     }
     
-    public static class QRSolution {
+    public static class Solution {
         private final double[] values;
         private final SequenceOfGivens givensSeq;
 
-        public QRSolution(double[] values, SequenceOfGivens givensSeq) {
+        public Solution(double[] values, SequenceOfGivens givensSeq) {
             this.values = values;
             this.givensSeq = givensSeq;
         }
@@ -340,7 +340,7 @@ public class QRAlgorithm {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final QRSolution other = (QRSolution) obj;
+            final Solution other = (Solution) obj;
             if (!Arrays.equals(this.values, other.values)) {
                 return false;
             }

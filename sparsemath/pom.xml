@@ -18,5 +18,10 @@
             <version>2.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>translation.topics.common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

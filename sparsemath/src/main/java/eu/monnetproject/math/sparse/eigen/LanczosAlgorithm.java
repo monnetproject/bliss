@@ -28,12 +28,9 @@ package eu.monnetproject.math.sparse.eigen;
 
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.Matrix;
-import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.VectorFunction;
 import eu.monnetproject.math.sparse.Vectors;
-import eu.monnetproject.math.sparse.Vectors.Factory;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -51,21 +48,25 @@ public class LanczosAlgorithm {
     
     private double[] v;
     
-    public static LanczosResult lanczos(VectorFunction<Double> A, final Vector<Double> w) {
-        
+    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w) {
+        return lanczos(A,w,w.size());
+    }
+     
+    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w, int K) {
         final int n= w.size();
+        assert(K <= n);
         if(n == 0) {
-            return new LanczosResult(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0]);
+            return new Solution(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0]);
         } else if(n == 1) {
             final Vector<Double> unitVector = Vectors.AS_REALS.make(new double[] { 1.0 });
             final double a11 = A.apply(unitVector).doubleValue(0);
-            return new LanczosResult(new TridiagonalMatrix(new double[] { a11 }, new double[0]), new double[][] { { 1 } });
+            return new Solution(new TridiagonalMatrix(new double[] { a11 }, new double[0]), new double[][] { { 1 } });
         } else if(n == 2) {
             final Vector<Double> unit1Vector = Vectors.AS_REALS.make(new double[] { 1.0, 0.0 });
             final Vector<Double> unit2Vector = Vectors.AS_REALS.make(new double[] { 0.0, 1.0 });
             final double[] a1 = A.apply(unit1Vector).toDoubleArray();
             final double[] a2 = A.apply(unit2Vector).toDoubleArray();
-            return new LanczosResult(new TridiagonalMatrix(new double[] { a1[0], a2[1] } , 
+            return new Solution(new TridiagonalMatrix(new double[] { a1[0], a2[1] } , 
                     new double[] { a1[1] }), new double[][] {
                         { 1, 0 },
                         { 0, 1 }
@@ -76,16 +77,16 @@ public class LanczosAlgorithm {
         final double[] v = new double[n];
         final double[] alpha = new double[n + 1];
         final double[] beta = new double[n + 1];
-        final ArrayList<double[]> q = new ArrayList<double[]>(n);
+        final double[][] q = new double[K][];
         
-        q.add(Arrays.copyOf(w.toDoubleArray(), n));
+        q[0] = Arrays.copyOf(w.toDoubleArray(), n);
         
         int j = 0;
         beta[0] = 1;
 
 
         // while \beta_j \neq 0
-        while (beta[j] != 0) {
+        while (beta[j] != 0 && j < K) {
             // if j \neq 0
             if (j != 0) {
                 // for i = 1:n
@@ -95,7 +96,7 @@ public class LanczosAlgorithm {
                     w.put(i-1,v[i - 1] / beta[j]);
                     v[i - 1] = -beta[j] * t;
                 }
-                q.add(Arrays.copyOf(w.toDoubleArray(),n));
+                q[j] = Arrays.copyOf(w.toDoubleArray(),n);
             }
             // v = v + A.mult(w)
             final Vector<Double> aw = A.apply(w);
@@ -118,8 +119,7 @@ public class LanczosAlgorithm {
             }
             beta[j] = Math.sqrt(beta[j]);
         }
-        return new LanczosResult(new TridiagonalMatrix(Arrays.copyOfRange(alpha, 1, n + 1), Arrays.copyOfRange(beta, 1, n)),
-                q.toArray(new double[q.size()][]));
+        return new Solution(new TridiagonalMatrix(Arrays.copyOfRange(alpha, 1, K + 1), Arrays.copyOfRange(beta, 1, K)), q);
     }
 
 
@@ -133,7 +133,7 @@ public class LanczosAlgorithm {
      * B[i+1][i] = r[1][i] and B[i][j] = 0 otherwise. This matrix has the same
      * set of eigenvalues as A.
      */
-    public static LanczosResult lanczos(Matrix<Double> A) {
+    public static Solution lanczos(Matrix<Double> A) {
         assert(A.rows() == A.cols());
         assert(A.isSymmetric());
         final int n = A.rows();
@@ -156,11 +156,11 @@ public class LanczosAlgorithm {
         return lanczos(A.asVectorFunction(), Vectors.AS_REALS.make(w));
     }
     
-    public static class LanczosResult {
+    public static class Solution {
         private final TridiagonalMatrix tridiagonal;
         private final double[][] q;
 
-        public LanczosResult(TridiagonalMatrix tridiagonal, double[][] q) {
+        public Solution(TridiagonalMatrix tridiagonal, double[][] q) {
             this.tridiagonal = tridiagonal;
             this.q = q;
         }
@@ -189,7 +189,7 @@ public class LanczosAlgorithm {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final LanczosResult other = (LanczosResult) obj;
+            final Solution other = (Solution) obj;
             if (this.tridiagonal != other.tridiagonal && (this.tridiagonal == null || !this.tridiagonal.equals(other.tridiagonal))) {
                 return false;
             }

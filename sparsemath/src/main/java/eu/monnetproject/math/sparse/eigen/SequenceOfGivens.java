@@ -45,7 +45,7 @@ public class SequenceOfGivens {
         return this;
     }
     
-    public void applyTo(double[][] matrix) {
+    public double[][] applyTo(double[][] matrix) {
         int n = matrix[0].length;
         for(Givens g : seq) {
             for(int i = 0; i < n; i++) {
@@ -54,6 +54,7 @@ public class SequenceOfGivens {
                 matrix[i][g.k] = t;
             }
         }
+        return matrix;
     }
     
     
