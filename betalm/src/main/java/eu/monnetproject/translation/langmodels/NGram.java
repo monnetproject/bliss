@@ -66,7 +66,7 @@ public class NGram {
 
     @Override
     public String toString() {
-        return "NGram{" + "ngram=" + Arrays.toString(ngram) + '}';
+        return "NGram" + Arrays.toString(ngram);
     }
     
     public NGram history() {
@@ -77,7 +77,7 @@ public class NGram {
         return new NGram(Arrays.copyOfRange(ngram, 1, ngram.length));
     }
 
-    private final boolean ngramNonnegative(int[] ngram) {
+    private boolean ngramNonnegative(int[] ngram) {
         for (int i : ngram) {
             if (i < 0) {
                 return false;

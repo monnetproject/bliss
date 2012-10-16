@@ -61,10 +61,10 @@ public class LossyCounterWithHistoryTest {
         instance.offer(4);
         instance.offer(3);
         final Object2ObjectOpenHashMap<NGram, double[]> expHistories = new Object2ObjectOpenHashMap<NGram, double[]>();
-        expHistories.put(ng(1), new double[] { 1,1,0,2,0,0 });
-        expHistories.put(ng(2), new double[] { 3,0,0,1,1,0 });
-        expHistories.put(ng(3), new double[] { 2,0,0,1,1,0 });
-        expHistories.put(ng(4), new double[] { 1,1,0,3,0,0 });
+        expHistories.put(ng(1), new double[] { 0,1,1,0,2,0,0 });
+        expHistories.put(ng(2), new double[] { 0,3,0,0,1,1,0 });
+        expHistories.put(ng(3), new double[] { 0,2,0,0,1,1,0 });
+        expHistories.put(ng(4), new double[] { 0,1,1,0,3,0,0 });
         final Object2ObjectMap<NGram, double[]> histories = instance.histories().histories(1);
         assertEquals(expHistories.size(),histories.size());
         final ObjectIterator<Entry<NGram, double[]>> iter1 = expHistories.entrySet().iterator();

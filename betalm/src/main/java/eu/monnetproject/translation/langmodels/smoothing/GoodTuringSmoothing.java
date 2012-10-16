@@ -76,28 +76,30 @@ public class GoodTuringSmoothing implements NGramScorer {
             double[] y = new double[M + 1];
             if(i != 0) {
                 y[0] = Math.log(Math.pow(v[0], i + 1) - v[i] + 1);
+                //System.err.println("y[0]="+y[0]);
             }
             for (int j = 1; j <= M; j++) {
                 y[j - (i == 0 ? 1 : 0)] = Math.log(CoC[i][j - 1] + 1);
+                //System.err.println("y["+(j - (i == 0 ? 1 : 0))+"]="+y[j - (i == 0 ? 1 : 0)]);
             }
             final OLSMultipleLinearRegression lr = new OLSMultipleLinearRegression();
             lr.newSampleData(y, x);
             gradient[i] = lr.estimateRegressionParameters()[1];
             intercept[i] = lr.estimateRegressionParameters()[0];
-            System.err.println("y = " + gradient[i] + " \u00d7 x + " + intercept[i]);
+            //System.err.println("y = " + gradient[i] + " \u00d7 x + " + intercept[i]);
 
             if (i > 0) {
                 double sum = 0.0;
                 for (int j = 0; j < CoC[i].length; j++) {
-                    sum += CoC[i][j] * (2 + j) * f(j + 2, i) / f(j + 1, i);
+                    sum += /*CoC[i][j] * */(2 + j) * f(j + 2, i) /*/ f(j + 1, i)*/;
                 }
-                System.err.println("sum=" + sum + "/" + C[i]);
+                //System.err.println("sum=" + sum + "/" + C[i]);
                 sum /= C[i];
 
                 double beta = Math.max(1 - sum, 0.0);
 
                 gamma[i - 1] = beta / (Math.pow(v[0], i + 1) - v[i]);
-                System.err.println("gamma[i - 1]=" + gamma[i - 1]);
+                //System.err.println("gamma[i - 1]=" + gamma[i - 1]);
             }
         }
     }

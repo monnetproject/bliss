@@ -109,27 +109,35 @@ private final int N, H;
                 if (i > 1) {
                     if (count < H) {
                         final double[] h = historySet.get(history);
-                        h[count - 1]--;
-                        h[count]++;
+                        h[count]--;
+                        h[count+1]++;
                         final double[] f = historySet.get(future);
-                        f[H + count - 1]--;
-                        f[H + count]++;
+                        f[H + count]--;
+                        f[H + count+1]++;
+                        if(count == 1 && i > 2) {
+                            final NGram futureHistory = future.history();
+                            if(!historySet.containsKey(futureHistory)) {
+                                historySet.put(futureHistory, new double[2 * H + 1]);
+                            }
+                            final double[] fh = historySet.get(futureHistory);
+                            fh[0]++;
+                        }
                     } else {
-                        historySet.get(history)[H - 1]++;
-                        historySet.get(future)[2 * H - 1]++;
+                        historySet.get(history)[H]++;
+                        historySet.get(future)[2 * H]++;
                     }
                 }
                 ngcs.put(ngram, ngcs.getDouble(ngram) + v);
             } else {
                 if (i > 1) {
                     if (!historySet.containsKey(history)) {
-                        historySet.put(history, new double[2 * H]);
+                        historySet.put(history, new double[2 * H+1]);
                     }
                     if (!historySet.containsKey(future)) {
-                        historySet.put(future, new double[2 * H]);
+                        historySet.put(future, new double[2 * H+1]);
                     }
-                    historySet.get(history)[0]++;
-                    historySet.get(future)[H]++;
+                    historySet.get(history)[1]++;
+                    historySet.get(future)[H+1]++;
                 }
                 ngcs.put(ngram, v);
             }
