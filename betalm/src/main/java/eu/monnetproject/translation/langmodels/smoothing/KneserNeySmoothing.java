@@ -28,8 +28,6 @@ package eu.monnetproject.translation.langmodels.smoothing;
 
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap.Entry;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.WeakHashMap;
 
 /**
@@ -105,7 +103,11 @@ public class KneserNeySmoothing implements NGramScorer {
 
             bo /= countSet.sum(nGram);
 
-            return new double[]{log10(p), log10(bo)};
+            if(bo < 1) {
+                return new double[]{log10(p), log10(bo)};
+            } else {
+                return new double[]{log10(p)};
+            }
         }
     }
     private final WeakHashMap<NGram, Double> historyCache = new WeakHashMap<NGram, Double>();

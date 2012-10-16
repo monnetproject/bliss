@@ -66,7 +66,7 @@ public class KneserNeySmoothingTest {
         assertArrayEquals(new double[] { Math.log10(1e-6), Math.log10(1.0/9.0) }, instance.ngramScores(ng(2),countSet),0.01);
         assertArrayEquals(new double[] { Math.log10(1.0/15.0), Math.log10(1.0/3.0) }, instance.ngramScores(ng(3),countSet),0.01);
         assertArrayEquals(new double[] { Math.log10(1.0/5.0), Math.log10(1.0/3.0) }, instance.ngramScores(ng(4),countSet),0.01);
-        assertArrayEquals(new double[] { Math.log10(1.0/15.0), Math.log10(1e-6) }, instance.ngramScores(ng(5),countSet),0.01);
+        assertArrayEquals(new double[] { Math.log10(1.0/15.0) }, instance.ngramScores(ng(5),countSet),0.01);
         assertArrayEquals(new double[] { Math.log10(1e-6) }, instance.ngramScores(ng(1,2),countSet),0.01);
         assertArrayEquals(new double[] { Math.log10(1.0/12.0) }, instance.ngramScores(ng(3,4),countSet),0.01);
     }
