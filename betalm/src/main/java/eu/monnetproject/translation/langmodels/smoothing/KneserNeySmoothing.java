@@ -59,6 +59,7 @@ public class KneserNeySmoothing implements NGramScorer {
             for (int j = 0; j < D; j++) {
                 if (CoC[i][j] != 0) {
                     d[i][j] = j + 1 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j];
+                    System.err.println("d_" +i + "[" + j +"]=" + d[i][j]);
                 }
             }
         }

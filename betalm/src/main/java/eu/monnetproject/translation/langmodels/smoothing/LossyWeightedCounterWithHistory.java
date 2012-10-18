@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +41,8 @@ import java.util.Random;
  * @author John McCrae
  */
 public class LossyWeightedCounterWithHistory implements WeightedCounter, CounterWithHistory {
-private final int N, H;
+
+    private final int N, H;
     private final NGramCarousel carousel;
     private final WeightedNGramCountSetImpl nGramCountSet;
     private final NGramHistories histories;
@@ -103,25 +105,17 @@ private final int N, H;
                 historySet = null;
             }
             final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            nGramCountSet.add(i,v);
+            nGramCountSet.add(i, v);
             if (ngcs.containsKey(ngram)) {
-                final int count = (int)Math.ceil(ngcs.getDouble(ngram));
+                final int count = (int) Math.ceil(ngcs.getDouble(ngram));
                 if (i > 1) {
                     if (count < H) {
                         final double[] h = historySet.get(history);
                         h[count]--;
-                        h[count+1]++;
+                        h[count + 1]++;
                         final double[] f = historySet.get(future);
                         f[H + count]--;
-                        f[H + count+1]++;
-                        if(count == 1 && i > 2) {
-                            final NGram futureHistory = future.history();
-                            if(!historySet.containsKey(futureHistory)) {
-                                historySet.put(futureHistory, new double[2 * H + 1]);
-                            }
-                            final double[] fh = historySet.get(futureHistory);
-                            fh[0]++;
-                        }
+                        f[H + count + 1]++;
                     } else {
                         historySet.get(history)[H]++;
                         historySet.get(future)[2 * H]++;
@@ -131,13 +125,21 @@ private final int N, H;
             } else {
                 if (i > 1) {
                     if (!historySet.containsKey(history)) {
-                        historySet.put(history, new double[2 * H+1]);
+                        historySet.put(history, new double[2 * H + 1]);
                     }
                     if (!historySet.containsKey(future)) {
-                        historySet.put(future, new double[2 * H+1]);
+                        historySet.put(future, new double[2 * H + 1]);
                     }
                     historySet.get(history)[1]++;
-                    historySet.get(future)[H+1]++;
+                    historySet.get(future)[H + 1]++;
+                    if (i > 2) {
+                        final NGram futureHistory = future.history();
+                        if (!historySet.containsKey(futureHistory)) {
+                            historySet.put(futureHistory, new double[2 * H + 1]);
+                        }
+                        final double[] fh = historySet.get(futureHistory);
+                        fh[0]++;
+                    }
                 }
                 ngcs.put(ngram, v);
             }
