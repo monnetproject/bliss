@@ -85,7 +85,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
     public int N() {
         return N;
     }
-
+    
     @Override
     public void offer(int w) {
         carousel.offer(w);
@@ -94,14 +94,21 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
             final NGram history;
             final NGram future;
             final Object2ObjectMap<NGram, double[]> historySet;
+            final Object2ObjectMap<NGram, double[]> futureHistorySet;
             if (i > 1) {
                 history = ngram.history();
                 future = ngram.future();
                 historySet = histories.histories(i - 1);
+                if(i > 2) {
+                    futureHistorySet = histories.histories(i-2);
+                } else {
+                    futureHistorySet = null;
+                }
             } else {
                 history = null;
                 future = null;
                 historySet = null;
+                futureHistorySet = null;
             }
             final Object2IntMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             nGramCountSet.inc(i);
@@ -133,10 +140,10 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                     historySet.get(future)[H + 1]++;
                     if (i > 2) {
                         final NGram futureHistory = future.history();
-                        if (!historySet.containsKey(futureHistory)) {
-                            historySet.put(futureHistory, new double[2 * H + 1]);
+                        if (!futureHistorySet.containsKey(futureHistory)) {
+                            futureHistorySet.put(futureHistory, new double[2 * H + 1]);
                         }
-                        final double[] fh = historySet.get(futureHistory);
+                        final double[] fh = futureHistorySet.get(futureHistory);
                         fh[0]++;
                     }
                 }

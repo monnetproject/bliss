@@ -34,6 +34,7 @@ import eu.monnetproject.translation.langmodels.impl.CompileLanguageModel;
 public class compile {
 
     public static void main(String[] args) throws Exception {
+        args = "-t INTERLEAVED_USE_FIRST -smooth KNESER_NEY ../wiki/en-es/en-es.bench.train.gz 3 ../wiki/en-es/wordMap-benchTrain 10111847 ../wiki/en-es/lm.en".split(" ");
         CompileLanguageModel.main(args);
     }
 }

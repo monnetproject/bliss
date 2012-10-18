@@ -39,7 +39,7 @@ import java.util.WeakHashMap;
  */
 public class KneserNeySmoothing implements NGramScorer {
 
-    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob", "1e-6"));
+    private static final double MIN_PROB = Double.parseDouble(System.getProperty("lm.smooth.minprob", "1e-10"));
     private final NGramHistories histories;
     private final double[][] d;
     private final int N;
@@ -95,7 +95,15 @@ public class KneserNeySmoothing implements NGramScorer {
                 p += history[i];
             }
             p -= d[n - 1][ci];
-            p /= sumHistory(nGram.history(), H);
+            final double sh = sumHistory(nGram.history(), H);
+            if(sh != 0.0) {
+                p /= sumHistory(nGram.history(), H);
+            } else {
+                // This is probably wrong... perhaps 1.0?
+                // There are no summed history as this token
+                // only occurred at the end of sentences??
+                p = MIN_PROB;
+            }
 
             double bo = 0.0;
             for (int i = 0; i < d[n - 1].length; i++) {
