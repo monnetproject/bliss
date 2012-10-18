@@ -28,6 +28,7 @@ package eu.monnetproject.math.sparse.eigen;
 import java.util.ArrayList;
 import java.util.List;
 import static java.lang.Math.*;
+import java.util.Iterator;
 
 /**
  *
@@ -57,7 +58,31 @@ public class SequenceOfGivens {
         return matrix;
     }
     
+    public double[][] applyTransposed(double[][] matrix) {
+        int n = matrix[0].length;
+        for(Givens g : seq) {
+            for(int i = 0; i < n; i++) {
+                final double t = -matrix[g.j][i] * g.s + matrix[g.k][i] * g.c;
+                matrix[g.j][i] = matrix[g.j][i] * g.c + matrix[g.k][i] * g.s;
+                matrix[g.k][i] = t;
+            }
+        }
+        return matrix;
+    }
     
+    
+    public String toRString(int N) {
+        final StringBuilder buf = new StringBuilder();
+        final Iterator<Givens> iter = seq.iterator();
+        while(iter.hasNext()) {
+            final Givens g = iter.next();
+            buf.append("givens(").append(g.j+1).append(",").append(g.c).append(",").append(g.s).append(",").append(N).append(")");
+            if(iter.hasNext()) {
+                buf.append(" %*% ");
+            }
+        }
+        return buf.toString();
+    }
     
     private static class Givens {
         int j,k;

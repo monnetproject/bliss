@@ -222,7 +222,7 @@ public class QRAlgorithm {
             }
         }
 
-        if (trivial.eigenvalues.length == 0) {
+        if (trivial == null || trivial.eigenvalues.length == 0) {
             return new Solution(tridiag.alpha(), givensSeq);
         } else {
             double[] eigenvalues = new double[n+trivial.eigenvalues.length];

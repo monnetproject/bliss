@@ -27,6 +27,7 @@
 package eu.monnetproject.math.sparse.eigen;
 
 import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
 import eu.monnetproject.translation.topics.CLIOpts;
@@ -34,6 +35,9 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Random;
 
 /**
  * An implementation of SVD for super-large sparse matrices. For smaller
@@ -43,29 +47,121 @@ import java.io.IOException;
  */
 public class SingularValueDecomposition {
 
-    public void calculate(File matrixFile, int W, int J, int K, double epsilon) {
-        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(matrixFile, W), randomUnitNormVector(J), K);
-        final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
-        final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
-        
-        
-        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(matrixFile, J), randomUnitNormVector(W), K);
-        final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
-        final double[][] oEigens = oQrSolve.givensSeq().applyTo(oLanczos.q());
-        
-        // Compare vectors and output solution
+    private static final void toR(TridiagonalMatrix tm) {
+        System.out.print("tridiag(c(");
+        for (int i = 0; i < tm.alpha().length; i++) {
+            System.out.print(tm.alpha()[i]);
+            if (i + 1 != tm.alpha().length) {
+                System.out.print(",");
+            }
+        }
+        System.out.print("),c(");
+        for (int i = 0; i < tm.beta().length; i++) {
+            System.out.print(tm.beta()[i]);
+            if (i + 1 != tm.beta().length) {
+                System.out.print(",");
+            }
+        }
+        System.out.println("))");
     }
+
+    private static final void toR(double[][] m) {
+        System.out.print("matrix(c(");
+        for (int i = 0; i < m[0].length; i++) {
+            for (int j = 0; j < m.length; j++) {
+                System.out.print(m[j][i]);
+                if (i + 1 != m[0].length || j + 1 != m.length) {
+                    System.out.print(",");
+                }
+            }
+        }
+        System.out.println(")," + m.length + ")");
+    }
+
+    public Solution calculate(File matrixFile, int W, int J, int K, double epsilon) {
+        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(matrixFile, W), randomUnitNormVector(J), K, true);
+        toR(oLanczos.tridiagonal());
+        toR(oLanczos.q());
+        final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
+        System.out.println(oQrSolve.givensSeq().toRString(K));
+        final double[][] oEigens = transpose(oQrSolve.givensSeq().applyTo(oLanczos.q()));
+        toR(oEigens);
+        final int[] oOrder = order(oQrSolve.values());
+
+        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(matrixFile, J), randomUnitNormVector(W), K, true);
+        toR(iLanczos.tridiagonal());
+        toR(iLanczos.q());
+        final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
+        System.out.println(iQrSolve.givensSeq().toRString(J));
+        final double[][] iEigens = transpose(iQrSolve.givensSeq().applyTo(iLanczos.q()));
+        toR(iEigens);
+        final int[] iOrder = order(iQrSolve.values());
+
+        final double[][] V = new double[K][];
+        final double[][] U = new double[K][J];
+        final double[] S = new double[K];
+
+        for (int i = 0; i < K; i++) {
+            S[i] = Math.sqrt(Math.abs((oLanczos.tridiagonal().alpha()[oOrder[i]] + iLanczos.tridiagonal().alpha()[iOrder[i]]) / 2.0));
+            U[i] = oEigens[oOrder[i]];
+            V[i] = iEigens[iOrder[i]];
+        }
+
+        return new Solution(transpose(U), V, S);
+    }
+    private static final Random r = new Random();
 
     private Vector<Double> randomUnitNormVector(int J) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        final double[] rv = new double[J];
+        double norm = 0.0;
+        for (int j = 0; j < J; j++) {
+            rv[j] = r.nextDouble();
+            norm += rv[j] * rv[j];
+        }
+
+        norm = Math.sqrt(norm);
+
+        for (int j = 0; j < J; j++) {
+            rv[j] /= norm;
+        }
+
+        return new RealVector(rv);
     }
 
-    private static class InnerProductMultiplication implements VectorFunction<Double> {
+    private static int[] order(final double[] d) {
+        final Integer[] order = new Integer[d.length];
+        for (int i = 0; i < d.length; i++) {
+            order[i] = i;
+        }
+        Arrays.sort(order, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return -Double.compare(d[o1], d[o2]);
+            }
+        });
+        final int[] order2 = new int[d.length];
+        for (int i = 0; i < d.length; i++) {
+            order2[i] = order[i];
+        }
+        return order2;
+    }
+
+    private static double[][] transpose(double[][] M) {
+        final double[][] N = new double[M[0].length][M.length];
+        for (int i = 0; i < M.length; i++) {
+            for (int j = 0; j < M[i].length; j++) {
+                N[j][i] = M[i][j];
+            }
+        }
+        return N;
+    }
+
+    public static class OuterProductMultiplication implements VectorFunction<Double> {
 
         private final File matrixFile;
         private final int W;
 
-        public InnerProductMultiplication(File matrixFile, int W) {
+        public OuterProductMultiplication(File matrixFile, int W) {
             this.matrixFile = matrixFile;
             this.W = W;
         }
@@ -79,12 +175,12 @@ public class SingularValueDecomposition {
                 while (data.available() > 0) {
                     try {
                         int i = data.readInt();
-                        if(i != 0) {
-                            mid[i] += v.doubleValue(n);
+                        if (i != 0) {
+                            mid[i - 1] += v.doubleValue(n);
                         } else {
                             n++;
                         }
-                    } catch(EOFException x) {
+                    } catch (EOFException x) {
                         break;
                     }
                 }
@@ -95,12 +191,12 @@ public class SingularValueDecomposition {
                 while (data.available() > 0) {
                     try {
                         int i = data.readInt();
-                        if(i != 0) {
-                            a[n] += mid[i];
+                        if (i != 0) {
+                            a[n] += mid[i - 1];
                         } else {
                             n++;
                         }
-                    } catch(EOFException x) {
+                    } catch (EOFException x) {
                         break;
                     }
                 }
@@ -112,13 +208,13 @@ public class SingularValueDecomposition {
 
         }
     }
-    
-    private static class OuterProductMultiplication implements VectorFunction<Double> {
-        
+
+    public static class InnerProductMultiplication implements VectorFunction<Double> {
+
         private final File matrixFile;
         private final int J;
 
-        public OuterProductMultiplication(File matrixFile, int J) {
+        public InnerProductMultiplication(File matrixFile, int J) {
             this.matrixFile = matrixFile;
             this.J = J;
         }
@@ -132,12 +228,12 @@ public class SingularValueDecomposition {
                 while (data.available() > 0) {
                     try {
                         int i = data.readInt();
-                        if(i != 0) {
-                            mid[n] += v.doubleValue(i);
+                        if (i != 0) {
+                            mid[n] += v.doubleValue(i - 1);
                         } else {
                             n++;
                         }
-                    } catch(EOFException x) {
+                    } catch (EOFException x) {
                         break;
                     }
                 }
@@ -148,12 +244,12 @@ public class SingularValueDecomposition {
                 while (data.available() > 0) {
                     try {
                         int i = data.readInt();
-                        if(i != 0) {
-                            a[i] += mid[n];
+                        if (i != 0) {
+                            a[i - 1] += mid[n];
                         } else {
                             n++;
                         }
-                    } catch(EOFException x) {
+                    } catch (EOFException x) {
                         break;
                     }
                 }
@@ -163,6 +259,48 @@ public class SingularValueDecomposition {
                 throw new RuntimeException(x);
             }
 
+        }
+    }
+
+    public static class Solution {
+
+        public final double[][] U, V;
+        public final double[] S;
+
+        public Solution(double[][] U, double[][] V, double[] S) {
+            this.U = U;
+            this.V = V;
+            this.S = S;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 59 * hash + Arrays.deepHashCode(this.U);
+            hash = 59 * hash + Arrays.deepHashCode(this.V);
+            hash = 59 * hash + Arrays.hashCode(this.S);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Solution other = (Solution) obj;
+            if (!Arrays.deepEquals(this.U, other.U)) {
+                return false;
+            }
+            if (!Arrays.deepEquals(this.V, other.V)) {
+                return false;
+            }
+            if (!Arrays.equals(this.S, other.S)) {
+                return false;
+            }
+            return true;
         }
     }
 }

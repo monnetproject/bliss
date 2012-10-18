@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- ********************************************************************************
+ * *******************************************************************************
  */
 package eu.monnetproject.math.sparse.eigen;
 
@@ -42,34 +42,35 @@ import java.util.Random;
  */
 public class LanczosAlgorithm {
 
+    private final boolean USE_GRAM_SCHMIDT = Boolean.parseBoolean(System.getProperty("svd.lanczos.usegs", "true"));
+
     private LanczosAlgorithm() {
     }
     private static final Random random = new Random();
-    
     private double[] v;
-    
+
     public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w) {
-        return lanczos(A,w,w.size());
+        return lanczos(A, w, w.size(), Boolean.parseBoolean(System.getProperty("svd.lanczos.usegs", "true")));
     }
-     
-    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w, int K) {
-        final int n= w.size();
-        assert(K <= n);
-        if(n == 0) {
+
+    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w, int K, boolean useGramSchmidt) {
+        final int n = w.size();
+        assert (K <= n);
+        if (n == 0) {
             return new Solution(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0]);
-        } else if(n == 1) {
-            final Vector<Double> unitVector = Vectors.AS_REALS.make(new double[] { 1.0 });
+        } else if (n == 1) {
+            final Vector<Double> unitVector = Vectors.AS_REALS.make(new double[]{1.0});
             final double a11 = A.apply(unitVector).doubleValue(0);
-            return new Solution(new TridiagonalMatrix(new double[] { a11 }, new double[0]), new double[][] { { 1 } });
-        } else if(n == 2) {
-            final Vector<Double> unit1Vector = Vectors.AS_REALS.make(new double[] { 1.0, 0.0 });
-            final Vector<Double> unit2Vector = Vectors.AS_REALS.make(new double[] { 0.0, 1.0 });
+            return new Solution(new TridiagonalMatrix(new double[]{a11}, new double[0]), new double[][]{{1}});
+        } else if (n == 2) {
+            final Vector<Double> unit1Vector = Vectors.AS_REALS.make(new double[]{1.0, 0.0});
+            final Vector<Double> unit2Vector = Vectors.AS_REALS.make(new double[]{0.0, 1.0});
             final double[] a1 = A.apply(unit1Vector).toDoubleArray();
             final double[] a2 = A.apply(unit2Vector).toDoubleArray();
-            return new Solution(new TridiagonalMatrix(new double[] { a1[0], a2[1] } , 
-                    new double[] { a1[1] }), new double[][] {
-                        { 1, 0 },
-                        { 0, 1 }
+            return new Solution(new TridiagonalMatrix(new double[]{a1[0], a2[1]},
+                    new double[]{a1[1]}), new double[][]{
+                        {1, 0},
+                        {0, 1}
                     });
         }
 
@@ -77,10 +78,13 @@ public class LanczosAlgorithm {
         final double[] v = new double[n];
         final double[] alpha = new double[n + 1];
         final double[] beta = new double[n + 1];
-        final double[][] q = new double[K][];
-        
-        q[0] = Arrays.copyOf(w.toDoubleArray(), n);
-        
+        final double[][] q = new double[n][K];
+
+        //q[0] = Arrays.copyOf(w.toDoubleArray(), n);
+        for (int i = 0; i < n; i++) {
+            q[i][0] = w.doubleValue(i);
+        }
+
         int j = 0;
         beta[0] = 1;
 
@@ -89,14 +93,40 @@ public class LanczosAlgorithm {
         while (beta[j] != 0 && j < K) {
             // if j \neq 0
             if (j != 0) {
+                // Gram-schmidt orthonormalization
+                final double[] p;
+                if (useGramSchmidt) {
+                    p = new double[j];
+                    for (int i = 0; i < j; i++) {
+                        for (int k = 0; k < n; k++) {
+                            p[i] += q[k][i] * v[k] / beta[j];
+                        }
+                    }
+                } else {
+                    p = null;
+                }
+
+                double sum_wi2 = 0.0;
                 // for i = 1:n
                 for (int i = 1; i <= n; i++) {
                     // t = w_i; w_i = v_i / \beta_j; v_i = -\beta_j t
-                    final double t = w.doubleValue(i-1);
-                    w.put(i-1,v[i - 1] / beta[j]);
+                    final double t = w.doubleValue(i - 1);
+                    // Gram-schmidt
+                    double wi = v[i - 1] / beta[j];
+                    if(useGramSchmidt) {
+                        for (int k = 0; k < j; k++) {
+                            wi -= p[k] * q[i - 1][k];
+                        }
+                        sum_wi2 += wi * wi;
+                    }
+                    w.put(i - 1, wi);
                     v[i - 1] = -beta[j] * t;
                 }
-                q[j] = Arrays.copyOf(w.toDoubleArray(),n);
+                sum_wi2 = Math.sqrt(sum_wi2);
+                for (int i = 0; i < n; i++) {
+                    w.put(i, w.doubleValue(i) / sum_wi2);
+                    q[i][j] = w.doubleValue(i);
+                }
             }
             // v = v + A.mult(w)
             final Vector<Double> aw = A.apply(w);
@@ -118,10 +148,10 @@ public class LanczosAlgorithm {
                 beta[j] += v[i] * v[i];
             }
             beta[j] = Math.sqrt(beta[j]);
+            System.out.println("beta[" + j + "]=" + beta[j]);
         }
         return new Solution(new TridiagonalMatrix(Arrays.copyOfRange(alpha, 1, K + 1), Arrays.copyOfRange(beta, 1, K)), q);
     }
-
 
     /**
      * Given a symmetric sparse integer matrix compute a tri-diagonalization of
@@ -134,16 +164,16 @@ public class LanczosAlgorithm {
      * set of eigenvalues as A.
      */
     public static Solution lanczos(Matrix<Double> A) {
-        assert(A.rows() == A.cols());
-        assert(A.isSymmetric());
+        assert (A.rows() == A.cols());
+        assert (A.isSymmetric());
         final int n = A.rows();
         double[] w = new double[n];
-        
+
         // w is a random vector with 2-norm = 1
         for (int i = 0; i < n; i++) {
             w[i] = random.nextDouble();
         }
-        
+
         double w2sum = 0.0;
         for (int i = 0; i < n; i++) {
             w2sum += w[i] * w[i];
@@ -155,8 +185,9 @@ public class LanczosAlgorithm {
         }
         return lanczos(A.asVectorFunction(), Vectors.AS_REALS.make(w));
     }
-    
+
     public static class Solution {
+
         private final TridiagonalMatrix tridiagonal;
         private final double[][] q;
 

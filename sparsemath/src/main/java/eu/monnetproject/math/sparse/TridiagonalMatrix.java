@@ -382,4 +382,15 @@ public class TridiagonalMatrix implements Matrix<Double> {
         out.flush();
         out.close();
     }
+    
+    public double[][] toDoubleArray() {
+        final double[][] M = new double[cols()][cols()];
+        for(int i = 0; i < cols(); i++) {
+            M[i][i] = alpha[i];
+        }
+        for(int i = 1; i < cols(); i++) {
+            M[i-1][i] = M[i][i-1] = beta[i-1];
+        }
+        return M;
+    }
 }
