@@ -109,16 +109,20 @@ public class PTBTokenizer implements Tokenizer {
         replaceAll(sb,"(\\S)([\\p{Pe}\\p{Pf}\u201f])\\s","\\1 \\2 ");
         replaceAll(sb,"^([\\p{Pe}\\p{Pf}\u201f])\\s","\\1 ");
         replaceAll(sb,"(\\S)([\\p{Pe}\\p{Pf}\u201f])$","\\1 \\2");
+        replaceAll(sb,"\\p{C}",""); // remove "control" characters
         
         // Clean up extra
-        replaceAll(sb,"\\s{2,}"," ");
-        replaceAll(sb,"^ +","");
-        replaceAll(sb," +$","");
+        //replaceAll(sb,"\\s{2,}"," ");
+        //replaceAll(sb,"^ +","");
+        //replaceAll(sb," +$","");
         
-        // Format into a token list
-        return Arrays.asList(sb.toString().split("\\s+"));
+        // Maximum Token length = 30 (Mostly junky URLs etc.)
+        replaceAll(sb,"\\S{30,}","");
+        
+        // Format into a token list \\p{Z} is the Unicode generalization of \\s
+        return Arrays.asList(sb.toString().split("\\p{Z}+"));
     }
-
+    
     @Override
     public Script getScript() {
         return Script.LATIN;
