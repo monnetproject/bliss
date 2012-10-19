@@ -46,8 +46,6 @@ public class DataStreamIterable implements IntIterable {
         this.file = file;
     }
     
-    
-    
     @Override
     public IntIterator iterator() {
         try {
