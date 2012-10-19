@@ -88,7 +88,7 @@ public class SingularValueDecompositionTest {
                 new double[]{
                     9.1774677, 3.4735260, 1.8760096, 0.4350767
                 });
-        Solution result = instance.calculate(matrixFile, W, J, K, epsilon);
+        Solution result = instance.calculate(new DataStreamIterable(matrixFile), W, J, K, epsilon);
 
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
@@ -114,7 +114,7 @@ public class SingularValueDecompositionTest {
     public void testInnerProduct() throws Exception {
         System.out.println("innerProduct");
         File matrixFile = writeTempDoc();
-        final VectorFunction<Double> innerProduct = new SingularValueDecomposition.InnerProductMultiplication(matrixFile, 4);
+        final VectorFunction<Double> innerProduct = new SingularValueDecomposition.InnerProductMultiplication(new DataStreamIterable(matrixFile), 4);
         final RealVector v = new RealVector(new double[]{1, 2, 3, 4, 5});
         final Vector<Double> apply = innerProduct.apply(v);
         assertEquals(new RealVector(new double[]{283, 160, 242, 250, 324}), apply);
@@ -124,7 +124,7 @@ public class SingularValueDecompositionTest {
     public void testOuterProduct() throws Exception {
         System.out.println("outerProduct");
         File matrixFile = writeTempDoc();
-        final VectorFunction<Double> outerProduct = new SingularValueDecomposition.OuterProductMultiplication(matrixFile, 5);
+        final VectorFunction<Double> outerProduct = new SingularValueDecomposition.OuterProductMultiplication(new DataStreamIterable(matrixFile), 5);
         final RealVector v = new RealVector(new double[]{1, 2, 3, 4});
         final Vector<Double> apply = outerProduct.apply(v);
         assertEquals(new RealVector(new double[]{189, 228, 202, 206}), apply);

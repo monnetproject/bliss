@@ -31,12 +31,16 @@ import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
 import eu.monnetproject.translation.topics.CLIOpts;
+import it.unimi.dsi.fastutil.ints.IntIterable;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 /**
@@ -78,23 +82,23 @@ public class SingularValueDecomposition {
         System.out.println(")," + m.length + ")");
     }
 
-    public Solution calculate(File matrixFile, int W, int J, int K, double epsilon) {
-        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(matrixFile, W), randomUnitNormVector(J), K, 1.0);
-        toR(oLanczos.tridiagonal());
-        toR(oLanczos.q());
+    public Solution calculate(IntIterable corpus, int W, int J, int K, double epsilon) {
+        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(corpus, W), randomUnitNormVector(J), K, 1.0);
+        //toR(oLanczos.tridiagonal());
+        //toR(oLanczos.q());
         final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
-        System.out.println(oQrSolve.givensSeq().toRString(K));
+        //System.out.println(oQrSolve.givensSeq().toRString(K));
         final double[][] oEigens = transpose(oQrSolve.givensSeq().applyTo(oLanczos.q()));
-        toR(oEigens);
+        //toR(oEigens);
         final int[] oOrder = order(oQrSolve.values());
 
-        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(matrixFile, J), randomUnitNormVector(W), K, 1.0);
-        toR(iLanczos.tridiagonal());
-        toR(iLanczos.q());
+        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 1.0);
+        //toR(iLanczos.tridiagonal());
+        //toR(iLanczos.q());
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
-        System.out.println(iQrSolve.givensSeq().toRString(J));
+        //System.out.println(iQrSolve.givensSeq().toRString(J));
         final double[][] iEigens = transpose(iQrSolve.givensSeq().applyTo(iLanczos.q()));
-        toR(iEigens);
+        //toR(iEigens);
         final int[] iOrder = order(iQrSolve.values());
 
         final double[][] V = new double[K][];
@@ -158,107 +162,78 @@ public class SingularValueDecomposition {
 
     public static class OuterProductMultiplication implements VectorFunction<Double> {
 
-        private final File matrixFile;
+        private final IntIterable corpus;
         private final int W;
 
-        public OuterProductMultiplication(File matrixFile, int W) {
-            this.matrixFile = matrixFile;
+        public OuterProductMultiplication(IntIterable corpus, int W) {
+            this.corpus = corpus;
             this.W = W;
         }
 
         @Override
         public Vector<Double> apply(Vector<Double> v) {
-            try {
-                double[] mid = new double[W];
-                int n = 0;
-                DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(matrixFile));
-                while (data.available() > 0) {
-                    try {
-                        int i = data.readInt();
-                        if (i != 0) {
-                            mid[i - 1] += v.doubleValue(n);
-                        } else {
-                            n++;
-                        }
-                    } catch (EOFException x) {
-                        break;
-                    }
+            double[] mid = new double[W];
+            int n = 0;
+            IntIterator data = corpus.iterator();
+            while (data.hasNext()) {
+                int i = data.nextInt();
+                if (i != 0) {
+                    mid[i - 1] += v.doubleValue(n);
+                } else {
+                    n++;
                 }
-                data.close();
-                n = 0;
-                double[] a = new double[v.length()];
-                data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(matrixFile));
-                while (data.available() > 0) {
-                    try {
-                        int i = data.readInt();
-                        if (i != 0) {
-                            a[n] += mid[i - 1];
-                        } else {
-                            n++;
-                        }
-                    } catch (EOFException x) {
-                        break;
-                    }
-                }
-                data.close();
-                return new RealVector(a);
-            } catch (IOException x) {
-                throw new RuntimeException(x);
             }
+            n = 0;
+            double[] a = new double[v.length()];
+            data = corpus.iterator();
+            while (data.hasNext()) {
+                int i = data.nextInt();
+                if (i != 0) {
+                    a[n] += mid[i - 1];
+                } else {
+                    n++;
+                }
+            }
+            return new RealVector(a);
 
         }
     }
 
     public static class InnerProductMultiplication implements VectorFunction<Double> {
 
-        private final File matrixFile;
+        private final IntIterable corpus;
         private final int J;
 
-        public InnerProductMultiplication(File matrixFile, int J) {
-            this.matrixFile = matrixFile;
+        public InnerProductMultiplication(IntIterable corpus, int J) {
+            this.corpus = corpus;
             this.J = J;
         }
 
         @Override
         public Vector<Double> apply(Vector<Double> v) {
-            try {
-                double[] mid = new double[J];
-                int n = 0;
-                DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(matrixFile));
-                while (data.available() > 0) {
-                    try {
-                        int i = data.readInt();
-                        if (i != 0) {
-                            mid[n] += v.doubleValue(i - 1);
-                        } else {
-                            n++;
-                        }
-                    } catch (EOFException x) {
-                        break;
-                    }
+            double[] mid = new double[J];
+            int n = 0;
+            IntIterator data = corpus.iterator();
+            while (data.hasNext()) {
+                int i = data.nextInt();
+                if (i != 0) {
+                    mid[n] += v.doubleValue(i - 1);
+                } else {
+                    n++;
                 }
-                data.close();
-                n = 0;
-                double[] a = new double[v.length()];
-                data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(matrixFile));
-                while (data.available() > 0) {
-                    try {
-                        int i = data.readInt();
-                        if (i != 0) {
-                            a[i - 1] += mid[n];
-                        } else {
-                            n++;
-                        }
-                    } catch (EOFException x) {
-                        break;
-                    }
-                }
-                data.close();
-                return new RealVector(a);
-            } catch (IOException x) {
-                throw new RuntimeException(x);
             }
-
+            n = 0;
+            double[] a = new double[v.length()];
+            data = corpus.iterator();
+            while (data.hasNext()) {
+                int i = data.nextInt();
+                if (i != 0) {
+                    a[i - 1] += mid[n];
+                } else {
+                    n++;
+                }
+            }
+            return new RealVector(a);
         }
     }
 
