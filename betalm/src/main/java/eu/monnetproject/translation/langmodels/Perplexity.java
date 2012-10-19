@@ -48,6 +48,10 @@ public class Perplexity {
 
         final File lmFile = opts.roFile("lm", "The language model file");
 
+        if(!opts.verify(Perplexity.class)) {
+            return;
+        }
+        
         final ARPALM lm = new ARPALM(lmFile);
 
         final Scanner scanner = new Scanner(doc);
