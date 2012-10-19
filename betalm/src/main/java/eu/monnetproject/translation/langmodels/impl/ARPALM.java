@@ -165,4 +165,14 @@ public class ARPALM {
             return min;
         }
     }
+    
+    public int unk(String s, int n) {
+        if (ngramIdx(n).containsKey(s)) {
+            return 0;
+        } else if (n > 1) {
+            return -1 + unk(s.substring(s.indexOf(" ") + 1, s.length()),n-1);
+        } else {
+            return -1;
+        }
+    }
 }

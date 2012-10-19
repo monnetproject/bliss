@@ -148,7 +148,7 @@ public class CompileLanguageModel {
         out.close();
     }
 
-    protected static int[][] countOfCounts(WeightedNGramCountSet countset) {
+    public static int[][] countOfCounts(WeightedNGramCountSet countset) {
         System.err.print("Counting counts");
         int n = 0;
         final int[][] CoC = new int[countset.N()][];
@@ -156,7 +156,7 @@ public class CompileLanguageModel {
             final Object2DoubleMap<NGram> ngramCount = countset.ngramCount(i + 1);
             final IntArrayList counts = new IntArrayList();
             for (Object2DoubleMap.Entry<NGram> e : ngramCount.object2DoubleEntrySet()) {
-                final int ci = (int) Math.ceil(e.getDoubleValue());
+                final int ci = (int) Math.ceil(e.getDoubleValue()) - 1;
                 while (counts.size() <= ci) {
                     counts.add(0);
                 }
@@ -230,7 +230,6 @@ public class CompileLanguageModel {
     public static void main(String[] _args) throws Exception {
         final CLIOpts opts = new CLIOpts(_args);
 
-
         final ArrayList<String> args = new ArrayList<String>(Arrays.asList(_args));
 
         final SourceType sourceType = opts.enumOptional("t", SourceType.class, SourceType.SIMPLE, "The type of source: SIMPLE, INTERLEAVED_USE_FIRST or INTERLEAVED_USE_SECOND");
@@ -288,6 +287,7 @@ public class CompileLanguageModel {
             betaSimFunction = null;
         }
 
+        System.err.println("Reading from " + inFile.getPath());
         System.err.print("Counting corpus");
         final WeightedNGramCountSet countSet;
         if (betaMethod == null) {

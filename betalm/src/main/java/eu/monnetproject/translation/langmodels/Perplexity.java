@@ -48,30 +48,31 @@ public class Perplexity {
 
         final File lmFile = opts.roFile("lm", "The language model file");
 
-        if(!opts.verify(Perplexity.class)) {
+        if (!opts.verify(Perplexity.class)) {
             return;
         }
-        
+
         final ARPALM lm = new ARPALM(lmFile);
 
         final Scanner scanner = new Scanner(doc);
 
         double perplexity = calculatePerplexity(scanner, lm);
-        
-        System.err.println("Log2 Perplexity="+(perplexity/LOG_10_2));
-    }
 
+        System.err.println("Log2 Perplexity=" + (perplexity / LOG_10_2));
+    }
     private static final double LOG_10_2 = 0.3010299956639812;
-    
+
     public static double calculatePerplexity(final Scanner scanner, final ARPALM lm) throws FileNotFoundException {
         double perplexity = 0.0;
+        int bo = 0;
+        int unk = 0;
 
-        for(int i = 1; i <= lm.n; i++) {
-            System.err.print("Creating " + i+ "-gram index...");
+        for (int i = 1; i <= lm.n; i++) {
+            System.err.print("Creating " + i + "-gram index...");
             lm.ngramIdx(i);
             System.err.println("done");
         }
-        
+
         final Tokenizer tokenizer = new PTBTokenizer();
 
         while (scanner.hasNextLine()) {
@@ -82,9 +83,11 @@ public class Perplexity {
             int m = 0;
 
             double p = 0.0;
-            
+            int u = 0;
+            int b = 0;
+
             for (String token : tokens) {
-                if (m  == lm.n) {
+                if (m == lm.n) {
                     sb.replace(0, sb.indexOf(" ") + 1, "");
                     m--;
                 }
@@ -93,15 +96,23 @@ public class Perplexity {
                 }
                 sb.append(token);
                 m++;
-                
+                final int unkScore = lm.unk(sb.toString(), m);
+                if (unkScore == -m) {
+                    u++;
+                }
+                b += unkScore;
+
                 p += lm.score(sb.toString(), m, -100);
-                
+
             }
             perplexity += p / tokens.size();
+            unk += u / tokens.size();
+            bo += b / tokens.size();
             System.err.print(".");
         }
+        System.err.println("UNK=" + unk);
+        System.err.println("BACKOFFS=" + (-bo));
         System.err.println();
         return perplexity;
     }
-    
 }

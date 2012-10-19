@@ -55,10 +55,13 @@ public class KneserNeySmoothing implements NGramScorer {
         this.d = new double[CoC.length/*don't snigger*/][D];
         for (int i = 0; i < CoC.length; i++) {
             double y = (double) CoC[i][0] / (double) (CoC[i][0] + 2 * CoC[i][1]);
+            System.err.println("y=" + y);
             assert (CoC[i].length > D);
+                System.err.println("CoC["+i+"][0]=" + CoC[i][0]);
             for (int j = 0; j < D; j++) {
+                System.err.println("CoC["+i+"]["+j+"]=" + CoC[i][j+1]);
                 if (CoC[i][j] != 0) {
-                    d[i][j] = j + 1 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j];
+                    d[i][j] = (double)j + 1.0 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j];
                     System.err.println("d_" +i + "[" + j +"]=" + d[i][j]);
                 }
             }
