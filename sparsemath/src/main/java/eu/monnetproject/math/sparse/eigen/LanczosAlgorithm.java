@@ -28,6 +28,7 @@ package eu.monnetproject.math.sparse.eigen;
 
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.Matrix;
+import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.VectorFunction;
 import eu.monnetproject.math.sparse.Vectors;
@@ -36,7 +37,7 @@ import java.util.Random;
 
 /**
  * Based on "Matrix Computations" (1990) by Golub & van Loan. 2nd Edition page
- * 485
+ * 485. And http://web.eecs.utk.edu/~dongarra/etemplates/node120.html
  *
  * @author John McCrae
  */
@@ -50,18 +51,18 @@ public class LanczosAlgorithm {
     private double[] v;
 
     public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w) {
-        return lanczos(A, w, w.size(), Boolean.parseBoolean(System.getProperty("svd.lanczos.usegs", "true")));
+        return lanczos(A, w, w.size(), 1.0);
     }
 
-    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w, int K, boolean useGramSchmidt) {
+    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w, int K, double rho) {
         final int n = w.size();
         assert (K <= n);
         if (n == 0) {
-            return new Solution(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0]);
+            return new Solution(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0],0.0);
         } else if (n == 1) {
             final Vector<Double> unitVector = Vectors.AS_REALS.make(new double[]{1.0});
             final double a11 = A.apply(unitVector).doubleValue(0);
-            return new Solution(new TridiagonalMatrix(new double[]{a11}, new double[0]), new double[][]{{1}});
+            return new Solution(new TridiagonalMatrix(new double[]{a11}, new double[0]), new double[][]{{1}},0.0);
         } else if (n == 2) {
             final Vector<Double> unit1Vector = Vectors.AS_REALS.make(new double[]{1.0, 0.0});
             final Vector<Double> unit2Vector = Vectors.AS_REALS.make(new double[]{0.0, 1.0});
@@ -71,86 +72,79 @@ public class LanczosAlgorithm {
                     new double[]{a1[1]}), new double[][]{
                         {1, 0},
                         {0, 1}
-                    });
+                    },0.0);
         }
 
         // v = 0; \beta_0 = 1; j = 0
         final double[] v = new double[n];
+        final double[] v2 = new double[n];
         final double[] alpha = new double[n + 1];
         final double[] beta = new double[n + 1];
+        beta[0] = 1;
         final double[][] q = new double[n][K];
+        final double[] r = new double[n];
+        System.arraycopy(w.toDoubleArray(), 0, r, 0, n);
 
         //q[0] = Arrays.copyOf(w.toDoubleArray(), n);
         for (int i = 0; i < n; i++) {
-            q[i][0] = w.doubleValue(i);
+            q[i][0] = r[i];
         }
 
         int j = 0;
-        beta[0] = 1;
-
 
         // while \beta_j \neq 0
         while (beta[j] != 0 && j < K) {
-            // if j \neq 0
-            if (j != 0) {
-                // Gram-schmidt orthonormalization
-                final double[] p;
-                if (useGramSchmidt) {
-                    p = new double[j];
-                    for (int i = 0; i < j; i++) {
-                        for (int k = 0; k < n; k++) {
-                            p[i] += q[k][i] * v[k] / beta[j];
-                        }
-                    }
-                } else {
-                    p = null;
-                }
+            // w = v_{j-1} * \beta_{j-1}
+            // v_j = r / \beta_{j-1}
+            for (int i = 0; i < n; i++) {
+                v2[i] = v[i] * beta[j];
+                v[i] = r[i] / beta[j];
+                q[i][j] = v[i];
+            }
 
-                double sum_wi2 = 0.0;
-                // for i = 1:n
-                for (int i = 1; i <= n; i++) {
-                    // t = w_i; w_i = v_i / \beta_j; v_i = -\beta_j t
-                    final double t = w.doubleValue(i - 1);
-                    // Gram-schmidt
-                    double wi = v[i - 1] / beta[j];
-                    if(useGramSchmidt) {
-                        for (int k = 0; k < j; k++) {
-                            wi -= p[k] * q[i - 1][k];
-                        }
-                        sum_wi2 += wi * wi;
+            // r = Av_j - v_{j-1}\beta_{j-1}
+            final Vector<Double> av = A.apply(new RealVector(v));
+            for (int i = 0; i < n; i++) {
+                r[i] = av.doubleValue(i) - v2[i];
+            }
+            // \alpha_j = v_j^T r
+            alpha[j] = 0.0;
+            for (int i = 0; i < n; i++) {
+                alpha[j] += v[i] * r[i];
+            }
+
+            beta[j+1] = 0.0;
+            // r = r - \alpha_j v_j
+            // \beta_j = ||r||
+            for (int i = 0; i < n; i++) {
+                r[i] -= alpha[j] * v[i];
+                beta[j+1] += r[i] * r[i];
+            }
+            beta[j+1] = Math.sqrt(beta[j+1]);
+
+            // if (||r|| <  \rho \sqrt{\alpha_j^2 + \beta_{j-1}^2}) {
+            if (j > 1 && beta[j+1] < rho * Math.sqrt(alpha[j] * alpha[j] + beta[j] * beta[j])) {
+                // s = V_j^T r
+                double[] s = new double[j];
+                for (int i = 0; i < j; i++) {
+                    for (int k = 0; k < n; k++) {
+                        s[i] += q[k][i] * r[k];
                     }
-                    w.put(i - 1, wi);
-                    v[i - 1] = -beta[j] * t;
                 }
-                sum_wi2 = Math.sqrt(sum_wi2);
+                // r = r - V_j s
                 for (int i = 0; i < n; i++) {
-                    w.put(i, w.doubleValue(i) / sum_wi2);
-                    q[i][j] = w.doubleValue(i);
+                    for (int k = 0; k < j; k++) {
+                        r[i] -= q[i][k] * s[k];
+                    }
                 }
+                // \alpha_j = \alpha_j + s_j ; \beta_j = \beta_j + s_{j-1}
+                alpha[j] = alpha[j] + s[j - 1];
+                beta[j] = beta[j] + s[j - 2];
             }
-            // v = v + A.mult(w)
-            final Vector<Double> aw = A.apply(w);
-            for (int i = 0; i < n; i++) {
-                v[i] += aw.doubleValue(i);
-            }
-            // j = j + 1; \alpha_j = w^Tv ; v = v - \alpha_j w; \beta_j = ||v||_2
+            // j = j + 1
             j++;
-            if (j == n + 1) {
-                break;
-            }
-            alpha[j] = 0;
-            for (int i = 0; i < n; i++) {
-                alpha[j] += w.doubleValue(i) * v[i];
-            }
-            beta[j] = 0;
-            for (int i = 0; i < n; i++) {
-                v[i] = v[i] - alpha[j] * w.doubleValue(i);
-                beta[j] += v[i] * v[i];
-            }
-            beta[j] = Math.sqrt(beta[j]);
-            System.out.println("beta[" + j + "]=" + beta[j]);
         }
-        return new Solution(new TridiagonalMatrix(Arrays.copyOfRange(alpha, 1, K + 1), Arrays.copyOfRange(beta, 1, K)), q);
+        return new Solution(new TridiagonalMatrix(Arrays.copyOfRange(alpha, 0, K), Arrays.copyOfRange(beta, 1, K)), q, beta[K]);
     }
 
     /**
@@ -190,10 +184,12 @@ public class LanczosAlgorithm {
 
         private final TridiagonalMatrix tridiagonal;
         private final double[][] q;
+        private final double beta;
 
-        public Solution(TridiagonalMatrix tridiagonal, double[][] q) {
+        public Solution(TridiagonalMatrix tridiagonal, double[][] q, double beta) {
             this.tridiagonal = tridiagonal;
             this.q = q;
+            this.beta = beta;
         }
 
         public double[][] q() {
@@ -202,6 +198,10 @@ public class LanczosAlgorithm {
 
         public TridiagonalMatrix tridiagonal() {
             return tridiagonal;
+        }
+
+        public double beta() {
+            return beta;
         }
 
         @Override

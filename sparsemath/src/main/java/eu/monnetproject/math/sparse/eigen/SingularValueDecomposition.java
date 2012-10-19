@@ -79,7 +79,7 @@ public class SingularValueDecomposition {
     }
 
     public Solution calculate(File matrixFile, int W, int J, int K, double epsilon) {
-        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(matrixFile, W), randomUnitNormVector(J), K, true);
+        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(matrixFile, W), randomUnitNormVector(J), K, 1.0);
         toR(oLanczos.tridiagonal());
         toR(oLanczos.q());
         final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
@@ -88,7 +88,7 @@ public class SingularValueDecomposition {
         toR(oEigens);
         final int[] oOrder = order(oQrSolve.values());
 
-        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(matrixFile, J), randomUnitNormVector(W), K, true);
+        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(matrixFile, J), randomUnitNormVector(W), K, 1.0);
         toR(iLanczos.tridiagonal());
         toR(iLanczos.q());
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
