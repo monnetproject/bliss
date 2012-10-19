@@ -138,20 +138,20 @@ public class LSATrain {
                     throw new RuntimeException(x);
                 }
             }
-
+ 
             @Override
             public int nextInt() {
                 if (!hasNext) {
                     throw new NoSuchElementException();
                 }
                 int rv = next;
+                advance();
                 if(next == 0) {
-                    if(odd) {
+                    if(odd && hasNext) {
                         advance();
                     }
                     odd = !odd;
                 }
-                advance();
                 return rv;
             }
 
