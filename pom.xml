@@ -51,6 +51,7 @@
        <module>common</module>
        <module>experiments</module>
        <module>lda</module>
+       <module>lsa</module>
        <module>monnet</module>
        <module>sparsemath</module>
     </modules>

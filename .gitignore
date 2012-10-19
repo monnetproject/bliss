@@ -3,4 +3,5 @@ target
 WikiExtractor.py
 experiments/tmp*
 wiki/
+*.out
 
