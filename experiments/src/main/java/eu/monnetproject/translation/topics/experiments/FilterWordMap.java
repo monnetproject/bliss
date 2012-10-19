@@ -45,6 +45,10 @@ public class FilterWordMap {
         final File wordMapInFile = opts.roFile("wordMap", "The full word map to reduce");
         final File wordMapOutFile = opts.woFile("out", "The file to store the reduced wordMap");
         
+        if(!opts.verify(FilterWordMap.class)) {
+            return;
+        }
+        
         IntSet inCorpus = new IntOpenHashSet();
         
         final DataInputStream dis = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpusFile));

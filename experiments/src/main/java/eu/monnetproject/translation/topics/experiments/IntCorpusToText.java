@@ -85,12 +85,12 @@ public class IntCorpusToText {
                         out.print(invMap[i]);
                         out.print(" ");
                     }
-                    odd = !odd;
                 } else {
                     if((odd || interleave != Interleave.FIRST) &&
                             (!odd || interleave != Interleave.SECOND)) {
                         out.println();
                     }
+                    odd = !odd;
                     //out.println();
                 }
             } catch(EOFException x) {
