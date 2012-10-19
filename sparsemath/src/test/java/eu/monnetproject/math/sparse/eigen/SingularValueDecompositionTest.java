@@ -8,7 +8,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Random;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -52,12 +52,32 @@ public class SingularValueDecompositionTest {
         int J = 4;
         int K = 4;
         double epsilon = 0.0001;
-        SingularValueDecomposition instance = new SingularValueDecomposition();
+        final Random r = new Random(J);
+        SingularValueDecomposition instance = new SingularValueDecomposition() {
+            @Override
+            protected Vector<Double> randomUnitNormVector(int J) {
+
+                final double[] rv = new double[J];
+                double norm = 0.0;
+                for (int j = 0; j < J; j++) {
+                    rv[j] = r.nextDouble();
+                    norm += rv[j] * rv[j];
+                }
+
+                norm = Math.sqrt(norm);
+
+                for (int j = 0; j < J; j++) {
+                    rv[j] /= norm;
+                }
+
+                return new RealVector(rv);
+            }
+        };
         Solution expResult = new Solution(new double[][]{
-                    {-0.4711454,-0.05076119,-0.79897599,-0.3702467},
-                    {-0.5780836,-0.47792513,0.06631807,0.6580340},
-                    {-0.4914296,-0.17556759,0.58753338,-0.6184477},
-                    {-0.4498203,0.85917803,0.10974433,0.2177866}
+                    {-0.4711454, -0.05076119, -0.79897599, -0.3702467},
+                    {-0.5780836, -0.47792513, 0.06631807, 0.6580340},
+                    {-0.4914296, -0.17556759, 0.58753338, -0.6184477},
+                    {-0.4498203, 0.85917803, 0.10974433, 0.2177866}
                 },
                 new double[][]{
                     {-0.4990883, -0.2681114, -0.4152654, -0.4337752, -0.5642879},
@@ -70,21 +90,21 @@ public class SingularValueDecompositionTest {
                 });
         Solution result = instance.calculate(matrixFile, W, J, K, epsilon);
 
-        for(int i = 0; i < 2; i++) {
-            for(int j = 0; j < 2; j++) {
-                assertEquals(Math.abs(expResult.U[i][j]), Math.abs(result.U[i][j]),0.02);
-                assertEquals(Math.abs(expResult.V[i][j]), Math.abs(result.V[i][j]),0.02);
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                assertEquals(Math.abs(expResult.U[i][j]), Math.abs(result.U[i][j]), 0.02);
+                assertEquals(Math.abs(expResult.V[i][j]), Math.abs(result.V[i][j]), 0.02);
             }
         }
         assertArrayEquals(expResult.S, result.S, 0.2);
     }
-    
+
     public double[] positive(double[] exp, double[] act) {
-        final double sgn = Math.signum(exp[0]*act[0]);
-        if(sgn == 0) {
-            assert(false);
+        final double sgn = Math.signum(exp[0] * act[0]);
+        if (sgn == 0) {
+            assert (false);
         }
-        for(int i = 0; i < act.length; i++) {
+        for (int i = 0; i < act.length; i++) {
             act[i] *= sgn;
         }
         return act;

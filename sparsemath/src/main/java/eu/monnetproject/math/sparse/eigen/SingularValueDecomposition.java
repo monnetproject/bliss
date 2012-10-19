@@ -111,7 +111,7 @@ public class SingularValueDecomposition {
     }
     private static final Random r = new Random();
 
-    private Vector<Double> randomUnitNormVector(int J) {
+    protected Vector<Double> randomUnitNormVector(int J) {
         final double[] rv = new double[J];
         double norm = 0.0;
         for (int j = 0; j < J; j++) {
