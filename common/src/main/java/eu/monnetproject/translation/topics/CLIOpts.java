@@ -26,6 +26,8 @@
  */
 package eu.monnetproject.translation.topics;
 
+import eu.monnetproject.lang.Language;
+import eu.monnetproject.lang.LanguageCodeFormatException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -334,6 +336,29 @@ public class CLIOpts {
             }
             args.remove(0);
             return (Class<C>) clazz;
+        }
+    }
+    
+    public Language language(String name, String description) {
+        
+        final Argument arg = new Argument(name, null, description, false);
+        argObjs.add(arg);
+        if (args.isEmpty()) {
+            arg.message = "Too few arguments: expected " + name;
+            succeeded = false;
+            return null;
+        } else {
+            final Language language;
+            try {
+                language = Language.get(args.get(0));
+            } catch(LanguageCodeFormatException x) {
+                arg.message = "Bad language code: " + args.get(0);
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            args.remove(0);
+            return language;
         }
     }
 
