@@ -28,6 +28,7 @@ package eu.monnetproject.translation.topics.sim;
 
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SparseArray;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -116,11 +117,11 @@ public class WxWCLESA implements SimilarityMetric {
     private SparseArray[] transpose(SparseArray[][] x, int l) {
         final SparseArray[] Xt = new SparseArray[W];
         for (int j = 0; j < x.length; j++) {
-            for (Map.Entry<Integer, Integer> e : x[j][l].entrySet()) {
-                if (Xt[e.getKey()] == null) {
-                    Xt[e.getKey()] = new SparseArray(x.length);
+            for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
+                if (Xt[e.getIntKey()] == null) {
+                    Xt[e.getIntKey()] = new SparseArray(x.length);
                 }
-                Xt[e.getKey()].put(j, e.getValue());
+                Xt[e.getIntKey()].put(j, e.getIntValue());
             }
         }
         return Xt;

@@ -29,6 +29,7 @@ package eu.monnetproject.translation.topics.sim;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.SparseRealArray;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -92,11 +93,11 @@ public class LinearSurjection implements SimilarityMetric {
         final SparseArray[][] Xt = new SparseArray[W][2];
         for (int j = 0; j < x.length; j++) {
             for (int l = 0; l < 2; l++) {
-                for (Map.Entry<Integer, Integer> e : x[j][l].entrySet()) {
-                    if (Xt[e.getKey()][l] == null) {
-                        Xt[e.getKey()][l] = new SparseArray(x.length);
+                for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
+                    if (Xt[e.getIntKey()][l] == null) {
+                        Xt[e.getIntKey()][l] = new SparseArray(x.length);
                     }
-                    Xt[e.getKey()][l].put(j, e.getValue());
+                    Xt[e.getIntKey()][l].put(j, e.getIntValue());
                 }
             }
         }
@@ -147,7 +148,7 @@ public class LinearSurjection implements SimilarityMetric {
                     continue;
                 }
                 for (Map.Entry<Integer, Integer> j : Xt[w1][1].entrySet()) {
-                    sim += Xt[w0][0].get(j.getKey()) * j.getValue();
+                    sim += Xt[w0][0].get(j.getKey().intValue()) * j.getValue();
                 }
                 sim = sim / norms[w1][1] / norms[w0][0];
                 if ((sim > bestSim && (ties = 0) == 0)

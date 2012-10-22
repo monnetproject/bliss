@@ -42,36 +42,40 @@ import java.util.Arrays;
  * @author John McCrae
  */
 public class CompileBetaModel extends CompileLanguageModel {
-    
+
     public WeightedNGramCountSet doCount(int N, IntegerizedCorpusReader reader, CompileLanguageModel.SourceType type, BetaSimFunction beta, Smoothing smoothing) throws IOException {
         final WeightedCounter counter = smoothing == Smoothing.KNESER_NEY ? new LossyWeightedCounterWithHistory(N) : new LossyWeightedCounter(N);
         long read = 0;
-        boolean inDoc = type != CompileLanguageModel.SourceType.INTERLEAVED_USE_SECOND;
+        if (type == CompileLanguageModel.SourceType.SIMPLE) {
+            throw new IllegalArgumentException("Cannot BetaLM a monolingual corpus");
+        }
         while (reader.nextDocument()) {
-            final int[] doc = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
-            final double v = beta.score(SparseArray.histogram(doc,0));
-            for (int tk : doc) {
+            final int[] doc1 = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
+            reader.nextDocument();
+            final int[] doc2 = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
+            final int[] docSrc = type == CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST ? doc2 : doc1;
+            final int[] docTrg = type == CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST ? doc1 : doc2;
+            final double v = beta.score(SparseArray.histogram(docSrc, 0));
+            if(v <= 0.0) {
+                continue;
+            }
+            for (int tk : docTrg) {
                 if (tk == 0) {
                     if (type == CompileLanguageModel.SourceType.SIMPLE) {
                         counter.docEnd();
                     } else {
-                        if (inDoc) {
-                            counter.docEnd();
-                            inDoc = false;
-                        } else {
-                            inDoc = true;
-                        }
+                        counter.docEnd();
                     }
-                } else if (inDoc) {
-                    counter.offer(tk,v);
+                } else {
+                    counter.offer(tk, v);
                 }
                 if (++read % 1048576 == 0) {
                     System.err.print(".");
                 }
             }
         }
-        if(counter instanceof CounterWithHistory) {
-            histories = ((CounterWithHistory)counter).histories();
+        if (counter instanceof CounterWithHistory) {
+            histories = ((CounterWithHistory) counter).histories();
         }
         return counter.counts();
     }

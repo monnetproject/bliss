@@ -65,11 +65,11 @@ public class Metrics {
         double a2 = 0.0;
         double b2 = 0.0;
         for (int i : vec2.keySet()) {
-            ab += (double) vec2.get(i) * (double) vec1[i];
+            ab += (double) vec2.get(i) * vec1[i];
             b2 += (double) vec2.get(i) * (double) vec2.get(i);
         }
         for (int i = 0; i < vec1.length; i++) {
-            a2 += (double) vec1[i] * (double) vec1[i];
+            a2 += vec1[i] * vec1[i];
         }
         return a2 > 0 && b2 > 0 ? ab / Math.sqrt(a2) / Math.sqrt(b2) : 0;
     }

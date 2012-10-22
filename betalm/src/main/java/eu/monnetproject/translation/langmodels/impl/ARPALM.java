@@ -81,11 +81,13 @@ public class ARPALM {
 
         this.n = n;
 
-        alpha = new double[n][];
+        alpha = new double[n-1][];
         grams = new String[n][];
         prob = new double[n][];
         for (int i = 0; i < n; i++) {
-            alpha[i] = new double[ngramSizes.get(i)];
+            if(i != n-1) {
+                alpha[i] = new double[ngramSizes.get(i)];
+            }
             grams[i] = new String[ngramSizes.get(i)];
             prob[i] = new double[ngramSizes.get(i)];
         }

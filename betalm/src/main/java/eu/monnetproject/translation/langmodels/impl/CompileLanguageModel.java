@@ -232,13 +232,14 @@ public class CompileLanguageModel {
 
         final ArrayList<String> args = new ArrayList<String>(Arrays.asList(_args));
 
-        final SourceType sourceType = opts.enumOptional("t", SourceType.class, SourceType.SIMPLE, "The type of source: SIMPLE, INTERLEAVED_USE_FIRST or INTERLEAVED_USE_SECOND");
 
         StringBuilder betalmString = new StringBuilder("The BetaLM method: ");
         for (BetaLMImpl.Method method : BetaLMImpl.Method.values()) {
             betalmString.append(method.name()).append(" ");
         }
         final BetaLMImpl.Method betaMethod = opts.enumOptional("b", BetaLMImpl.Method.class, null, betalmString.toString());
+
+        final SourceType sourceType = opts.enumOptional("t", SourceType.class, betaMethod == null ? SourceType.SIMPLE : SourceType.INTERLEAVED_USE_FIRST, "The type of source: SIMPLE, INTERLEAVED_USE_FIRST or INTERLEAVED_USE_SECOND");
 
         final Smoothing smoothing = opts.enumOptional("smooth", Smoothing.class, Smoothing.NONE, "The type of smoothing: NONE, ADD_ALPHA, GOOD_TURING, KNESER_NEY");
 
@@ -276,7 +277,11 @@ public class CompileLanguageModel {
                 System.err.println("BetaLM needs a query file");
                 return;
             }
-            final SparseArray binQuery = SparseArray.fromBinary(queryFile, Integer.MAX_VALUE);
+            if(sourceType == SourceType.SIMPLE) {
+                System.err.println("BetaLM needs a bilingual corpus, set -t");
+                return;
+            }
+            final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
             if (smoothness == 1.0) {
                 betaSimFunction = betaSimFunction(betaMethod, binQuery, precomp);
             } else {
