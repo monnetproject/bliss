@@ -85,6 +85,22 @@ public class PTBTokenizerTest {
         assertFalse(tokIter.hasNext());
         assertFalse(expIter.hasNext());
     }
+    
+    @Test
+    public void testTokenize3() {
+        System.out.println("tokenize3");
+        String input = "\u00a1arriba! at http://www.ariba.com should remove URL";
+        PTBTokenizer instance = new PTBTokenizer();
+        List<String> expResult = Arrays.asList("\u00a1","arriba","!","at","should","remove","URL");
+        List<String> result = instance.tokenize(input);
+        final Iterator<String> tokIter = result.iterator();
+        final Iterator<String> expIter = expResult.iterator();
+        while(tokIter.hasNext() && expIter.hasNext()) {
+            assertEquals(expIter.next(),tokIter.next());
+        }
+        assertFalse(tokIter.hasNext());
+        assertFalse(expIter.hasNext());
+    }
 
     /**
      * Test of getScript method, of class PTBTokenizer.

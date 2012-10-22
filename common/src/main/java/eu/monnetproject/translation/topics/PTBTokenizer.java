@@ -66,14 +66,16 @@ public class PTBTokenizer implements Tokenizer {
     @Override
     public List<String> tokenize(String input) {
         final StringBuilder sb = new StringBuilder(input);
+        // Remove non-informative tokens
+        replaceAll(sb,"http://\\S+","");
+        
         // Generic Latin Charset rules
         replaceAll(sb,"^\"","`` ");
         replaceAll(sb,"(?<=[ \\(\\[\\{\\<])\"","`` ");
         replaceAll(sb,"\\.\\.\\."," ... ");
-        replaceAll(sb,"([,;:@#$%&])"," \\1 ");
+        replaceAll(sb,"([\\p{Po}&&[^'\\.]])"," \\1 ");
         replaceAll(sb,"([^\\.])\\.([\\]\\)\\}\\>\"'\\s])","\\1 . \\2 ");
         replaceAll(sb,"([^\\.])\\.$","\\1 .");
-        replaceAll(sb,"([\\?\\!])"," \\1 ");
         replaceAll(sb,"([\\]\\[\\(\\)\\{\\}\\<\\>])"," \\1 ");
         replaceAll(sb,"--"," -- ");
         replaceAll(sb,"\""," '' ");
@@ -113,11 +115,12 @@ public class PTBTokenizer implements Tokenizer {
         
         // Clean up extra
         //replaceAll(sb,"\\s{2,}"," ");
-        //replaceAll(sb,"^ +","");
-        //replaceAll(sb," +$","");
+        replaceAll(sb,"^ +","");
+        replaceAll(sb," +$","");
         
         // Maximum Token length = 30 (Mostly junky URLs etc.)
         replaceAll(sb,"\\S{30,}","");
+        
         
         // Format into a token list \\p{Z} is the Unicode generalization of \\s
         return Arrays.asList(sb.toString().split("\\p{Z}+"));
