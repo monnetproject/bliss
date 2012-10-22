@@ -29,6 +29,7 @@ package eu.monnetproject.translation.topics.clesa;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.sim.ParallelReader;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -91,13 +92,13 @@ public class CLESA implements SimilarityMetric {
             n[j] = x[j][0].sum();
             n_f[j] = x[j][0].sum();
             for (int l = 0; l < 2; l++) {
-                for (Map.Entry<Integer, Integer> e : x[j][l].entrySet()) {
-                    if (Xt[e.getKey()][l] == null) {
-                        Xt[e.getKey()][l] = new SparseArray(x.length);
+                for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
+                    if (Xt[e.getIntKey()][l] == null) {
+                        Xt[e.getIntKey()][l] = new SparseArray(x.length);
                     }
-                    final Integer v = e.getValue();
+                    final int v = e.getIntValue();
                     if(v != 0) { // So DF calculation doesn't go wrong
-                        Xt[e.getKey()][l].put(j, v);
+                        Xt[e.getIntKey()][l].put(j, v);
                     }
                 }
             }
