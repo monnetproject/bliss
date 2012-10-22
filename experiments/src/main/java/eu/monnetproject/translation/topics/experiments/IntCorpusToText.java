@@ -42,35 +42,40 @@ import java.io.PrintStream;
 public class IntCorpusToText {
 
     enum Interleave {
+
         NO,
         FIRST,
         SECOND
     }
-    
-    public static void main(String[] args) throws Exception {
-        final CLIOpts opts = new CLIOpts(args);
-        
-        final Interleave interleave = opts.enumOptional("i", Interleave.class, Interleave.NO, "Is the corpus interleaved: NO, FIRST, SECOND");
-        
-        final File wordMapFile = opts.roFile("wordMap[.gz|bz2]", "The map from words to integer IDs");
-        
-        final int W = opts.intValue("W", "The number of distinct tokens in the corpus");
 
-        final File corpusFile = opts.roFile("corpusFile[.gz|bz2]", "The corpus");
+    public static void main(String[] args) {
+        try {
+            final CLIOpts opts = new CLIOpts(args);
 
-        final PrintStream out = opts.outFileOrStdout();
+            final Interleave interleave = opts.enumOptional("i", Interleave.class, Interleave.NO, "Is the corpus interleaved: NO, FIRST, SECOND");
 
-        if(!opts.verify(IntCorpusToText.class)) {
-            return;
+            final File wordMapFile = opts.roFile("wordMap[.gz|bz2]", "The map from words to integer IDs");
+
+            final int W = opts.intValue("W", "The number of distinct tokens in the corpus");
+
+            final File corpusFile = opts.roFile("corpusFile[.gz|bz2]", "The corpus");
+
+            final PrintStream out = opts.outFileOrStdout();
+
+            if (!opts.verify(IntCorpusToText.class)) {
+                return;
+            }
+
+            final String[] invMap;
+            System.err.println("Reading word map");
+            invMap = WordMap.inverseFromFile(wordMapFile, W, true);
+
+            final InputStream corpusIn = CLIOpts.openInputAsMaybeZipped(corpusFile);
+
+            intCorpus2Text(invMap, corpusIn, out, interleave);
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
-        
-        final String[] invMap;
-        System.err.println("Reading word map");
-        invMap = WordMap.inverseFromFile(wordMapFile, W, true);
-
-        final InputStream corpusIn = CLIOpts.openInputAsMaybeZipped(corpusFile);
-
-        intCorpus2Text(invMap, corpusIn, out, interleave);
     }
 
     private static void intCorpus2Text(String[] invMap, InputStream corpusIn, PrintStream out, Interleave interleave) throws IOException {
@@ -80,20 +85,20 @@ public class IntCorpusToText {
             try {
                 int i = data.readInt();
                 if (i != 0) {
-                    if((odd || interleave != Interleave.FIRST) &&
-                            (!odd || interleave != Interleave.SECOND)) {
+                    if ((odd || interleave != Interleave.FIRST)
+                            && (!odd || interleave != Interleave.SECOND)) {
                         out.print(invMap[i]);
                         out.print(" ");
                     }
                 } else {
-                    if((odd || interleave != Interleave.FIRST) &&
-                            (!odd || interleave != Interleave.SECOND)) {
+                    if ((odd || interleave != Interleave.FIRST)
+                            && (!odd || interleave != Interleave.SECOND)) {
                         out.println();
                     }
                     odd = !odd;
                     //out.println();
                 }
-            } catch(EOFException x) {
+            } catch (EOFException x) {
                 break;
             }
         }
