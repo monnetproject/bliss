@@ -32,6 +32,7 @@ import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SimilarityMetricFactory;
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -44,11 +45,20 @@ public class MateFindingTrial {
 
     private static final Random random = new Random();
 
+    @SuppressWarnings("unchecked")
     public static void compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile) throws Exception {
-        final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile));
         final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         final SimilarityMetricFactory smf = factoryClazz.newInstance();
-        final SimilarityMetric metric = smf.makeMetric(trainPBR, W);
+        final SimilarityMetric metric;
+        if(smf.datatype().equals(ParallelBinarizedReader.class)) {
+            final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile));
+            metric= ((SimilarityMetricFactory<ParallelBinarizedReader>)smf).makeMetric(trainPBR, W);
+        } else if(InputStream.class.isAssignableFrom(smf.datatype())) {
+            final InputStream train = CLIOpts.openInputAsMaybeZipped(trainFile);
+            metric = ((SimilarityMetricFactory<InputStream>)smf).makeMetric(train, W);
+        } else {
+            throw new IllegalArgumentException();
+        }
 
         compare(metric, W, testPBR);
     }

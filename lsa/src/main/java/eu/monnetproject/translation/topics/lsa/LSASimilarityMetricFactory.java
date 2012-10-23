@@ -23,65 +23,48 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics.experiments;
+package eu.monnetproject.translation.topics.lsa;
 
-import eu.monnetproject.translation.topics.CLIOpts;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
+import eu.monnetproject.translation.topics.ParallelBinarizedReader;
+import eu.monnetproject.translation.topics.SimilarityMetric;
+import eu.monnetproject.translation.topics.SimilarityMetricFactory;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  *
  * @author John McCrae
  */
-public class FilterWordMap {
-
-    public static void main(String[] args) throws Exception {
-        final CLIOpts opts = new CLIOpts(args);
-        final File corpusFile = opts.roFile("corpus[.gz|.bz2]", "The corpus to reduce the word map to");
-        final File wordMapInFile = opts.roFile("wordMap", "The full word map to reduce");
-        final File wordMapOutFile = opts.woFile("out", "The file to store the reduced wordMap");
-        
-        if(!opts.verify(FilterWordMap.class)) {
-            return;
+public class LSASimilarityMetricFactory implements SimilarityMetricFactory<InputStream> {
+    
+    @Override
+    public SimilarityMetric makeMetric(InputStream data, int W) throws IOException {
+        final DataInputStream in = new DataInputStream(data);
+        final int K = in.readInt();
+        final int W2 = in.readInt();
+        if(W != W2) {
+            throw new IllegalArgumentException("W="+W+" but matrix has " + W2 + " rows");
         }
-        
-        IntSet inCorpus = new IntOpenHashSet();
-        
-        final DataInputStream dis = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpusFile));
-        
-        while(dis.available() > 0) {
-            try {
-                int i = dis.readInt();
-                inCorpus.add(i);
-            } catch(EOFException x) {
-                break;
+        final int J = in.readInt();
+        final double[][] U = new double[K][W];
+        for(int k = 0; k < K; k++) {
+            for(int w = 0; w < W; w++) {
+                U[k][w] = in.readDouble();
             }
         }
-        
-        dis.close();
-        
-        final DataInputStream in = new DataInputStream(CLIOpts.openInputAsMaybeZipped(wordMapInFile));
-        final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(wordMapOutFile));
-        
-        while(in.available() > 0) {
-            try {
-                final String key = in.readUTF();
-                final int i = in.readInt();
-                if(inCorpus.contains(i)) {
-                    out.writeUTF(key);
-                    out.writeInt(i);
-                }
-            } catch(EOFException x) {
-                break;
-            }
+        final double[] S = new double[K];
+        for(int k =0; k < K; k++) {
+            S[k] = in.readDouble();
         }
         in.close();
-        out.flush();
-        out.close();
-        
+        return new LSASimilarityMetric(U, S);
     }
+
+    @Override
+    public Class<InputStream> datatype() {
+        return InputStream.class;
+    }
+    
+
 }

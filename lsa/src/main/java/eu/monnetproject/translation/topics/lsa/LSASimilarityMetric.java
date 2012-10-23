@@ -23,26 +23,55 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics.clesa;
+package eu.monnetproject.translation.topics.lsa;
 
-import eu.monnetproject.translation.topics.ParallelBinarizedReader;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SimilarityMetricFactory;
-import java.io.IOException;
+import eu.monnetproject.translation.topics.SparseArray;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 
 /**
  *
  * @author John McCrae
  */
-public class CLESAFactory implements SimilarityMetricFactory<ParallelBinarizedReader> {
+public class LSASimilarityMetric implements SimilarityMetric {
+    double[][] U;
+    double[] S;
+    int W,K;
 
+    public LSASimilarityMetric(double[][] U, double[] S) {
+        this.U = U;
+        this.S = S;
+        this.W = U[0].length;
+        this.K = U.length;
+    }
+    
+    
+    
     @Override
-    public SimilarityMetric makeMetric(ParallelBinarizedReader reader, int W) throws IOException {
-        return new CLESA(reader.readAll(W), W, null);
+    public double[] simVecSource(SparseArray termVec) {
+        return doMultiplication(termVec);
     }
 
     @Override
-    public Class<ParallelBinarizedReader> datatype() {
-        return ParallelBinarizedReader.class;
+    public double[] simVecTarget(SparseArray termVec) {
+        return doMultiplication(termVec);
+    }
+
+    private double[] doMultiplication(SparseArray termVec) {
+        double[] result = new double[K];
+        for(Int2IntMap.Entry e : termVec.int2IntEntrySet()) {
+            for(int k = 0; k < K; k++) {
+                result[k] += U[k][e.getIntKey()] * e.getIntValue();
+            }
+        }
+        for(int k = 0; k < K; k++) {
+            result[k] /= S[k];
+        }
+        return result;
+    }
+    
+    @Override
+    public int W() {
+        return W;
     }
 }

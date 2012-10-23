@@ -31,7 +31,9 @@ import java.io.IOException;
  *
  * @author John McCrae
  */
-public interface SimilarityMetricFactory {
+public interface SimilarityMetricFactory<Data> {
 
-    SimilarityMetric makeMetric(ParallelBinarizedReader reader, int W) throws IOException;
+    SimilarityMetric makeMetric(Data data, int W) throws IOException;
+    
+    Class<Data> datatype();
 }
