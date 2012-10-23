@@ -95,14 +95,21 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
             final NGram history;
             final NGram future;
             final Object2ObjectMap<NGram, double[]> historySet;
+            final Object2ObjectMap<NGram, double[]> futureHistorySet;
             if (i > 1) {
                 history = ngram.history();
                 future = ngram.future();
                 historySet = histories.histories(i - 1);
+                if(i > 2) {
+                    futureHistorySet = histories.histories(i-2);
+                } else {
+                    futureHistorySet = null;
+                }
             } else {
                 history = null;
                 future = null;
                 historySet = null;
+                futureHistorySet = null;
             }
             final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             nGramCountSet.add(i, v);
@@ -134,10 +141,10 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                     historySet.get(future)[H + 1]++;
                     if (i > 2) {
                         final NGram futureHistory = future.history();
-                        if (!historySet.containsKey(futureHistory)) {
-                            historySet.put(futureHistory, new double[2 * H + 1]);
+                        if (!futureHistorySet.containsKey(futureHistory)) {
+                            futureHistorySet.put(futureHistory, new double[2 * H + 1]);
                         }
-                        final double[] fh = historySet.get(futureHistory);
+                        final double[] fh = futureHistorySet.get(futureHistory);
                         fh[0]++;
                     }
                 }
@@ -168,6 +175,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
 
     protected void prune() {
         do {
+            System.err.println("P");
             final double thresh = bStep * b;
             for (int i = 1; i <= N; i++) {
                 final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();

@@ -64,9 +64,10 @@ public class Perplexity {
 
     public static double calculatePerplexity(final Scanner scanner, final ARPALM lm) throws FileNotFoundException {
         double perplexity = 0.0;
-        int bo = 0;
-        int unk = 0;
-
+        double bo = 0;
+        double unk = 0;
+        int docs = 0;
+        
         for (int i = 1; i <= lm.n; i++) {
             System.err.print("Creating " + i + "-gram index...");
             lm.ngramIdx(i);
@@ -83,8 +84,8 @@ public class Perplexity {
             int m = 0;
 
             double p = 0.0;
-            int u = 0;
-            int b = 0;
+            double u = 0;
+            double b = 0;
 
             for (String token : tokens) {
                 if (m == lm.n) {
@@ -109,10 +110,12 @@ public class Perplexity {
             unk += u / tokens.size();
             bo += b / tokens.size();
             System.err.print(".");
+            docs++;
         }
+        System.err.println();
+        System.err.println("DOCS="+docs);
         System.err.println("UNK=" + unk);
         System.err.println("BACKOFFS=" + (-bo));
-        System.err.println();
         return perplexity;
     }
 }

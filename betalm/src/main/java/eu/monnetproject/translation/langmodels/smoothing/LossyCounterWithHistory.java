@@ -70,7 +70,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
         this.carousel = new NGramCarousel(N);
         this.nGramCountSet = new NGramCountSetImpl(N);
         this.histories = new NGramHistoriesImpl(N);
-        System.err.println("lcwh");
     }
 
     /**
@@ -87,8 +86,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
     public int N() {
         return N;
     }
-    
-    private final int[] unique = new int[5];
     
     @Override
     public void offer(int w) {
@@ -118,9 +115,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
             nGramCountSet.inc(i);
             if (ngcs.containsKey(ngram)) {
                 final int count = ngcs.getInt(ngram);
-                if(count == 1) {
-                    unique[i-1]--;
-                }
                 if (i > 1) {
                     if (count < H) {
                         final double[] h = historySet.get(history);
@@ -155,7 +149,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                     }
                 }
                 ngcs.put(ngram, 1);
-                unique[i-1]++;
             }
 
             if (i > 1) {
@@ -179,7 +172,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
     }
 
     protected void prune() {
-        System.err.println("lcwh-prune");
         do {
             b++;
             for (int i = 1; i <= N; i++) {
@@ -213,7 +205,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
 
     @Override
     public NGramHistories histories() {
-        System.err.println("unique=" + Arrays.toString(unique));
         return histories;
     }
 }

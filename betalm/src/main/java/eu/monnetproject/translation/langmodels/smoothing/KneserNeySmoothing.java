@@ -28,6 +28,7 @@ package eu.monnetproject.translation.langmodels.smoothing;
 
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import java.util.WeakHashMap;
 
 /**
@@ -57,17 +58,17 @@ public class KneserNeySmoothing implements NGramScorer {
             double y = (double) CoC[i][0] / (double) (CoC[i][0] + 2 * CoC[i][1]);
             System.err.println("y=" + y);
             assert (CoC[i].length > D);
-                System.err.println("CoC["+i+"][0]=" + CoC[i][0]);
+            System.err.println("CoC[" + i + "][0]=" + CoC[i][0]);
             for (int j = 0; j < D; j++) {
-                System.err.println("CoC["+i+"]["+j+"]=" + CoC[i][j+1]);
+                System.err.println("CoC[" + i + "][" + j + "]=" + CoC[i][j + 1]);
                 if (CoC[i][j] != 0) {
-                    d[i][j] = (double)j + 1.0 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j];
-                    System.err.println("d_" +i + "[" + j +"]=" + d[i][j]);
+                    d[i][j] = (double) j + 1.0 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j];
+                    System.err.println("d_" + i + "[" + j + "]=" + d[i][j]);
                 }
             }
         }
         int v2tmp = 0;
-        for(int i = 0; i < CoC[1].length; i++) {
+        for (int i = 0; i < CoC[1].length; i++) {
             v2tmp += CoC[1][i];
         }
         this.v2 = v2tmp;
@@ -94,12 +95,12 @@ public class KneserNeySmoothing implements NGramScorer {
             assert (history != null);
             final int H = history.length / 2;
             double p = 0.0;
-            for (int i = H+1; i < 2 * H+1; i++) {
+            for (int i = H + 1; i < 2 * H + 1; i++) {
                 p += history[i];
             }
             p -= d[n - 1][ci];
             final double sh = sumHistory(nGram.history(), H);
-            if(sh != 0.0) {
+            if (sh != 0.0) {
                 p /= sumHistory(nGram.history(), H);
             } else {
                 // This is probably wrong... perhaps 1.0?
@@ -110,12 +111,12 @@ public class KneserNeySmoothing implements NGramScorer {
 
             double bo = 0.0;
             for (int i = 0; i < d[n - 1].length; i++) {
-                bo += d[n - 1][i] * history[i+1];
+                bo += d[n - 1][i] * history[i + 1];
             }
 
             bo /= countSet.sum(nGram);
 
-            if(bo < 1) {
+            if (bo < 1) {
                 return new double[]{log10(p), log10(bo)};
             } else {
                 return new double[]{log10(p)};
@@ -125,26 +126,36 @@ public class KneserNeySmoothing implements NGramScorer {
     private final WeakHashMap<NGram, Double> historyCache = new WeakHashMap<NGram, Double>();
 
     private double sumHistory(NGram nGram, int H) {
-        if(nGram.ngram.length > 0) {
-            return histories.histories(nGram.ngram.length).get(nGram)[0];
+        if (nGram.ngram.length > 0) {
+            final Object2ObjectMap<NGram, double[]> hists = histories.histories(nGram.ngram.length);
+            if (hists != null) {
+                if (hists.containsKey(nGram)) {
+                    return hists.get(nGram)[0];
+                } else {
+                    System.err.println("Missing n-gram " + nGram);
+                }
+            } else {
+                System.err.println("No history!");
+            }
+            return 0.0;
         } else {
             return v2;
         }
         /*final Double cacheValue = historyCache.get(nGram);
-        if (cacheValue != null) {
-            return cacheValue.doubleValue();
-        }
-        double s = 0.0;
-        final ObjectIterator<Entry<NGram, double[]>> iterator = histories.histories(nGram.ngram.length + 1).object2ObjectEntrySet().iterator();
-        while (iterator.hasNext()) {
-            final Entry<NGram, double[]> e = iterator.next();
-            if (e.getKey().future().equals(nGram)) {
-                for (int i = H; i < 2 * H; i++) {
-                    s += e.getValue()[i];
-                }
-            }
-        }
-        historyCache.put(nGram, s);
-        return s;*/
+         if (cacheValue != null) {
+         return cacheValue.doubleValue();
+         }
+         double s = 0.0;
+         final ObjectIterator<Entry<NGram, double[]>> iterator = histories.histories(nGram.ngram.length + 1).object2ObjectEntrySet().iterator();
+         while (iterator.hasNext()) {
+         final Entry<NGram, double[]> e = iterator.next();
+         if (e.getKey().future().equals(nGram)) {
+         for (int i = H; i < 2 * H; i++) {
+         s += e.getValue()[i];
+         }
+         }
+         }
+         historyCache.put(nGram, s);
+         return s;*/
     }
 }
