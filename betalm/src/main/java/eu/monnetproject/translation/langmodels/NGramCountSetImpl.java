@@ -149,5 +149,12 @@ public class NGramCountSetImpl implements NGramCountSet {
         public void sub(int n, double v) {
             sums[n - 1] -= v;
         }
+
+        @Override
+        public double mean(int n) {
+            return 1.0;
+        }
+        
+        
     }
 }

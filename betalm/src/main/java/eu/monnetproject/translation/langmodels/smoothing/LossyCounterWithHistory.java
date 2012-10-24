@@ -178,7 +178,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                 final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2IntMap.Entry<NGram> entry = iter.next();
-                    if (entry.getValue() < b) {
+                    if (entry.getValue() < (b+N-i)) {
                         final NGram key = entry.getKey();
                         nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();

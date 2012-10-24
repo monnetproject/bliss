@@ -71,6 +71,13 @@ public interface WeightedNGramCountSet {
     double total(int n);
     
     /**
+     * The mean of all values of length n
+     * @param n The length of the n-grams
+     * @return The mean
+     */
+    double mean(int n);
+    
+    /**
      * Increment the total count of n-grams
      * @param n At length n
      * @param v The amount to increase the count

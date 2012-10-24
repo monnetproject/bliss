@@ -29,6 +29,7 @@ package eu.monnetproject.translation.langmodels.smoothing;
 import eu.monnetproject.translation.langmodels.NGram;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import java.util.Arrays;
 import java.util.WeakHashMap;
 
 /**
@@ -51,6 +52,16 @@ public class KneserNeySmoothing implements NGramScorer {
     }
 
     public KneserNeySmoothing(NGramHistories histories, int[][] CoC, int N, int D) {
+        this(histories,CoC,N,D,ones(N));
+    }
+    
+    private static double[] ones(int N) {
+        final double[] arr = new double[N];
+        Arrays.fill(arr, 1.0);
+        return arr;
+    }
+    
+    public KneserNeySmoothing(NGramHistories histories, int[][] CoC, int N, int D, double[] r) {
         this.histories = histories;
         this.N = N;
         this.d = new double[CoC.length/*don't snigger*/][D];
@@ -58,12 +69,12 @@ public class KneserNeySmoothing implements NGramScorer {
             double y = (double) CoC[i][0] / (double) (CoC[i][0] + 2 * CoC[i][1]);
             System.err.println("y=" + y);
             assert (CoC[i].length > D);
-            System.err.println("CoC[" + i + "][0]=" + CoC[i][0]);
+            System.err.println("CoC[" + (i+1) + "][0]=" + CoC[i][0]);
             for (int j = 0; j < D; j++) {
-                System.err.println("CoC[" + i + "][" + j + "]=" + CoC[i][j + 1]);
+                System.err.println("CoC[" + (i+1) + "][" + (j+1) + "]=" + CoC[i][j + 1]);
                 if (CoC[i][j] != 0) {
-                    d[i][j] = (double) j + 1.0 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j];
-                    System.err.println("d_" + i + "[" + j + "]=" + d[i][j]);
+                    d[i][j] = r[i] * ((double) j + 1.0 - (y * (j + 2) * CoC[i][j + 1]) / (double) CoC[i][j]);
+                    System.err.println("d_" + (i+1) + "[" + (j+1) + "]=" + d[i][j]);
                 }
             }
         }

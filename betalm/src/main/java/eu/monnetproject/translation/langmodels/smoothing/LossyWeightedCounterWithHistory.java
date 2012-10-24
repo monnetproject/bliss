@@ -34,6 +34,7 @@ import eu.monnetproject.translation.langmodels.WeightedNGramCountSetImpl;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -46,12 +47,13 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
     private final NGramCarousel carousel;
     private final WeightedNGramCountSetImpl nGramCountSet;
     private final NGramHistories histories;
-    private int b;
-    private double bStep = 1.0;
+    private int[] b;
+    private double[] bStep;
     /**
      * Number of tokens read
      */
-    protected long p;
+    protected long[] p;
+    protected long allp;
     final Random random = new Random();
     private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
@@ -65,8 +67,11 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
     public LossyWeightedCounterWithHistory(int N, int H) {
         this.N = N;
         this.H = H;
-        this.b = 1;
-        this.p = 0;
+        this.b = new int[N];
+        Arrays.fill(b, 1);
+        this.p = new long[N];
+        this.bStep = new double[N];
+        Arrays.fill(bStep, 1.0);
         this.carousel = new NGramCarousel(N);
         this.nGramCountSet = new WeightedNGramCountSetImpl(N);
         this.histories = new NGramHistoriesImpl(N);
@@ -100,8 +105,8 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                 history = ngram.history();
                 future = ngram.future();
                 historySet = histories.histories(i - 1);
-                if(i > 2) {
-                    futureHistorySet = histories.histories(i-2);
+                if (i > 2) {
+                    futureHistorySet = histories.histories(i - 2);
                 } else {
                     futureHistorySet = null;
                 }
@@ -159,11 +164,13 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                     hcs.put(history, v);
                 }
             }
+            p[i-1]++;
+            bStep[i-1] *= (double) (p[i-1] - 1) / (double) p[i-1];
+            bStep[i-1] += v / p[i-1];
+            nGramCountSet.setMean(i,bStep[i-1]);
         }
-        p++;
-        bStep *= (double) (p - 1) / (double) p;
-        bStep += v / p;
-        if (p % 1000 == 0 && memoryCritical()) {
+        allp++;
+        if (allp % 1000 == 0 && memoryCritical()) {
             prune();
         }
     }
@@ -175,9 +182,9 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
 
     protected void prune() {
         do {
-            System.err.println("P");
-            final double thresh = bStep * b;
+            System.err.print("P");
             for (int i = 1; i <= N; i++) {
+                final double thresh = bStep[i-1] * (b[i-1] + i - N);
                 final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2DoubleMap.Entry<NGram> entry = iter.next();
@@ -191,6 +198,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                         }
                     }
                 }
+                b[i-1]++;
             }
             System.gc();
         } while (memoryCritical());

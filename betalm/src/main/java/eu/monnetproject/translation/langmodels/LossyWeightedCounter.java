@@ -110,8 +110,8 @@ public class LossyWeightedCounter implements WeightedCounter {
     protected void prune() {
         do {
             b++;
-            final double thresh = bStep * b;
             for (int i = 1; i <= N; i++) {
+                final double thresh = bStep * (b+N-i);
                 final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2DoubleMap.Entry<NGram> entry = iter.next();

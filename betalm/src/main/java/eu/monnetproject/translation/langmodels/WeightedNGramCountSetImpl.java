@@ -39,6 +39,7 @@ public class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
     private final Object2DoubleOpenHashMap<NGram>[] counts;
     private final Object2DoubleOpenHashMap<NGram>[] historyCounts;
     private final double[] sums;
+    private final double[] mean;
 
     @SuppressWarnings(value = "unchecked")
     public WeightedNGramCountSetImpl(int N) {
@@ -52,6 +53,7 @@ public class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
             }
         }
         sums = new double[N];
+        mean = new double[N];
     }
 
     @Override
@@ -93,4 +95,12 @@ public class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
         sums[n - 1] -= v;
     }
 
+    @Override
+    public double mean(int n) {
+        return mean[n-1];
+    }
+
+    public void setMean(int n, double mean) {
+        this.mean[n-1] = mean;
+    }
 }

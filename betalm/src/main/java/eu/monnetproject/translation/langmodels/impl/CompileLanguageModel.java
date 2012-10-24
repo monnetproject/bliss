@@ -196,7 +196,11 @@ public class CompileLanguageModel {
             }
             case KNESER_NEY: {
                 final int[][] CoC = countOfCounts(countset);
-                return new KneserNeySmoothing(histories, CoC, countset.N());
+                double[] r = new double[countset.N()];
+                for(int i = 1; i <= countset.N(); i++) {
+                    r[i-1] = countset.mean(i);
+                }
+                return new KneserNeySmoothing(histories, CoC, countset.N(),3,r);
             }
             default:
                 throw new IllegalArgumentException();
