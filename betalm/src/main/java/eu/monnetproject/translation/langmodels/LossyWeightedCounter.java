@@ -27,8 +27,6 @@
 package eu.monnetproject.translation.langmodels;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap.Entry;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
 
@@ -111,7 +109,7 @@ public class LossyWeightedCounter implements WeightedCounter {
         do {
             b++;
             for (int i = 1; i <= N; i++) {
-                final double thresh = bStep * (b+N-i);
+                final double thresh = bStep * (b-N+i);
                 final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2DoubleMap.Entry<NGram> entry = iter.next();

@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,8 +52,28 @@ public class ARPALM {
     final public String[][] grams;
     final public int n;
 
+    private ARPALM(int n) {
+        this.n = n;
+        
+        alpha = new double[n-1][];
+        grams = new String[n][];
+        prob = new double[n][];
+        
+    }
+    
     public ARPALM(File lmFile) throws IOException {
         final BufferedReader in = new BufferedReader(new FileReader(lmFile));
+        final HashMap<Integer, Integer> ngramSizes = new HashMap<Integer, Integer>();
+        this.n = readPt1(in,ngramSizes);
+
+        alpha = new double[n-1][];
+        grams = new String[n][];
+        prob = new double[n][];
+        
+        readPt2(in,ngramSizes);
+    }
+    
+    private static int readPt1(BufferedReader in, HashMap<Integer, Integer> ngramSizes) throws IOException {
         String s;
         DATA:
         {
@@ -66,7 +87,6 @@ public class ARPALM {
 
         int n = 0;
 
-        final HashMap<Integer, Integer> ngramSizes = new HashMap<Integer, Integer>();
 
         final Pattern pattern = Pattern.compile("ngram (\\d)=(\\d+)");
         while ((s = in.readLine()) != null) {
@@ -79,11 +99,10 @@ public class ARPALM {
             }
         }
 
-        this.n = n;
-
-        alpha = new double[n-1][];
-        grams = new String[n][];
-        prob = new double[n][];
+        return n;
+    }
+    
+    private void readPt2(BufferedReader in, HashMap<Integer, Integer> ngramSizes) throws IOException {
         for (int i = 0; i < n; i++) {
             if(i != n-1) {
                 alpha[i] = new double[ngramSizes.get(i)];
@@ -92,6 +111,8 @@ public class ARPALM {
             prob[i] = new double[ngramSizes.get(i)];
         }
 
+        String s;
+        
         for (int m = 1; m <= n; m++) {
             NGRAM:
             {
@@ -124,7 +145,7 @@ public class ARPALM {
             System.err.println("Read " + ngramSizes.get(m - 1) + " " + m + "-grams");
         }
     }
-
+        
     public double[] getQuartiles(int n) {
         final double[] unisort = Arrays.copyOf(prob[n - 1], prob[n - 1].length);
         Arrays.sort(unisort);
@@ -141,6 +162,24 @@ public class ARPALM {
             final Object2IntOpenHashMap<String> map = new Object2IntOpenHashMap<String>();
             for (int i = 0; i < grams[n - 1].length; i++) {
                 map.put(grams[n - 1][i], i);
+            }
+            while (ngramIdxs.size() < n - 1) {
+                ngramIdxs.add(new Object2IntOpenHashMap<String>());
+            }
+            ngramIdxs.add(map);
+            return map;
+        }
+    }
+    
+    public Object2IntMap<String> ngramIdx(int n, Set<String> filter) {
+        if (ngramIdxs.size() >= n && !ngramIdxs.get(n - 1).isEmpty()) {
+            return ngramIdxs.get(n - 1);
+        } else {
+            final Object2IntOpenHashMap<String> map = new Object2IntOpenHashMap<String>();
+            for (int i = 0; i < grams[n - 1].length; i++) {
+                if(filter.contains(grams[n-1][i])) {
+                    map.put(grams[n - 1][i], i);
+                }
             }
             while (ngramIdxs.size() < n - 1) {
                 ngramIdxs.add(new Object2IntOpenHashMap<String>());

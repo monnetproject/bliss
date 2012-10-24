@@ -195,7 +195,7 @@ public class CompileLanguageModel {
                 return new GoodTuringSmoothing(C, CoC, v);
             }
             case KNESER_NEY: {
-                final int[][] CoC = countOfCounts(countset);
+                final int[][] CoC = histories.countOfCounts();
                 double[] r = new double[countset.N()];
                 for(int i = 1; i <= countset.N(); i++) {
                     r[i-1] = countset.mean(i);

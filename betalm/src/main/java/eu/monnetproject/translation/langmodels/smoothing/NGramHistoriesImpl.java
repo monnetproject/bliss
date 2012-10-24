@@ -38,14 +38,16 @@ public class NGramHistoriesImpl implements NGramHistories {
 
     private final int N;
     private final Object2ObjectMap<NGram, double[]>[] histories;
+    private final int[][] CoC;
 
     @SuppressWarnings("unchecked")
-    public NGramHistoriesImpl(int N) {
+    public NGramHistoriesImpl(int N, int H) {
         this.N = N;
         this.histories = new Object2ObjectMap[N];
         for (int i = 0; i < N; i++) {
             histories[i] = new Object2ObjectOpenHashMap<NGram, double[]>();
         }
+        this.CoC = new int[N][H];
     }
 
     @Override
@@ -56,5 +58,10 @@ public class NGramHistoriesImpl implements NGramHistories {
     @Override
     public Object2ObjectMap<NGram, double[]> histories(int n) {
         return histories[n - 1];
+    }
+
+    @Override
+    public int[][] countOfCounts() {
+        return CoC;
     }
 }

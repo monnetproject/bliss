@@ -74,7 +74,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
         Arrays.fill(bStep, 1.0);
         this.carousel = new NGramCarousel(N);
         this.nGramCountSet = new WeightedNGramCountSetImpl(N);
-        this.histories = new NGramHistoriesImpl(N);
+        this.histories = new NGramHistoriesImpl(N, H + 1);
     }
 
     /**
@@ -119,7 +119,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
             final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
             nGramCountSet.add(i, v);
             if (ngcs.containsKey(ngram)) {
-                final int count = (int) Math.ceil(ngcs.getDouble(ngram));
+                final int count = (int) Math.ceil(ngcs.getDouble(ngram) * bStep[i - 1]);
                 if (i > 1) {
                     if (count < H) {
                         final double[] h = historySet.get(history);
@@ -132,6 +132,12 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                         historySet.get(history)[H]++;
                         historySet.get(future)[2 * H]++;
                     }
+                }
+                if (count <= H) {
+                    histories.countOfCounts()[i-1][count - 1]--;
+                    histories.countOfCounts()[i-1][count]++;
+                } else if(count == H+1) {
+                    histories.countOfCounts()[i-1][count-1]--;
                 }
                 ngcs.put(ngram, ngcs.getDouble(ngram) + v);
             } else {
@@ -153,6 +159,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                         fh[0]++;
                     }
                 }
+                histories.countOfCounts()[i-1][0]++;
                 ngcs.put(ngram, v);
             }
 
@@ -164,10 +171,10 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                     hcs.put(history, v);
                 }
             }
-            p[i-1]++;
-            bStep[i-1] *= (double) (p[i-1] - 1) / (double) p[i-1];
-            bStep[i-1] += v / p[i-1];
-            nGramCountSet.setMean(i,bStep[i-1]);
+            p[i - 1]++;
+            bStep[i - 1] *= (double) (p[i - 1] - 1) / (double) p[i - 1];
+            bStep[i - 1] += v / p[i - 1];
+            nGramCountSet.setMean(i, bStep[i - 1]);
         }
         allp++;
         if (allp % 1000 == 0 && memoryCritical()) {
@@ -184,7 +191,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
         do {
             System.err.print("P");
             for (int i = 1; i <= N; i++) {
-                final double thresh = bStep[i-1] * (b[i-1] + i - N);
+                final double thresh = bStep[i - 1] * (b[i - 1] - N + i);
                 final ObjectIterator<Object2DoubleMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2DoubleEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2DoubleMap.Entry<NGram> entry = iter.next();
@@ -198,7 +205,7 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
                         }
                     }
                 }
-                b[i-1]++;
+                b[i - 1]++;
             }
             System.gc();
         } while (memoryCritical());

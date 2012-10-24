@@ -42,4 +42,6 @@ public interface NGramHistories {
     int N();
     
     Object2ObjectMap<NGram,double[]> histories(int n);
+    
+    int[][] countOfCounts();
 }

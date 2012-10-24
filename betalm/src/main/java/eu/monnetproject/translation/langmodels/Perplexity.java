@@ -103,19 +103,19 @@ public class Perplexity {
                 }
                 b += unkScore;
 
-                p += lm.score(sb.toString(), m, -100);
+                p += lm.score(sb.toString(), m, -10);
 
             }
             perplexity += p / tokens.size();
-            unk += u / tokens.size();
-            bo += b / tokens.size();
+            unk += u;
+            bo += b;
             System.err.print(".");
             docs++;
         }
         System.err.println();
         System.err.println("DOCS="+docs);
-        System.err.println("UNK=" + unk);
-        System.err.println("BACKOFFS=" + (-bo));
+        System.err.println("UNK=" + unk/docs);
+        System.err.println("BACKOFFS=" + (-bo/docs));
         return perplexity;
     }
 }

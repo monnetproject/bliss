@@ -34,7 +34,6 @@ import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -69,7 +68,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
         this.p = 0;
         this.carousel = new NGramCarousel(N);
         this.nGramCountSet = new NGramCountSetImpl(N);
-        this.histories = new NGramHistoriesImpl(N);
+        this.histories = new NGramHistoriesImpl(N, H + 1);
     }
 
     /**
@@ -86,7 +85,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
     public int N() {
         return N;
     }
-    
+
     @Override
     public void offer(int w) {
         carousel.offer(w);
@@ -100,8 +99,8 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                 history = ngram.history();
                 future = ngram.future();
                 historySet = histories.histories(i - 1);
-                if(i > 2) {
-                    futureHistorySet = histories.histories(i-2);
+                if (i > 2) {
+                    futureHistorySet = histories.histories(i - 2);
                 } else {
                     futureHistorySet = null;
                 }
@@ -128,6 +127,12 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                         historySet.get(future)[2 * H]++;
                     }
                 }
+                if (count <= H) {
+                    histories.countOfCounts()[i - 1][count - 1]--;
+                    histories.countOfCounts()[i - 1][count]++;
+                } else if (count == H + 1) {
+                    histories.countOfCounts()[i-1][count - 1]--;
+                }
                 ngcs.put(ngram, count + 1);
             } else {
                 if (i > 1) {
@@ -148,6 +153,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                         fh[0]++;
                     }
                 }
+                histories.countOfCounts()[i - 1][0]++;
                 ngcs.put(ngram, 1);
             }
 
@@ -178,7 +184,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                 final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
                 while (iter.hasNext()) {
                     final Object2IntMap.Entry<NGram> entry = iter.next();
-                    if (entry.getValue() < (b+N-i)) {
+                    if (entry.getValue() < (b - N + i)) {
                         final NGram key = entry.getKey();
                         nGramCountSet.sub(i, entry.getIntValue());
                         iter.remove();
