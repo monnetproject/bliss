@@ -58,7 +58,7 @@ public class Perplexity {
 
         double perplexity = calculatePerplexity(scanner, lm);
 
-        System.err.println("Log2 Perplexity=" + (perplexity / LOG_10_2));
+        System.err.println("Log2 Perplexity=" + (perplexity ));
     }
     private static final double LOG_10_2 = 0.3010299956639812;
 
@@ -116,6 +116,6 @@ public class Perplexity {
         System.err.println("DOCS="+docs);
         System.err.println("UNK=" + unk/docs);
         System.err.println("BACKOFFS=" + (-bo/docs));
-        return perplexity;
+        return perplexity/ LOG_10_2;
     }
 }

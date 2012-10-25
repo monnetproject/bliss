@@ -93,6 +93,8 @@ public class KneserNeySmoothing implements NGramScorer {
         }
     }
 
+    //private static final NGram RIGOROUSLY = new NGram(new int[] { 30411 });
+    
     @Override
     public double[] ngramScores(NGram nGram, WeightedNGramCountSet countSet) {
         final int n = nGram.ngram.length;
@@ -122,7 +124,9 @@ public class KneserNeySmoothing implements NGramScorer {
 
             double bo = 0.0;
             for (int i = 0; i < d[n - 1].length; i++) {
-                bo += d[n - 1][i] * history[i + 1];
+                // Yes this should be a small n... but a big N is much closer
+                // to the results of SRILM :s
+                bo += d[N - 1][i] * history[i + 1];
             }
 
             bo /= countSet.sum(nGram);
@@ -134,8 +138,7 @@ public class KneserNeySmoothing implements NGramScorer {
             }
         }
     }
-    private final WeakHashMap<NGram, Double> historyCache = new WeakHashMap<NGram, Double>();
-
+    
     private double sumHistory(NGram nGram, int H) {
         if (nGram.ngram.length > 0) {
             final Object2ObjectMap<NGram, double[]> hists = histories.histories(nGram.ngram.length);
@@ -152,21 +155,5 @@ public class KneserNeySmoothing implements NGramScorer {
         } else {
             return v2;
         }
-        /*final Double cacheValue = historyCache.get(nGram);
-         if (cacheValue != null) {
-         return cacheValue.doubleValue();
-         }
-         double s = 0.0;
-         final ObjectIterator<Entry<NGram, double[]>> iterator = histories.histories(nGram.ngram.length + 1).object2ObjectEntrySet().iterator();
-         while (iterator.hasNext()) {
-         final Entry<NGram, double[]> e = iterator.next();
-         if (e.getKey().future().equals(nGram)) {
-         for (int i = H; i < 2 * H; i++) {
-         s += e.getValue()[i];
-         }
-         }
-         }
-         historyCache.put(nGram, s);
-         return s;*/
     }
 }

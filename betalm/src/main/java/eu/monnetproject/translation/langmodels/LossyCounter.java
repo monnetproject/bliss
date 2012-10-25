@@ -28,7 +28,6 @@ package eu.monnetproject.translation.langmodels;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import java.util.Random;
 
 /**
  * Count using the lossy counting method. This method is described in:
@@ -47,7 +46,6 @@ public class LossyCounter implements Counter {
      * Number of tokens read
      */
     protected long p;
-    final Random random = new Random();
     private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
     /**

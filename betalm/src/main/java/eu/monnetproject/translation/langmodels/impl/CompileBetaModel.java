@@ -49,13 +49,17 @@ public class CompileBetaModel extends CompileLanguageModel {
         if (type == CompileLanguageModel.SourceType.SIMPLE) {
             throw new IllegalArgumentException("Cannot BetaLM a monolingual corpus");
         }
+        int doc = 0;
         while (reader.nextDocument()) {
             final int[] doc1 = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
             reader.nextDocument();
             final int[] doc2 = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
             final int[] docSrc = type == CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST ? doc2 : doc1;
             final int[] docTrg = type == CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST ? doc1 : doc2;
-            final double v = beta.score(SparseArray.histogram(docSrc, 0));
+            double v = beta.score(SparseArray.histogram(docSrc, 0));
+            double alpha = Double.parseDouble(System.getProperty("betalm.alpha","0.0"));
+            v = (1.0-alpha) * v + alpha;
+            //System.err.println("Doc #"+(++doc)+"="+v);
             if(v <= 0.0) {
                 continue;
             }

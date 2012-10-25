@@ -75,7 +75,7 @@ public class CompileLanguageModel {
         KNESER_NEY
     };
 
-    protected NGramHistories histories;
+    public NGramHistories histories;
     
     public NGramCountSet doCount(int N, IntegerizedCorpusReader reader, SourceType type, Smoothing smoothing) throws IOException {
         final Counter counter = smoothing == Smoothing.KNESER_NEY ? new LossyCounterWithHistory(N) : new LossyCounter(N);
@@ -171,7 +171,7 @@ public class CompileLanguageModel {
         return CoC;
     }
 
-    protected static NGramScorer getScorer(Smoothing smoothing, WeightedNGramCountSet countset, NGramHistories histories) {
+    public static NGramScorer getScorer(Smoothing smoothing, WeightedNGramCountSet countset, NGramHistories histories) {
         switch (smoothing) {
             case NONE:
                 return new SimpleNGramScorer();
@@ -207,7 +207,7 @@ public class CompileLanguageModel {
         }
     }
 
-    private static BetaSimFunction betaSimFunction(BetaLMImpl.Method method, SparseArray query, PrecomputedValues precomp) {
+    public static BetaSimFunction betaSimFunction(BetaLMImpl.Method method, SparseArray query, PrecomputedValues precomp) {
         switch (method) {
             case COS_SIM:
                 return Metrics.cosSim(query);

@@ -36,6 +36,7 @@ public class PerplexityTest {
     public void tearDown() {
     }
 
+    private static final double LOG_10_2 = 0.3010299956639812;
     /**
      * Test of calculatePerplexity method, of class Perplexity.
      */
@@ -47,7 +48,7 @@ public class PerplexityTest {
         double expResult = (log10(2.0/8.0) + log10(1.0/6.0) + log10(1.0/6.0) + log10(2.0/6.0/60.0) + log10(1.0/8.0)) / 4.0 
                 + (log10(1.0/8.0) + log10(1.0/6.0) + log10(2.0/6.0/60.0)  + log10(2.0/8.0) + log10(1.0/6.0)) / 4.0;
         double result = Perplexity.calculatePerplexity(scanner, lm);
-        assertEquals(expResult, result, 0.00001);
+        assertEquals(expResult/LOG_10_2, result, 0.00001);
     }
 
 }

@@ -34,7 +34,6 @@ import eu.monnetproject.translation.langmodels.NGramCountSetImpl;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import java.util.Random;
 
 /**
  *
@@ -51,7 +50,6 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
      * Number of tokens read
      */
     protected long p;
-    final Random random = new Random();
     private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
     /**

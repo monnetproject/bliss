@@ -35,7 +35,6 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  *
@@ -54,7 +53,6 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
      */
     protected long[] p;
     protected long allp;
-    final Random random = new Random();
     private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
 
     /**
