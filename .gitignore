@@ -5,3 +5,8 @@ experiments/tmp*
 wiki/
 *.out
 
+/cplsa/docs/cplsa.dvi
+/cplsa/docs/cplsa.log
+/cplsa/docs/cplsa.aux
+/cplsa/docs/cplsa.tex.backup
+/cplsa/docs/cplsa.synctex.gz
