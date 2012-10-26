@@ -58,50 +58,66 @@ public class AlphaSigmaGrid {
         final File testDoc = new File("../wiki/en-es/ifrs.en.txt");
         final int W = 349513;
 
-        final double[][] perplexity = new double[10][20];
+        final double alphaStep = 0.1, sigmaStep = 1.0, sigmaMax = 10.0;
+        final double[][] perplexity = new double[(int)Math.round(1.0/alphaStep)][(int)Math.round(sigmaMax/sigmaStep)+1];
 
+        
+        
         PrintWriter out = new PrintWriter("alpha-sigma-results");
         
-        for (double alpha = 0.0; alpha < 1.0; alpha += 0.1) {
-                System.setProperty("betalm.alpha", ""+alpha);
-            for (double sigma = 1.0; sigma <= 20.0; sigma += 1.0) {
-
-                System.err.print("Loading word map:");
-                final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
-
-                final CompileLanguageModel.SourceType sourceType = CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST;
-                final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.COS_SIM;
-                final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
-                final BetaSimFunction betaSimFunction = Metrics.selective(CompileLanguageModel.betaSimFunction(betaMethod, binQuery, null), sigma);
-                final CompileLanguageModel.Smoothing smoothing = CompileLanguageModel.Smoothing.NONE;
-
-                final CompileBetaModel compiler = new CompileBetaModel();
-                final int N = 3;
-                System.err.print("Counting corpus");
-                final WeightedNGramCountSet countSet;
-                countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType, betaSimFunction, smoothing);
-
-
-                final NGramScorer scorer = CompileLanguageModel.getScorer(smoothing, countSet, compiler.histories);
-
-                System.err.print("Writing model");
-                final File tmpFile = File.createTempFile("lmlmlm", ".en");
-                final PrintStream out2 = new PrintStream(tmpFile);
-                compiler.writeModel(out2, wordMap, countSet, scorer);
-                out2.flush();
-                out2.close();
-
-
-                final ARPALM lm = new ARPALM(tmpFile);
-
-                final Scanner scanner = new Scanner(testDoc);
-
-                perplexity[(int) alpha * 10][(int) sigma] = Perplexity.calculatePerplexity(scanner, lm);
-                System.err.println("alpha=" + alpha + ";sigma= " + sigma + ";perplexity=" + perplexity[(int) alpha * 10][(int) sigma]);
+            for (double sigma = 0.0; sigma <= sigmaMax; sigma += sigmaStep) {
+                out.print("\""+sigma + "\"");
+                if(sigma + sigmaStep <= sigmaMax) {
+                    out.print(",");
+                } else {
+                    out.println();
+                }
             }
-            out.println(Arrays.toString(perplexity[(int)alpha*10]));
+
+        for (double alpha = 0.0; alpha < 1.0; alpha += alphaStep) {
+            System.setProperty("betalm.alpha", "" + alpha);
+            for (double sigma = 0.0; sigma <= sigmaMax; sigma += sigmaStep) {
+                final File tmpFile = File.createTempFile("lmlmlm", ".en");
+                {
+                    System.err.print("Loading word map:");
+                    final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
+
+                    final CompileLanguageModel.SourceType sourceType = CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST;
+                    final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.DICE;
+                    final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
+                    final BetaSimFunction betaSimFunction = Metrics.selective(CompileLanguageModel.betaSimFunction(betaMethod, binQuery, null), sigma);
+                    final CompileLanguageModel.Smoothing smoothing = CompileLanguageModel.Smoothing.NONE;
+
+                    final CompileBetaModel compiler = new CompileBetaModel();
+                    final int N = 3;
+                    System.err.print("Counting corpus");
+                    final WeightedNGramCountSet countSet;
+                    countSet = compiler.doCount(N, new IntegerizedCorpusReader(new DataInputStream(CLIOpts.openInputAsMaybeZipped(inFile))), sourceType, betaSimFunction, smoothing);
+
+
+                    final NGramScorer scorer = CompileLanguageModel.getScorer(smoothing, countSet, compiler.histories);
+
+                    System.err.print("Writing model");
+                    final PrintStream out2 = new PrintStream(tmpFile);
+                    compiler.writeModel(out2, wordMap, countSet, scorer);
+                    out2.flush();
+                    out2.close();
+                }
+                {
+
+                    final ARPALM lm = new ARPALM(tmpFile);
+
+                    final Scanner scanner = new Scanner(testDoc);
+
+                    perplexity[(int) alpha * 10][(int) sigma] = Perplexity.calculatePerplexity(scanner, lm);
+                    System.err.println("alpha=" + alpha + ";sigma= " + sigma + ";perplexity=" + perplexity[(int) alpha * 10][(int) sigma]);
+                }
+                tmpFile.delete();
+            }
+            final String perplexStr = Arrays.toString(perplexity[(int) alpha * 10]);
+            out.println(perplexStr.substring(1, perplexStr.length()-1));
         }
         out.close();
-        
+
     }
 }

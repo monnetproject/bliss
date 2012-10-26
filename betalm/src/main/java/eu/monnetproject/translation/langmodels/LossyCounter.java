@@ -105,6 +105,7 @@ public class LossyCounter implements Counter {
     protected void prune() {
         do {
             b++;
+            System.err.print("P");
             for (int i = 1; i <= N; i++) {
                 final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
                 while (iter.hasNext()) {
