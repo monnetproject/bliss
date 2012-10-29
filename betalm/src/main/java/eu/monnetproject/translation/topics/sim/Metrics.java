@@ -282,12 +282,12 @@ public class Metrics {
         };
     }
     
-    public static BetaSimFunction selective(final BetaSimFunction function, final double selectivity) {
+    public static BetaSimFunction smoothed(final BetaSimFunction function, final double selectivity, final double minimal) {
         return new BetaSimFunction() {
 
             @Override
             public double score(SparseArray document) {
-                return Math.pow(function.score(document),selectivity);
+                return (1.0 - minimal) * Math.pow(function.score(document),selectivity) + minimal;
             }
         };
     }

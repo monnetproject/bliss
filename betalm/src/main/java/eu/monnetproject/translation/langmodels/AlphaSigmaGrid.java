@@ -75,7 +75,6 @@ public class AlphaSigmaGrid {
             }
 
         for (double alpha = 0.0; alpha < 1.0; alpha += alphaStep) {
-            System.setProperty("betalm.alpha", "" + alpha);
             for (double sigma = 0.0; sigma <= sigmaMax; sigma += sigmaStep) {
                 final File tmpFile = File.createTempFile("lmlmlm", ".en");
                 {
@@ -85,7 +84,7 @@ public class AlphaSigmaGrid {
                     final CompileLanguageModel.SourceType sourceType = CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST;
                     final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.JACCARD;
                     final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
-                    final BetaSimFunction betaSimFunction = Metrics.selective(CompileLanguageModel.betaSimFunction(betaMethod, binQuery, null), sigma);
+                    final BetaSimFunction betaSimFunction = Metrics.smoothed(CompileLanguageModel.betaSimFunction(betaMethod, binQuery, null), sigma,alpha);
                     final CompileLanguageModel.Smoothing smoothing = CompileLanguageModel.Smoothing.NONE;
 
                     final CompileBetaModel compiler = new CompileBetaModel();

@@ -249,7 +249,9 @@ public class CompileLanguageModel {
 
         final File queryFile = opts.roFile("f", "The query file (ontology)", null);
 
-        final double smoothness = opts.doubleValue("s", 1.0, "The smoothing parameter");
+        final double smoothness = opts.doubleValue("s", 1.0, "The selective smoothing parameter");
+        
+        final double alpha = opts.doubleValue("a", 1.0, "The minimal smoothing parameter");
 
         final File inFile = opts.roFile("corpus[.gz|.bz2]", "The corpus file");
 
@@ -289,7 +291,7 @@ public class CompileLanguageModel {
             if (smoothness == 1.0) {
                 betaSimFunction = betaSimFunction(betaMethod, binQuery, precomp);
             } else {
-                betaSimFunction = Metrics.selective(betaSimFunction(betaMethod, binQuery, precomp), smoothness);
+                betaSimFunction = Metrics.smoothed(betaSimFunction(betaMethod, binQuery, precomp), smoothness, alpha);
             }
 
         } else {
