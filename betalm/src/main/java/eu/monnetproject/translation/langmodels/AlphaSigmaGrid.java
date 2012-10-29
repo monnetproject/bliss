@@ -83,7 +83,7 @@ public class AlphaSigmaGrid {
                     final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
 
                     final CompileLanguageModel.SourceType sourceType = CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST;
-                    final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.DICE;
+                    final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.JACCARD;
                     final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
                     final BetaSimFunction betaSimFunction = Metrics.selective(CompileLanguageModel.betaSimFunction(betaMethod, binQuery, null), sigma);
                     final CompileLanguageModel.Smoothing smoothing = CompileLanguageModel.Smoothing.NONE;
