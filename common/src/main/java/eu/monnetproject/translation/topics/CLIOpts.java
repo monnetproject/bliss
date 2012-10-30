@@ -373,7 +373,7 @@ public class CLIOpts {
      */
     public static InputStream openInputAsMaybeZipped(File file) throws IOException {
         if (file.getName().endsWith(".gz")) {
-            return new GZIPInputStream(new FileInputStream(file));
+            return new GZIPInputStream(new MMapFileInputStream(file));
         } else if (file.getName().endsWith(".bz2")) {
             return new BZip2CompressorInputStream(new FileInputStream(file));
         } else {
