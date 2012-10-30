@@ -37,6 +37,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.NoSuchElementException;
 
 /**
@@ -46,88 +47,121 @@ import java.util.NoSuchElementException;
 public class LSATrain {
 
     public static void main(String[] args) throws Exception {
+        System.in.read();
         final CLIOpts opts = new CLIOpts(args);
 
         final double epsilon = opts.doubleValue("epsilon", 0.0001, "The error rate");
         final File corpus = opts.roFile("corpus[.gz|bz2]", "The corpus file");
-        
+
         final int W = opts.intValue("W", "The number of distinct tokens");
         final int J = opts.intValue("J", "The number of documents (per language)");
         final int K = opts.intValue("K", "The number of topics");
-        
+
         final File outFile = opts.woFile("output", "The file to write the SVD to");
 
         if (!opts.verify(LSATrain.class)) {
             return;
         }
-        
+
         final SingularValueDecomposition svd = new SingularValueDecomposition();
-        
-        final Solution svdSoln = svd.calculate(new SkipOddZeroDataStreamIterable(corpus), W, J, K, epsilon);
-        
-        write(svdSoln,outFile);
+
+        final Solution svdSoln = svd.calculateSymmetric(new SkipOddZeroDataStreamIterable(corpus, W), 2 * W, J, K, epsilon);
+
+        write(svdSoln, outFile);
 
     }
 
     private static void write(Solution soln, File outFile) throws IOException {
         final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(outFile));
         out.writeInt(soln.S.length);
-        out.writeInt(soln.U.length);
         out.writeInt(soln.V[0].length);
-        
-        for(int i = 0; i < soln.U.length; i++) {
-            for(int j = 0; j < soln.U[i].length; j++) {
-                out.writeDouble(soln.U[i][j]);
-            }
-        }
-        
-        for(int i = 0; i < soln.S.length; i++) {
-                out.writeDouble(soln.S[i]);
-        }
-        
-        for(int i = 0; i < soln.V.length; i++) {
-            for(int j = 0; j < soln.V[i].length; j++) {
+
+        for (int i = 0; i < soln.V.length; i++) {
+            for (int j = 0; j < soln.V[i].length; j++) {
                 out.writeDouble(soln.V[i][j]);
             }
         }
+
+        for (int i = 0; i < soln.S.length; i++) {
+            out.writeDouble(soln.S[i]);
+        }
+
         out.flush();
         out.close();
     }
 
-    private static class SkipOddZeroDataStreamIterable implements IntIterable {
+    public static class SkipOddZeroDataStreamIterable implements IntIterable {
 
         private final File file;
+        private final int W;
 
-        public SkipOddZeroDataStreamIterable(File file) throws IOException {
+        public SkipOddZeroDataStreamIterable(File file, int W) throws IOException {
             this.file = file;
+            this.W = W;
         }
 
         @Override
         public IntIterator iterator() {
             try {
                 System.err.print(".");
-                return new DataInputStreamAsIntIterator(CLIOpts.openInputAsMaybeZipped(file));
+                return new DataInputStreamAsIntIterator(CLIOpts.openInputAsMaybeZipped(file), W);
             } catch (IOException x) {
                 throw new RuntimeException(x);
             }
         }
 
-        private static class DataInputStreamAsIntIterator implements IntIterator {
+        public static class DataInputStreamAsIntIterator implements IntIterator {
 
-            private final DataInputStream data;
+            private final InputStream data;
             private int next = -1;
             private boolean hasNext;
             private boolean odd = true;
+            private final int W;
 
-            public DataInputStreamAsIntIterator(InputStream is) {
-                this.data = new DataInputStream(is);
+            public DataInputStreamAsIntIterator(InputStream is, int W) {
+                this.data = is;
+                this.W = W;
                 advance();
             }
+            final byte[] buf = new byte[4];
 
+            
+
+    public static String bytesToHex(byte[] bytes) {
+        final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        char[] hexChars = new char[bytes.length * 3];
+        int v;
+        for (int j = 0; j < bytes.length; j++) {
+            v = bytes[j] & 0xFF;
+            hexChars[j * 3] = hexArray[v >>> 4];
+            hexChars[j * 3 + 1] = hexArray[v & 0x0F];
+            hexChars[j * 3 + 2] = ' ';
+        }
+        return new String(hexChars);
+    }
+            
             private void advance() {
                 try {
-                    next = data.readInt();
+                    int r = data.read(buf);
+                    if(r == -1) {
+                        hasNext = false;
+                        try {
+                            data.close();
+                        } catch (Exception x2) {
+                        }
+                        return;
+                    }
+                    while(r < 4) {
+                        final int r2 = data.read(buf,r,4-r);
+                        if(r2 == 0) {
+                            throw new RuntimeException("Broken read!");
+                        }
+                        r += r2;
+                    }
                     hasNext = true;
+                    //System.out.println(bytesToHex(buf));
+                    next = (buf[0] & 0xFF) << 24 | (buf[1] & 0xFF) << 16 | (buf[2] & 0xFF) << 8 | (buf[3] & 0xFF);
+                    //next = ByteBuffer.wrap(buf).getInt(); 
                 } catch (EOFException x) {
                     hasNext = false;
                     try {
@@ -138,16 +172,16 @@ public class LSATrain {
                     throw new RuntimeException(x);
                 }
             }
- 
+
             @Override
             public int nextInt() {
                 if (!hasNext) {
                     throw new NoSuchElementException();
                 }
-                int rv = next;
+                int rv = odd ? next : (next + W);
                 advance();
-                if(next == 0) {
-                    if(odd && hasNext) {
+                if (next == 0) {
+                    if (odd && hasNext) {
                         advance();
                     }
                     odd = !odd;

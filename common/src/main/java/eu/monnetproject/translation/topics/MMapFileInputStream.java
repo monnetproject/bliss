@@ -30,14 +30,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 /**
- * This is a faster FileInputStream that maps several megabyte of data into memory
- * quickly using mmap(). This class is frequently about 60-90x faster than the standard
- * {@code java.io.FileInputStream}
- * 
+ * This is a faster FileInputStream that maps several megabyte of data into
+ * memory quickly using mmap(). This class is frequently about 60-90x faster
+ * than the standard {@code java.io.FileInputStream}
+ *
  * @author John McCrae
  */
 public class MMapFileInputStream extends InputStream {
@@ -73,6 +75,7 @@ public class MMapFileInputStream extends InputStream {
 
     /**
      * Create a new mmapped file input stream
+     *
      * @param file The file
      * @throws IOException If an I/O error occurred
      */
@@ -80,10 +83,11 @@ public class MMapFileInputStream extends InputStream {
         // Default buf size = 4MB
         this(file, 4194304);
     }
-    
+
     /**
      * Create a new mmapped file input stream
-     * @param fileName  The file name
+     *
+     * @param fileName The file name
      * @throws IOException If an I/O error occurred
      */
     public MMapFileInputStream(String fileName) throws IOException {
@@ -93,6 +97,7 @@ public class MMapFileInputStream extends InputStream {
 
     /**
      * Create a new mmapped file input stream
+     *
      * @param file The file
      * @param bufSize The size of the buffer to mmap at one time
      * @throws IOException If an I/O error occurred
@@ -104,6 +109,9 @@ public class MMapFileInputStream extends InputStream {
     }
 
     protected MappedByteBuffer getBufferWithAtLeast(int bytesFree) throws IOException {
+        if (buf0 + pos >= fileSize) {
+            return null;
+        }
         if (buf == null || bufSize - pos < bytesFree) {
             // The current buffer is not large enough
             final long toRead = Math.min(fileSize - buf0 - pos, bufSize);
@@ -123,7 +131,7 @@ public class MMapFileInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        if(isClosed) {
+        if (isClosed) {
             throw new IOException("Stream closed");
         }
         final MappedByteBuffer buffer = getBufferWithAtLeast(1);
@@ -137,7 +145,7 @@ public class MMapFileInputStream extends InputStream {
 
     @Override
     public long skip(long n) throws IOException {
-        if(isClosed) {
+        if (isClosed) {
             throw new IOException("Stream closed");
         }
         if (n > bufSize) {
@@ -174,7 +182,7 @@ public class MMapFileInputStream extends InputStream {
 
     @Override
     public int available() throws IOException {
-        if(isClosed) {
+        if (isClosed) {
             throw new IOException("Stream closed");
         }
         final long l = fileSize - buf0 - pos;
@@ -192,7 +200,7 @@ public class MMapFileInputStream extends InputStream {
 
     @Override
     public synchronized void reset() throws IOException {
-        if(isClosed) {
+        if (isClosed) {
             throw new IOException("Stream closed");
         }
         if (mark >= buf0) {
@@ -226,19 +234,22 @@ public class MMapFileInputStream extends InputStream {
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        if(isClosed) {
+        if (isClosed) {
             throw new IOException("Stream closed");
         }
-        if(off < 0 || len < 0 || len > b.length - off) {
+        if (off < 0 || len < 0 || len > b.length - off) {
             throw new IndexOutOfBoundsException();
         }
-        if(len > bufSize) {
+        if (len > bufSize) {
             // Direct read
             final long toRead = Math.min(fileSize - buf0 - pos, len);
-            final MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, buf0+pos, toRead);
+            if(toRead == 0 && len != 0) {
+                return -1;
+            }
+            final MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, buf0 + pos, toRead);
             buffer.get(b, off, len);
-            final long toReadNext = Math.min(fileSize - buf0 -pos - toRead, bufSize);
-            if(toReadNext != 0) {
+            final long toReadNext = Math.min(fileSize - buf0 - pos - toRead, bufSize);
+            if (toReadNext != 0) {
                 buf0 = buf0 + pos + toRead;
                 pos = 0;
                 buf = channel.map(FileChannel.MapMode.READ_ONLY, buf0, toReadNext);
@@ -247,16 +258,16 @@ public class MMapFileInputStream extends InputStream {
                 pos = 0;
                 buf = null;
             }
-            return (int)toRead;
+            return (int) toRead;
         } else {
-            final int toRead = (int)Math.min(fileSize - buf0 - pos, len);
+            final int toRead = (int) Math.min(fileSize - buf0 - pos, len);
             final MappedByteBuffer buffer = getBufferWithAtLeast(toRead);
-            //System.arraycopy(buffer.array(), pos, b, off, toRead);
-            buf.get(b,off,toRead);
+            if(buffer == null) {
+                return -1;
+            }
+            buffer.get(b, off, toRead);
             pos += toRead;
             return toRead;
         }
     }
-    
-    
 }

@@ -32,40 +32,20 @@ public class SequenceOfGivensTest {
     public void tearDown() {
     }
 
-
     /**
      * Test of applyTo method, of class SequenceOfGivens.
      */
     @Test
     public void testApplyTo() {
         System.out.println("applyTo");
-        double[][] matrix = new double[][] { { 6,5,0 }, {5,1,4}, {0,4,3} };
+        double[][] matrix = new double[][]{
+            {6, 5, 0}, {5, 1, 4}, {0, 4, 3}};
         SequenceOfGivens instance = new SequenceOfGivens();
         instance.add(0, 1, 0.7682, -0.6402);
         instance.applyTo(matrix);
-        double[][] expResult = new double[][] { 
-            {7.8102,-0.0002,0},
-            {4.4812,-2.4328,4},
-            {2.5608,3.0728,3}
-        };
-        assertArrayEquals(expResult[0], matrix[0], 0.01);
-        assertArrayEquals(expResult[1], matrix[1], 0.01);
-        assertArrayEquals(expResult[2], matrix[2], 0.01);
-    }
-    
-    /**
-     * Test of applyTransposed method, of class SequenceOfGivens.
-     */
-    @Test
-    public void testApplyTransposed() {
-        System.out.println("applyTransposed");
-        double[][] matrix = new double[][] { { 6,5,0 }, {5,1,4}, {0,4,3} };
-        SequenceOfGivens instance = new SequenceOfGivens();
-        instance.add(0, 1, 0.7682, -0.6402);
-        instance.applyTransposed(matrix);
-        double[][] expResult = new double[][] { 
-            {1.4082,3.2008,-2.5608},
-            {7.6822,3.9692,3.0728},
+        double[][] expResult = new double[][]{
+            {7.8102,4.4812,2.5608},
+            {-.0002,-2.4328,3.0728},
             {0,4,3}
         };
         assertArrayEquals(expResult[0], matrix[0], 0.01);
@@ -73,4 +53,23 @@ public class SequenceOfGivensTest {
         assertArrayEquals(expResult[2], matrix[2], 0.01);
     }
 
+    /**
+     * Test of applyTransposed method, of class SequenceOfGivens.
+     */
+    @Test
+    public void testApplyTransposed() {
+        System.out.println("applyTransposed");
+        double[][] matrix = new double[][]{{6, 5, 0}, {5, 1, 4}, {0, 4, 3}};
+        SequenceOfGivens instance = new SequenceOfGivens();
+        instance.add(0, 1, 0.7682, -0.6402);
+        instance.applyTransposed(matrix);
+        double[][] expResult = new double[][]{
+            {1.4082,7.6822,0},
+            {3.2008,3.9692,4},
+            {-2.5608,3.0728,3}
+        };
+        assertArrayEquals(expResult[0], matrix[0], 0.01);
+        assertArrayEquals(expResult[1], matrix[1], 0.01);
+        assertArrayEquals(expResult[2], matrix[2], 0.01);
+    }
 }

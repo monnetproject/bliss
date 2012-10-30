@@ -4,7 +4,7 @@
     <parent>
         <artifactId>project</artifactId>
         <groupId>eu.monnetproject</groupId>
-        <version>1.12.7-SNAPSHOT</version>
+        <version>1.12.10-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 

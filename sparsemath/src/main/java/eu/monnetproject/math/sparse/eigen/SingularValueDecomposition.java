@@ -30,17 +30,10 @@ import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
-import eu.monnetproject.translation.topics.CLIOpts;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.NoSuchElementException;
 import java.util.Random;
 
 /**
@@ -51,7 +44,7 @@ import java.util.Random;
  */
 public class SingularValueDecomposition {
 
-    private static final void toR(TridiagonalMatrix tm) {
+    private static void toR(TridiagonalMatrix tm) {
         System.out.print("tridiag(c(");
         for (int i = 0; i < tm.alpha().length; i++) {
             System.out.print(tm.alpha()[i]);
@@ -69,7 +62,7 @@ public class SingularValueDecomposition {
         System.out.println("))");
     }
 
-    private static final void toR(double[][] m) {
+    private static void toR(double[][] m) {
         System.out.print("matrix(c(");
         for (int i = 0; i < m[0].length; i++) {
             for (int j = 0; j < m.length; j++) {
@@ -84,25 +77,17 @@ public class SingularValueDecomposition {
 
     public Solution calculate(IntIterable corpus, int W, int J, int K, double epsilon) {
         final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(corpus, W), randomUnitNormVector(J), K, 1.0);
-        //toR(oLanczos.tridiagonal());
-        //toR(oLanczos.q());
         final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
-        //System.out.println(oQrSolve.givensSeq().toRString(K));
-        final double[][] oEigens = transpose(oQrSolve.givensSeq().applyTo(oLanczos.q()));
-        //toR(oEigens);
+        final double[][] oEigens = oQrSolve.givensSeq().applyTo(oLanczos.q());
         final int[] oOrder = order(oQrSolve.values());
 
         final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 1.0);
-        //toR(iLanczos.tridiagonal());
-        //toR(iLanczos.q());
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
-        //System.out.println(iQrSolve.givensSeq().toRString(J));
-        final double[][] iEigens = transpose(iQrSolve.givensSeq().applyTo(iLanczos.q()));
-        //toR(iEigens);
+        final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
         final int[] iOrder = order(iQrSolve.values());
 
         final double[][] V = new double[K][];
-        final double[][] U = new double[K][J];
+        final double[][] U = new double[K][];
         final double[] S = new double[K];
 
         for (int i = 0; i < K; i++) {
@@ -111,7 +96,25 @@ public class SingularValueDecomposition {
             V[i] = iEigens[iOrder[i]];
         }
 
-        return new Solution(transpose(U), V, S);
+        return new Solution(U, V, S);
+    }
+
+    public Solution calculateSymmetric(IntIterable corpus, int W, int J, int K, double epsilon) {
+        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 1.0);
+        final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
+        final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
+        //toR(iEigens);
+        final int[] iOrder = order(iQrSolve.values());
+
+        final double[] S = new double[K];
+        final double[][] V = new double[K][];
+
+        for (int i = 0; i < K; i++) {
+            S[i] = Math.sqrt(Math.abs(iLanczos.tridiagonal().alpha()[iOrder[i]]));
+            V[i] = iEigens[iOrder[i]];
+        }
+
+        return new Solution(null, V, S);
     }
     private static final Random r = new Random();
 

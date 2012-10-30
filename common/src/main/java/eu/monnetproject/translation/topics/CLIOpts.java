@@ -375,9 +375,9 @@ public class CLIOpts {
         if (file.getName().endsWith(".gz")) {
             return new GZIPInputStream(new MMapFileInputStream(file));
         } else if (file.getName().endsWith(".bz2")) {
-            return new BZip2CompressorInputStream(new FileInputStream(file));
+            return new BZip2CompressorInputStream(new MMapFileInputStream(file));
         } else {
-            return new FileInputStream(file);
+            return new MMapFileInputStream(file);
         }
     }
 

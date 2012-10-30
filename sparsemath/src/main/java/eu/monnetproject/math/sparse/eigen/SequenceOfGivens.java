@@ -50,9 +50,9 @@ public class SequenceOfGivens {
         int n = matrix[0].length;
         for(Givens g : seq) {
             for(int i = 0; i < n; i++) {
-                final double t = matrix[i][g.j] * g.s + matrix[i][g.k] * g.c;
-                matrix[i][g.j] = matrix[i][g.j] * g.c - matrix[i][g.k] * g.s;
-                matrix[i][g.k] = t;
+                final double t = matrix[g.j][i] * g.s + matrix[g.k][i] * g.c;
+                matrix[g.j][i] = matrix[g.j][i] * g.c - matrix[g.k][i] * g.s;
+                matrix[g.k][i] = t;
             }
         }
         return matrix;
@@ -62,9 +62,9 @@ public class SequenceOfGivens {
         int n = matrix[0].length;
         for(Givens g : seq) {
             for(int i = 0; i < n; i++) {
-                final double t = -matrix[g.j][i] * g.s + matrix[g.k][i] * g.c;
-                matrix[g.j][i] = matrix[g.j][i] * g.c + matrix[g.k][i] * g.s;
-                matrix[g.k][i] = t;
+                final double t = -matrix[i][g.j] * g.s + matrix[i][g.k] * g.c;
+                matrix[i][g.j] = matrix[i][g.j] * g.c + matrix[i][g.k] * g.s;
+                matrix[i][g.k] = t;
             }
         }
         return matrix;

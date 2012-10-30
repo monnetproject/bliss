@@ -81,14 +81,14 @@ public class LanczosAlgorithm {
         final double[] alpha = new double[n + 1];
         final double[] beta = new double[n + 1];
         beta[0] = 1;
-        final double[][] q = new double[n][K];
+        final double[][] q = new double[K][];
         final double[] r = new double[n];
         System.arraycopy(w.toDoubleArray(), 0, r, 0, n);
 
         //q[0] = Arrays.copyOf(w.toDoubleArray(), n);
-        for (int i = 0; i < n; i++) {
-            q[i][0] = r[i];
-        }
+        //for (int i = 0; i < n; i++) {
+        //    q[0][i] = r[i];
+        //}
 
         int j = 0;
 
@@ -99,8 +99,9 @@ public class LanczosAlgorithm {
             for (int i = 0; i < n; i++) {
                 v2[i] = v[i] * beta[j];
                 v[i] = r[i] / beta[j];
-                q[i][j] = v[i];
+                //q[j][i] = v[i];
             }
+            q[j] = Arrays.copyOf(v, v.length);
 
             // r = Av_j - v_{j-1}\beta_{j-1}
             final Vector<Double> av = A.apply(new RealVector(v));
@@ -128,13 +129,13 @@ public class LanczosAlgorithm {
                 double[] s = new double[j];
                 for (int i = 0; i < j; i++) {
                     for (int k = 0; k < n; k++) {
-                        s[i] += q[k][i] * r[k];
+                        s[i] += q[i][k] * r[k];
                     }
                 }
                 // r = r - V_j s
                 for (int i = 0; i < n; i++) {
                     for (int k = 0; k < j; k++) {
-                        r[i] -= q[i][k] * s[k];
+                        r[i] -= q[k][i] * s[k];
                     }
                 }
                 // \alpha_j = \alpha_j + s_j ; \beta_j = \beta_j + s_{j-1}
