@@ -5,7 +5,7 @@
     <parent>
       <groupId>eu.monnetproject</groupId>
       <artifactId>translation.topics</artifactId>
-      <version>1.12.7-SNAPSHOT</version>
+      <version>1.12.10-SNAPSHOT</version>
       <relativePath>..</relativePath>
     </parent>
     <artifactId>translation.topics.monnet</artifactId>
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>eu.monnetproject</groupId>
             <artifactId>translation.core</artifactId>
-            <version>1.12.7-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>eu.monnetproject</groupId>
             <artifactId>nlp.owlapi</artifactId>
-            <version>1.12.7-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>

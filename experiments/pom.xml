@@ -5,7 +5,7 @@
     <parent>
       <groupId>eu.monnetproject</groupId>
       <artifactId>translation.topics</artifactId>
-      <version>1.12.7-SNAPSHOT</version>
+      <version>1.12.10-SNAPSHOT</version>
       <relativePath>..</relativePath>
     </parent>
     <artifactId>translation.topics.experiments</artifactId>
