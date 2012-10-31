@@ -25,10 +25,10 @@
  */
 package eu.monnetproject.translation.topics.lsa;
 
-import eu.monnetproject.translation.topics.ParallelBinarizedReader;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SimilarityMetricFactory;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -43,22 +43,32 @@ public class LSASimilarityMetricFactory implements SimilarityMetricFactory<Input
         final DataInputStream in = new DataInputStream(data);
         final int K = in.readInt();
         final int W2 = in.readInt();
-        if(W != W2) {
+        if(W*2 != W2) {
             throw new IllegalArgumentException("W="+W+" but matrix has " + W2 + " rows");
         }
-        final int J = in.readInt();
-        final double[][] U = new double[K][W];
+        //final int J = in.readInt();
+        final double[][] U1 = new double[K][W];
+        final double[][] U2 = new double[K][W];
         for(int k = 0; k < K; k++) {
             for(int w = 0; w < W; w++) {
-                U[k][w] = in.readDouble();
+                U1[k][w] = in.readDouble();
+            }
+            for(int w = W; w < 2* W; w++) {
+                U2[k][w-W] = in.readDouble();
             }
         }
         final double[] S = new double[K];
         for(int k =0; k < K; k++) {
-            S[k] = in.readDouble();
+            try {
+                S[k] = in.readDouble();
+                System.err.println("S["+k+"]="+S[k]);
+            } catch(EOFException x) {
+                System.err.println("K="+k);
+                throw x;
+            }
         }
         in.close();
-        return new LSASimilarityMetric(U, S);
+        return new LSASimilarityMetric(U1,U2, S);
     }
 
     @Override

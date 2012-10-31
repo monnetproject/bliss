@@ -114,6 +114,8 @@ public class SingularValueDecomposition {
             V[i] = iEigens[iOrder[i]];
         }
 
+        System.err.println("Eigenvalues:" + Arrays.toString(S));
+        
         return new Solution(null, V, S);
     }
     private static final Random r = new Random();

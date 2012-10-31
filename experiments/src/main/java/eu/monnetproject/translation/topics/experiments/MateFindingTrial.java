@@ -32,6 +32,7 @@ import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SimilarityMetricFactory;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;

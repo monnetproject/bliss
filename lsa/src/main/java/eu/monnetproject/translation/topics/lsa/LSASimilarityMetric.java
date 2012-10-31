@@ -28,40 +28,51 @@ package eu.monnetproject.translation.topics.lsa;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 import eu.monnetproject.translation.topics.SparseArray;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import java.util.Arrays;
 
 /**
  *
  * @author John McCrae
  */
 public class LSASimilarityMetric implements SimilarityMetric {
-    double[][] U;
+    double[][] U1,U2;
     double[] S;
     int W,K;
 
-    public LSASimilarityMetric(double[][] U, double[] S) {
-        this.U = U;
+    public LSASimilarityMetric(double[][] U1, double[][] U2, double[] S) {
+        this.U1 = U1;
+        this.U2 = U2;
         this.S = S;
-        this.W = U[0].length;
-        this.K = U.length;
+        this.W = U1[0].length;
+        this.K = U1.length;
     }
     
     
     
     @Override
     public double[] simVecSource(SparseArray termVec) {
-        return doMultiplication(termVec);
+        final double[] r = doMultiplication(U1,termVec);
+        return r;
     }
 
     @Override
     public double[] simVecTarget(SparseArray termVec) {
-        return doMultiplication(termVec);
+        final double[] r = doMultiplication(U2,termVec);
+        return r;
     }
 
-    private double[] doMultiplication(SparseArray termVec) {
+    private double[] doMultiplication(double[][] U, SparseArray termVec) {
         double[] result = new double[K];
         for(Int2IntMap.Entry e : termVec.int2IntEntrySet()) {
             for(int k = 0; k < K; k++) {
-                result[k] += U[k][e.getIntKey()] * e.getIntValue();
+                final double u = U[k][e.getIntKey()];
+                if(Double.isInfinite(u)) {
+                    continue;
+                }
+                if(Double.isNaN(u)) {
+                    throw new IllegalArgumentException("Matrix contains NaN");
+                }
+                result[k] += u * e.getIntValue();
             }
         }
         for(int k = 0; k < K; k++) {

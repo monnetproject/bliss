@@ -111,10 +111,13 @@ public class CLESA implements SimilarityMetric {
         double[] sim = new double[J];
         for(Map.Entry<Integer,Integer> e : termVec.entrySet()) {
             double termVecFreq = (double)e.getValue();
-            if(e.getKey() >= W || xt[e.getKey()][0] == null)
+            if(e.getKey() >= W || xt[e.getKey()][0] == null) {
                 continue;
+            }
             for(int j = 0; j < J; j++) {
-                sim[j] += (double)(termVecFreq * xt[e.getKey()][0].get(j)) / n[j] * -1.0 * Math.log(df[e.getKey()]);
+                if(n[j] != 0) {
+                    sim[j] += (termVecFreq * xt[e.getKey()][0].get(j)) / n[j] * -1.0 * Math.log(df[e.getKey()]);
+                }
              }
         }
         return sim;
@@ -125,10 +128,13 @@ public class CLESA implements SimilarityMetric {
         double[] sim = new double[J];
         for(Map.Entry<Integer,Integer> e : termVec.entrySet()) {
             double termVecFreq = (double)e.getValue();
-            if(xt[e.getKey()][1] == null)
+            if(xt[e.getKey()][1] == null) {
                 continue;
+            }
             for(int j = 0; j < J; j++) {
-                sim[j] += (double)(termVecFreq * xt[e.getKey()][1].get(j)) / n_f[j] * -1.0 * Math.log(df_f[e.getKey()]);
+                if(n_f[j] != 0) {
+                    sim[j] += (termVecFreq * xt[e.getKey()][1].get(j)) / n_f[j] * -1.0 * Math.log(df_f[e.getKey()]);
+                }
              }
         }
         return sim;

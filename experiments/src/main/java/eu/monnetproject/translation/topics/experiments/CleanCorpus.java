@@ -95,6 +95,16 @@ public class CleanCorpus {
             dataOut = new DataOutputStream(new FileOutputStream(outFile));
         }
         
+        int remainingVocab = 0;
+        
+        for(int i = 1; i < freqArray.length; i++) {
+            if(freqArray[i] > freqMin && freqArray[i] < freqMax) {
+                remainingVocab++;
+            }
+        }
+        
+        System.err.println("Remaining: " + remainingVocab);
+        
         cleanCorpus(corpusIn, dataOut, freqArray, freqMin, freqMax, lenMin);
     }
 

@@ -175,6 +175,10 @@ public class LanczosAlgorithm {
         }
         w2sum = Math.sqrt(w2sum);
 
+        if(w2sum == 0.0)  {
+            return lanczos(A);
+        }
+        
         for (int i = 0; i < n; i++) {
             w[i] = w[i] / w2sum;
         }

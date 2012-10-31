@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.translation.topics.CLIOpts;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -50,37 +51,19 @@ public class CountFrequencies {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 4) {
-            fail("Wrong number of arguments");
-        }
-        final File corpusFile = new File(args[0]);
+        final CLIOpts opts = new CLIOpts(args);
+        final File corpusFile = opts.roFile("corpus[.gz|.bz2]", "The corpus");
+        
+        final int W = opts.intValue("W", "The number of distinct tokens");
 
-        if (!corpusFile.exists() || !corpusFile.canRead()) {
-            fail("Cannot access corpusFile");
-        }
+        final int topN = opts.intValue("topN", "The top N to set the top threshold at");
+        
+        final File outFile = opts.woFile("out", "The file to write frequencies to");
 
-        final int W;
-        try {
-            W = Integer.parseInt(args[1]);
-        } catch (NumberFormatException x) {
-            fail("Not an integer " + args[1]);
+        if(!opts.verify(CountFrequencies.class)) {
             return;
         }
-
-        final int topN;
-        try {
-            topN = Integer.parseInt(args[2]);
-        } catch (NumberFormatException x) {
-            fail("Not an integer " + args[2]);
-            return;
-        }
-
-        final File outFile = new File(args[3]);
-
-        if (outFile.exists() && !outFile.canWrite()) {
-            fail("Cannot access outFile");
-        }
-
+        
         final DataInputStream dataIn;
 
         if (corpusFile.getName().endsWith(".gz")) {

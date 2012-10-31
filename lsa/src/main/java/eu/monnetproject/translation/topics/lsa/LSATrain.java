@@ -47,7 +47,6 @@ import java.util.NoSuchElementException;
 public class LSATrain {
 
     public static void main(String[] args) throws Exception {
-        System.in.read();
         final CLIOpts opts = new CLIOpts(args);
 
         final double epsilon = opts.doubleValue("epsilon", 0.0001, "The error rate");
