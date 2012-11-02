@@ -78,7 +78,7 @@ public class SequenceOfGivens {
             final Givens g = iter.next();
             buf.append("givens(").append(g.j+1).append(",").append(g.c).append(",").append(g.s).append(",").append(N).append(")");
             if(iter.hasNext()) {
-                buf.append(" %*% ");
+                buf.append(" %*%\n");
             }
         }
         return buf.toString();

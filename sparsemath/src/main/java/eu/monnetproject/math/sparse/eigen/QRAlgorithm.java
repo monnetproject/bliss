@@ -209,6 +209,8 @@ public class QRAlgorithm {
                 p = 0;
             }
             
+            System.err.println("p=" + p + " q=" + q + " n=" + n);
+            
             if (q < n) {
                 if (n - p - q >= 2) {
                     wilkinsonShift(tridiag.alpha(), tridiag.beta(), p, n - p - q, givensSeq);

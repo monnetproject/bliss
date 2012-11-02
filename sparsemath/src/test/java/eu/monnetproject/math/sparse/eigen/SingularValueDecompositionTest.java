@@ -51,7 +51,7 @@ public class SingularValueDecompositionTest {
         int W = 5;
         int J = 4;
         int K = 4;
-        double epsilon = 0.0001;
+        double epsilon = 1e-20;
         final Random r = new Random(J);
         SingularValueDecomposition instance = new SingularValueDecomposition() {
             @Override
@@ -90,13 +90,45 @@ public class SingularValueDecompositionTest {
                 });
         Solution result = instance.calculate(new DataStreamIterable(matrixFile), W, J, K, epsilon);
 
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
                 assertEquals(Math.abs(expResult.U[i][j]), Math.abs(result.U[i][j]), 0.02);
                 assertEquals(Math.abs(expResult.V[i][j]), Math.abs(result.V[i][j]), 0.02);
             }
         }
         assertArrayEquals(expResult.S, result.S, 0.2);
+    }
+    
+    @Test
+    public void testCalculateSymmetric() throws Exception {
+        System.out.println("calculateSymmetric");
+        File matrixFile = writeTempDoc2();
+        int W = 10;
+        int J = 10;
+        int K = 10;
+        double epsilon = 1e-20;
+        final Random r = new Random(J);
+        SingularValueDecomposition instance = new SingularValueDecomposition() {
+            @Override
+            protected Vector<Double> randomUnitNormVector(int J) {
+
+                final double[] rv = new double[J];
+                double norm = 0.0;
+                for (int j = 0; j < J; j++) {
+                    rv[j] = r.nextDouble();
+                    norm += rv[j] * rv[j];
+                }
+
+                norm = Math.sqrt(norm);
+
+                for (int j = 0; j < J; j++) {
+                    rv[j] /= norm;
+                }
+
+                return new RealVector(rv);
+            }
+        };
+        Solution result = instance.calculateSymmetric(new DataStreamIterable(matrixFile), W, J, K, epsilon);
     }
 
     public double[] positive(double[] exp, double[] act) {
@@ -135,50 +167,188 @@ public class SingularValueDecompositionTest {
         tmpFile.deleteOnExit();
         final DataOutputStream dos = new DataOutputStream(new FileOutputStream(tmpFile));
         dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(1);
         dos.writeInt(3);
+        dos.writeInt(3);
+        dos.writeInt(4);
+        dos.writeInt(4);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(0);
+
+        dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(2);
+        dos.writeInt(3);
+        dos.writeInt(4);
+        dos.writeInt(4);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(0);
+
         dos.writeInt(5);
         dos.writeInt(1);
+        dos.writeInt(3);
+        dos.writeInt(2);
+        dos.writeInt(2);
+        dos.writeInt(4);
+        dos.writeInt(1);
+        dos.writeInt(5);
         dos.writeInt(5);
         dos.writeInt(4);
+        dos.writeInt(0);
+
         dos.writeInt(3);
+        dos.writeInt(5);
+        dos.writeInt(2);
+        dos.writeInt(3);
+        dos.writeInt(3);
+        dos.writeInt(2);
+        dos.writeInt(3);
+        dos.writeInt(4);
         dos.writeInt(4);
         dos.writeInt(1);
         dos.writeInt(0);
 
-        dos.writeInt(3);
-        dos.writeInt(4);
-        dos.writeInt(5);
-        dos.writeInt(1);
-        dos.writeInt(5);
-        dos.writeInt(1);
-        dos.writeInt(5);
-        dos.writeInt(1);
-        dos.writeInt(5);
+        dos.flush();
+        dos.close();
+
+        return tmpFile;
+    }
+    
+    
+    private File writeTempDoc2() throws IOException {
+        final File tmpFile = File.createTempFile("matrix", ".bin");
+        tmpFile.deleteOnExit();
+        final DataOutputStream dos = new DataOutputStream(new FileOutputStream(tmpFile));
+        // A <- t( matrix(c(1,1,0,0,1,1,4,0,0,2, 1,1,1,1,0,2,1,1,0,2, 1,0,3,2,2,0,0,1,0,1, 0,1,1,0,2,1,2,2,0,1, 
+        //                  1,0,1,0,2,1,2,2,1,0, 1,0,5,0,0,1,0,2,0,1, 0,2,0,2,1,2,0,1,1,1, 1,1,0,3,0,3,0,0,0,2,
+        //                  2,1,1,1,0,0,1,2,1,1, 1,1,1,1,2,3,0,1,0,0),10))
+        dos.writeInt(6);
+        dos.writeInt(10);
+        dos.writeInt(7);
+        dos.writeInt(7);
         dos.writeInt(2);
+        dos.writeInt(7);
+        dos.writeInt(10);
+        dos.writeInt(7);
+        dos.writeInt(1);
+        dos.writeInt(5);
+        dos.writeInt(0);
+        
+        dos.writeInt(1);
+        dos.writeInt(7);
+        dos.writeInt(10);
+        dos.writeInt(2);
+        dos.writeInt(6);
+        dos.writeInt(10);
+        dos.writeInt(3);
+        dos.writeInt(8);
+        dos.writeInt(6);
         dos.writeInt(4);
         dos.writeInt(0);
-
-        dos.writeInt(5);
+        
+        dos.writeInt(10);
         dos.writeInt(1);
+        dos.writeInt(8);
+        dos.writeInt(5);
+        dos.writeInt(4);
+        dos.writeInt(5);
         dos.writeInt(3);
-        dos.writeInt(2);
-        dos.writeInt(2);
         dos.writeInt(4);
-        dos.writeInt(1);
-        dos.writeInt(5);
-        dos.writeInt(5);
-        dos.writeInt(4);
+        dos.writeInt(3);
+        dos.writeInt(3);
         dos.writeInt(0);
-
+                
+        dos.writeInt(7);
+        dos.writeInt(10);
         dos.writeInt(3);
+        dos.writeInt(2);
+        dos.writeInt(7);
         dos.writeInt(5);
+        dos.writeInt(6);
+        dos.writeInt(5);
+        dos.writeInt(8);
+        dos.writeInt(8);
+        dos.writeInt(0);
+        
+        dos.writeInt(6);
+        dos.writeInt(7);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(7);
+        dos.writeInt(3);
+        dos.writeInt(8);
+        dos.writeInt(1);
+        dos.writeInt(8);
+        dos.writeInt(9);
+        dos.writeInt(0);
+        
+        
+        dos.writeInt(3);
+        dos.writeInt(3);
+        dos.writeInt(8);
+        dos.writeInt(1);
+        dos.writeInt(6);
+        dos.writeInt(3);
+        dos.writeInt(10);
+        dos.writeInt(8);
+        dos.writeInt(3);
+        dos.writeInt(3);
+        dos.writeInt(0);
+        
         dos.writeInt(2);
-        dos.writeInt(3);
-        dos.writeInt(3);
         dos.writeInt(2);
-        dos.writeInt(3);
+        dos.writeInt(6);
+        dos.writeInt(8);
         dos.writeInt(4);
         dos.writeInt(4);
+        dos.writeInt(10);
+        dos.writeInt(9);
+        dos.writeInt(5);
+        dos.writeInt(6);
+        dos.writeInt(0);
+        
+        dos.writeInt(4);
+        dos.writeInt(4);
+        dos.writeInt(6);
+        dos.writeInt(4);
+        dos.writeInt(6);
+        dos.writeInt(1);
+        dos.writeInt(10);
+        dos.writeInt(10);
+        dos.writeInt(2);
+        dos.writeInt(6);
+        dos.writeInt(0);
+        
+        
+        dos.writeInt(8);
+        dos.writeInt(10);
+        dos.writeInt(1);
+        dos.writeInt(7);
+        dos.writeInt(9);
+        dos.writeInt(4);
+        dos.writeInt(1);
+        dos.writeInt(2);
+        dos.writeInt(8);
+        dos.writeInt(3);
+        dos.writeInt(0);
+        
+        
+        
+        dos.writeInt(2);
+        dos.writeInt(4);
+        dos.writeInt(6);
+        dos.writeInt(5);
+        dos.writeInt(6);
+        dos.writeInt(3);
+        dos.writeInt(8);
+        dos.writeInt(6);
+        dos.writeInt(5);
         dos.writeInt(1);
         dos.writeInt(0);
 
