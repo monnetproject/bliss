@@ -27,6 +27,7 @@
 package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
+import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +36,7 @@ import java.util.Map;
  *
  * @author John McCrae
  */
-public class SparseRealArray extends HashMap<Integer, Double> implements Vector<Double> {
+public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Double> {
 
     private static final long serialVersionUID = 8976723557456415580L;
     private double defaultValue;
@@ -63,11 +64,11 @@ public class SparseRealArray extends HashMap<Integer, Double> implements Vector<
      */
     public SparseRealArray(int n, double defaultValue, double epsilon) {
         this.n = n;
-        this.defaultValue = defaultValue;
+        this.defaultValue = super.defRetValue = defaultValue;
         this.epsilon = epsilon;
     }
 
-    protected SparseRealArray(int n, double defaultValue, double epsilon, HashMap<Integer, Double> map) {
+    protected SparseRealArray(int n, double defaultValue, double epsilon, Int2DoubleOpenHashMap map) {
         super(map);
         this.n = n;
         this.defaultValue = defaultValue;
@@ -90,13 +91,13 @@ public class SparseRealArray extends HashMap<Integer, Double> implements Vector<
     }
 
     @Override
-    public void put(int idx, double value) {
-        super.put(idx, new Double(value));
+    public double put(int idx, double value) {
+        return super.put(idx, value);
     }
 
     @Override
-    public void put(int idx, int value) {
-        super.put(idx, new Double(value));
+    public int put(int idx, int value) {
+        return (int)super.put(idx, value);
     }
 
     /**
@@ -238,29 +239,6 @@ public class SparseRealArray extends HashMap<Integer, Double> implements Vector<
     }
 
     /**
-     * Add a value at a given index
-     *
-     * @param idx The index
-     * @param i The value
-     */
-    @Override
-    public void add(int idx, double i) {
-        if (Math.abs(i) <= epsilon) {
-            return;
-        }
-        if (this.containsKey(idx)) {
-            final double val = super.get(idx);
-            if (Math.abs(val + i - defaultValue) <= epsilon) {
-                super.remove(idx);
-            } else {
-                super.put(idx, val + i);
-            }
-        } else {
-            super.put(idx, defaultValue + i);
-        }
-    }
-
-    /**
      * Subtract a value from a given index
      *
      * @param idx The index
@@ -305,8 +283,8 @@ public class SparseRealArray extends HashMap<Integer, Double> implements Vector<
     }
 
     @Override
-    public void add(int idx, int val) {
-        add(idx, (double) val);
+    public int add(int idx, int val) {
+        return (int)add(idx, (double) val);
     }
 
     @Override
@@ -466,7 +444,7 @@ public class SparseRealArray extends HashMap<Integer, Double> implements Vector<
     }
 
     @Override
-    public Vector<Double> clone() {
+    public SparseRealArray clone() {
         return new SparseRealArray(n, defaultValue, epsilon, this);
     }
 

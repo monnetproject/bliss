@@ -78,18 +78,24 @@ public class RealVector implements Vector<Double> {
     }
 
     @Override
-    public void put(int idx, double value) {
+    public double put(int idx, double value) {
+        double r = data[idx];
         data[idx] = value;
+        return r;
     }
 
     @Override
-    public void put(int idx, int value) {
+    public int put(int idx, int value) {
+        int r = (int)data[idx];
         data[idx] = value;
+        return r;
     }
 
     @Override
-    public void add(int idx, int val) {
+    public int add(int idx, int val) {
+        int r = (int)data[idx];
         data[idx] += val;
+        return r;
     }
 
     @Override
@@ -109,8 +115,10 @@ public class RealVector implements Vector<Double> {
     
     
     @Override
-    public void add(int idx, double val) {
+    public double add(int idx, double val) {
+        double r = data[idx];
         data[idx] += val;
+        return r;
     }
 
     @Override

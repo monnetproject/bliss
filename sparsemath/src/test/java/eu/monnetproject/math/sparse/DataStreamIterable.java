@@ -23,17 +23,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.math.sparse.eigen;
+package eu.monnetproject.math.sparse;
 
-import eu.monnetproject.translation.topics.CLIOpts;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
+import java.util.zip.GZIPInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 /**
  *
@@ -45,11 +47,19 @@ public class DataStreamIterable implements IntIterable {
     public DataStreamIterable(File file) throws IOException {
         this.file = file;
     }
-    
+    public static InputStream openInputAsMaybeZipped(File file) throws IOException {
+        if (file.getName().endsWith(".gz")) {
+            return new GZIPInputStream(new FileInputStream(file));
+        } else if (file.getName().endsWith(".bz2")) {
+            return new BZip2CompressorInputStream(new FileInputStream(file));
+        } else {
+            return new FileInputStream(file);
+        }
+    }
     @Override
     public IntIterator iterator() {
         try {
-            return new DataInputStreamAsIntIterator(CLIOpts.openInputAsMaybeZipped(file));
+            return new DataInputStreamAsIntIterator(openInputAsMaybeZipped(file));
         } catch(IOException x) {
             throw new RuntimeException(x);
         } 

@@ -27,6 +27,7 @@
 package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.Map;
  *
  * @author John McCrae
  */
-public class SparseIntArray extends HashMap<Integer, Integer> implements Vector<Integer> {
+public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer> {
 
     private static final long serialVersionUID = 9099860117350068663L;
     private final int n;
@@ -82,7 +83,7 @@ public class SparseIntArray extends HashMap<Integer, Integer> implements Vector<
         }
     }
     
-    protected SparseIntArray(int n, int defaultValue, HashMap<Integer,Integer> map) {
+    protected SparseIntArray(int n, int defaultValue, Int2IntOpenHashMap map) {
         super(map);
         this.n = n;
         this.defaultValue = defaultValue;
@@ -104,13 +105,13 @@ public class SparseIntArray extends HashMap<Integer, Integer> implements Vector<
     }
 
     @Override
-    public void put(int idx, double value) {
-        super.put(idx, idx);
+    public double put(int idx, double value) {
+        return super.put(idx, idx);
     }
 
     @Override
-    public void put(int idx, int value) {
-        super.put(idx, value);
+    public int put(int idx, int value) {
+        return super.put(idx, value);
     }
     
     /**
@@ -278,18 +279,11 @@ public class SparseIntArray extends HashMap<Integer, Integer> implements Vector<
     }
 
     @Override
-    public void add(int idx, int i) {
-        if (this.containsKey(idx)) {
-            final int val = super.get(idx);
-            if (val + i == defaultValue) {
-                this.remove(idx);
-            } else {
-                this.put(idx, val + i);
-            }
-        } else {
-            this.put(idx, i + defaultValue);
-        }
+    public double add(int idx, double val) {
+        return super.add(idx, (int)val);
     }
+    
+    
 
     @Override
     public void sub(int idx, int i) {
@@ -317,19 +311,6 @@ public class SparseIntArray extends HashMap<Integer, Integer> implements Vector<
         }
     }
     
-    @Override
-    public void add(int idx, double i) {
-        if (this.containsKey(idx)) {
-            final int val = super.get(idx);
-            if (val + i == defaultValue) {
-                this.remove(idx);
-            } else {
-                this.put(idx, val + i);
-            }
-        } else {
-            this.put(idx, i + defaultValue);
-        }
-    }
 
     @Override
     public void sub(int idx, double i) {
@@ -505,7 +486,7 @@ public class SparseIntArray extends HashMap<Integer, Integer> implements Vector<
     }
 
     @Override
-    public Vector<Integer> clone() {
+    public SparseIntArray clone() {
         return new SparseIntArray(n, defaultValue, this);
     }
 }

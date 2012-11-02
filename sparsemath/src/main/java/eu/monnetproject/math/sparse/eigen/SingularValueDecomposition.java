@@ -77,12 +77,12 @@ public class SingularValueDecomposition {
     
 
     public Solution calculate(IntIterable corpus, int W, int J, int K, double epsilon) {
-        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(corpus, W), randomUnitNormVector(J), K, 0.0);
+        final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(corpus, W), randomUnitNormVector(J), K, 1.0);
         final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
         final double[][] oEigens = oQrSolve.givensSeq().applyTo(oLanczos.q());
         final int[] oOrder = order(oQrSolve.values());
 
-        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 0.0);
+        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 1.0);
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
         final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
         final int[] iOrder = order(iQrSolve.values());

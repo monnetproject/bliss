@@ -1,5 +1,6 @@
 package eu.monnetproject.math.sparse.eigen;
 
+import eu.monnetproject.math.sparse.DataStreamIterable;
 import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;

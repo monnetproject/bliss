@@ -79,7 +79,7 @@ public interface Vector<N extends Number> {
      * @param n The value
      * @return The previous value
      */
-    void put(int idx, double value);
+    double put(int idx, double value);
     
     /**
      * Set a value at a given index
@@ -88,7 +88,7 @@ public interface Vector<N extends Number> {
      * @param n The value
      * @return The previous value
      */
-    void put(int idx, int value);
+    int put(int idx, int value);
 
     /**
      * Add a value to the sparse array. This will automatically remove an
@@ -97,7 +97,7 @@ public interface Vector<N extends Number> {
      * @param idx The index
      * @param val The value
      */
-    void add(int idx, int val);
+    int add(int idx, int val);
 
     /**
      * Subtract a value from the sparse array. This will automatically remove an
@@ -135,7 +135,7 @@ public interface Vector<N extends Number> {
      * @param idx The index
      * @param val The value
      */
-    void add(int idx, double val);
+    double add(int idx, double val);
 
     /**
      * Subtract a value from the sparse array. This will automatically remove an
