@@ -26,7 +26,7 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.*;
 import java.util.HashMap;
 
@@ -41,10 +41,10 @@ public final class BinaryReader {
     private BinaryReader() {
     }
 
-    public static SparseArray[] readFromFile(File file, int length, int arrMax) throws IOException {
+    public static SparseIntArray[] readFromFile(File file, int length, int arrMax) throws IOException {
         final DataInputStream in = new DataInputStream(new FileInputStream(file));
         System.err.println(file.getPath());
-        final SparseArray[] elems = new SparseArray[length];
+        final SparseIntArray[] elems = new SparseIntArray[length];
         final int[] buffer = new int[BUF_SIZE];
         int loc = 0;
         int elemCt = 0;
@@ -58,7 +58,7 @@ public final class BinaryReader {
                     loc++;
                 }
             } else {
-                final SparseArray arr = new SparseArray(arrMax);
+                final SparseIntArray arr = new SparseIntArray(arrMax);
                 elems[elemCt] = arr;
                 for (int j = 0; j < loc; j++) {
                     arr.inc(buffer[j]);
@@ -74,12 +74,12 @@ public final class BinaryReader {
         return elems;
     }
     
-    public static SparseArray[][] read2FromFile(File file1, File file2, int length, int arrMax) throws IOException {
-        final SparseArray[] sa1 = readFromFile(file1, length, arrMax);
-        final SparseArray[] sa2 = readFromFile(file2, length, arrMax);
-        final SparseArray[][] sa = new SparseArray[length][];
+    public static SparseIntArray[][] read2FromFile(File file1, File file2, int length, int arrMax) throws IOException {
+        final SparseIntArray[] sa1 = readFromFile(file1, length, arrMax);
+        final SparseIntArray[] sa2 = readFromFile(file2, length, arrMax);
+        final SparseIntArray[][] sa = new SparseIntArray[length][];
         for(int i = 0; i < length; i++) {
-            sa[i] = new SparseArray[] { sa1[i], sa2[i] };
+            sa[i] = new SparseIntArray[] { sa1[i], sa2[i] };
         }
         return sa;
     }

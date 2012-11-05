@@ -27,7 +27,7 @@
 package eu.monnetproject.translation.topics.lda;
 
 import eu.monnetproject.lang.Language;
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -412,12 +412,26 @@ public class GibbsInference {
 
     public GibbsData getData() {
         return getPolylingualData(new Language[]{Language.ENGLISH}, new HashMap<String, Integer>()).monolingual(0);
-        //return new GibbsData(N_k, SparseArray.fromArray(N_kw), K, W, D, alpha, beta, phi(), theta());
+        //return new GibbsData(N_k, SparseIntArray.fromArray(N_kw), K, W, D, alpha, beta, phi(), theta());
     }
 
+    public static SparseIntArray[] fromArray(int[][] arrs) {
+        SparseIntArray[] sas = new SparseIntArray[arrs.length];
+        for (int i = 0; i < arrs.length; i++) {
+            sas[i] = SparseIntArray.fromArray(arrs[i]);
+        }
+        return sas;
+    }
+    public static SparseIntArray[][] fromArray(int[][][] arrs) {
+        SparseIntArray[][] sass = new SparseIntArray[arrs.length][];
+        for (int i = 0; i < arrs.length; i++) {
+            sass[i] = fromArray(arrs[i]);
+        }
+        return sass;
+    }
     public PolylingualGibbsData getPolylingualData(Language[] languages, Map<String, Integer> words) {
         assert (languages.length == L);
-        return new PolylingualGibbsData(N_lk, SparseArray.fromArray(N_lkw), K, W, D, alpha, beta, phiPolyLingual(), theta(), languages, words);
+        return new PolylingualGibbsData(N_lk, fromArray(N_lkw), K, W, D, alpha, beta, phiPolyLingual(), theta(), languages, words);
     }
 
     protected Collection<Integer> wordsInDoc(int j) {

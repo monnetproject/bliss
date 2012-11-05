@@ -26,9 +26,11 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.lda.Estimator;
 import eu.monnetproject.translation.topics.lda.PolylingualGibbsData;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 
 /**
@@ -47,22 +49,22 @@ public class LDAParaSim implements SimilarityMetric {
     }
     
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         int[] d = toDocument(termVec);
-        return estimator.topics(d, l1, polylingualGibbsData, 100);
+        return new RealVector(estimator.topics(d, l1, polylingualGibbsData, 100));
     }
 
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
         int[] d = toDocument(termVec);
-        return estimator.topics(d, l2, polylingualGibbsData, 100);
+        return new RealVector(estimator.topics(d, l2, polylingualGibbsData, 100));
     }
 
-    private int[] toDocument(SparseArray termVec) {
+    private int[] toDocument(Vector<Integer> termVec) {
         final int[] vec = new int[termVec.sum()];
         int j = 0;
         for(int w : termVec.keySet()) {
-            final int n = termVec.get(w);
+            final int n = termVec.value(w);
             for(int i = 0; i < n; i++) {
                 vec[j++] = w;
             }

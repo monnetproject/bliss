@@ -28,8 +28,13 @@ package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -60,7 +65,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
      */
     public SparseIntArray(int n, int defaultValue) {
         this.n = n;
-        this.defaultValue = defaultValue;
+        this.defaultValue = super.defRetValue = defaultValue;
     }
 
     /**
@@ -74,7 +79,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
      */
     public SparseIntArray(int n, int defaultValue, int... values) {
         this.n = n;
-        this.defaultValue = defaultValue;
+        this.defaultValue = super.defRetValue = defaultValue;
         if (values.length % 2 != 0) {
             throw new IllegalArgumentException("Wrong number of varargs to SparseIntArray");
         }
@@ -82,11 +87,11 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
             put(values[i], values[i + 1]);
         }
     }
-    
+
     protected SparseIntArray(int n, int defaultValue, Int2IntOpenHashMap map) {
         super(map);
         this.n = n;
-        this.defaultValue = defaultValue;
+        this.defaultValue = super.defRetValue = defaultValue;
     }
 
     @Override
@@ -113,7 +118,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
     public int put(int idx, int value) {
         return super.put(idx, value);
     }
-    
+
     /**
      * Increment an index
      */
@@ -143,23 +148,23 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
     public static SparseIntArray fromFrequencyString(String string, int n) throws VectorFormatException {
         final String[] entries = string.split("\\s+");
         final SparseIntArray array = new SparseIntArray(n);
-        for(String entry : entries) {
+        for (String entry : entries) {
             try {
                 array.inc(Integer.parseInt(entry));
-            } catch(NumberFormatException x) {
+            } catch (NumberFormatException x) {
                 throw new VectorFormatException(x);
             }
         }
         return array;
     }
-    
+
     /**
      * Create from a string of the form "idx=val,...,idx=val"
      *
      * @param string The string
      * @param n The length of the array
      * @return The array object
-     * @throws SparseArrayFormatException If the string is not formatted as a
+     * @throws SparseIntArrayFormatException If the string is not formatted as a
      * sparse array
      */
     public static SparseIntArray fromString(String string, int n) throws VectorFormatException {
@@ -173,7 +178,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
      * @param n The length of the array
      * @param defaultValue The default value
      * @return The array object
-     * @throws SparseArrayFormatException If the string is not formatted as a
+     * @throws SparseIntArrayFormatException If the string is not formatted as a
      * sparse array
      */
     public static SparseIntArray fromString(String string, int length, int defaultValue) throws VectorFormatException {
@@ -188,7 +193,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
      * @param defaultValue The default value
      * @param sep The seperator
      * @return The array object
-     * @throws SparseArrayFormatException If the string is not formatted as a
+     * @throws SparseIntArrayFormatException If the string is not formatted as a
      * sparse array
      */
     public static SparseIntArray fromString(String string, int length, int defaultValue, String sep) throws VectorFormatException {
@@ -261,14 +266,15 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
         return n;
     }
 
-    public int sum() {
+    @Override
+    public Integer sum() {
         int sum = defaultValue * n;
         for (int v : values()) {
-            sum += v;
+            sum += v-defaultValue;
         }
         return sum;
     }
-    
+
     @Override
     public double norm() {
         double norm = 0.0;
@@ -280,10 +286,8 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
 
     @Override
     public double add(int idx, double val) {
-        return super.add(idx, (int)val);
+        return super.add(idx, (int) val);
     }
-    
-    
 
     @Override
     public void sub(int idx, int i) {
@@ -310,8 +314,32 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
             }
         }
     }
-    
 
+    public static SparseIntArray histogram(int[] vector, int W) {
+        final SparseIntArray hist = new SparseIntArray(W);
+        for (int i : vector) {
+            hist.inc(i);
+        }
+        return hist;
+    }
+
+    public static SparseIntArray fromBinary(File file, int W) throws IOException {
+        return fromBinary(new FileInputStream(file),W);
+    }
+    
+    public static SparseIntArray fromBinary(InputStream stream, int W) throws IOException {
+        final DataInputStream dis = new DataInputStream(stream);
+        final SparseIntArray arr = new SparseIntArray(W);
+        while (dis.available() > 0) {
+            try {
+                arr.inc(dis.readInt());
+            } catch (EOFException x) {
+                break;
+            }
+        }
+        return arr;
+    }
+    
     @Override
     public void sub(int idx, double i) {
         add(idx, -i);
@@ -329,11 +357,11 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
             if (val * i == defaultValue) {
                 super.remove(idx);
             } else {
-                super.put(idx, (int)(val * i));
+                super.put(idx, (int) (val * i));
             }
         } else {
             if (defaultValue != 0.0 && i != defaultValue) {
-                super.put(idx, (int)(defaultValue * i));
+                super.put(idx, (int) (defaultValue * i));
             }
         }
     }
@@ -354,7 +382,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
     public int length() {
         return n;
     }
-    
+
     @Override
     public <M extends Number> void add(Vector<M> vector) {
         assert (vector.length() == n);
@@ -370,12 +398,11 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
             sub(e.getKey(), e.getValue().intValue());
         }
     }
-    
-    
+
     @Override
     public void multiply(double n) {
-        for(Map.Entry<Integer,Integer> e : entrySet()) {
-            e.setValue((int)(e.getValue()*n));
+        for (Map.Entry<Integer, Integer> e : entrySet()) {
+            e.setValue((int) (e.getValue() * n));
         }
         defaultValue *= n;
     }
@@ -444,35 +471,35 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
             }
         }
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public <M extends Number, O extends Number> Matrix<O> outerProduct(Vector<M> y, Vectors.Factory<O> using) {
-        if(using == Vectors.AS_INTS) {
+        if (using == Vectors.AS_INTS) {
             int[][] data2 = new int[n][y.length()];
-            for(Map.Entry<Integer,Integer> e : entrySet()) {
-                for(int j = 0; j < y.length(); j++) {
+            for (Map.Entry<Integer, Integer> e : entrySet()) {
+                for (int j = 0; j < y.length(); j++) {
                     data2[e.getKey()][j] = e.getValue().intValue() * y.intValue(j);
                 }
             }
-            return (Matrix<O>)new IntArrayMatrix(data2);
-        } else if(using == Vectors.AS_REALS) {
+            return (Matrix<O>) new IntArrayMatrix(data2);
+        } else if (using == Vectors.AS_REALS) {
             double[][] data2 = new double[n][y.length()];
-            for(Map.Entry<Integer,Integer> e : entrySet()) {
-                for(int j = 0; j < y.length(); j++) {
+            for (Map.Entry<Integer, Integer> e : entrySet()) {
+                for (int j = 0; j < y.length(); j++) {
                     data2[e.getKey()][j] = y.doubleValue(j) * e.getValue().intValue();
                 }
             }
-            return (Matrix<O>)new DoubleArrayMatrix(data2);
-        } else  {
+            return (Matrix<O>) new DoubleArrayMatrix(data2);
+        } else {
             final SparseMatrix<O> matrix = new SparseMatrix<O>(n, y.length(), using);
-            for(Map.Entry<Integer,Integer> e : entrySet()) {
-                for(Map.Entry<Integer,M> e2 : y.entrySet()) {
+            for (Map.Entry<Integer, Integer> e : entrySet()) {
+                for (Map.Entry<Integer, M> e2 : y.entrySet()) {
                     matrix.set(e.getKey(), e2.getKey(), e2.getValue().doubleValue() * e.getKey().doubleValue());
                 }
             }
             return matrix;
-        } 
+        }
     }
 
     @Override

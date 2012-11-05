@@ -23,27 +23,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.translation.topics.experiments;
+
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
+import eu.monnetproject.math.sparse.Vector;
+import eu.monnetproject.translation.topics.SimilarityMetric;
+import eu.monnetproject.translation.topics.SimilarityMetricFactory;
+import java.io.IOException;
 
 /**
  *
  * @author John McCrae
  */
-public class SparseArrayFormatException extends RuntimeException {
+public class DummySim implements SimilarityMetricFactory<Object> {
 
-    public SparseArrayFormatException() {
+    @Override
+    public SimilarityMetric makeMetric(Object data, final int W) throws IOException {
+        return new SimilarityMetric() {
+
+            @Override
+            public Vector<Double> simVecSource(Vector<Integer> termVec) {
+                return new Integer2DoubleVector(termVec);
+            }
+
+            @Override
+            public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+                return new Integer2DoubleVector(termVec);
+            }
+
+            @Override
+            public int W() {
+                return W;
+            }
+        };
     }
 
-    public SparseArrayFormatException(String message) {
-        super(message);
-    }
-
-    public SparseArrayFormatException(Throwable cause) {
-        super(cause);
-    }
-
-    public SparseArrayFormatException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public Class<Object> datatype() {
+        return Object.class;
     }
 
 }

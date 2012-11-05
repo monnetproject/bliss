@@ -26,7 +26,7 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -44,19 +44,19 @@ import java.util.Map;
  */
 public class ParallelReader {
 
-    public final SparseArray[][] x; // jli
+    public final SparseIntArray[][] x; // jli
     private final int W;
     private final int n;
     public final Map<String, Integer> words;
 
-    private ParallelReader(SparseArray[][] x, int W) {
+    private ParallelReader(SparseIntArray[][] x, int W) {
         this.x = x;
         this.W = W;
         this.n = 1;
         this.words = new HashMap<String, Integer>();
     }
 
-    private ParallelReader(SparseArray[][] x, int W, int n) {
+    private ParallelReader(SparseIntArray[][] x, int W, int n) {
         this.x = x;
         this.W = W;
         this.n = 1;
@@ -73,7 +73,7 @@ public class ParallelReader {
     public static ParallelReader fromFile(File data) throws IOException {
 
         final BufferedReader in = new BufferedReader(new FileReader(data));
-        final List<SparseArray[]> docs = new ArrayList<SparseArray[]>();
+        final List<SparseIntArray[]> docs = new ArrayList<SparseIntArray[]>();
         String s;
         int W = 0;
         while (!(s = in.readLine()).matches("\\s*")) {
@@ -94,9 +94,9 @@ public class ParallelReader {
                     W = i2[i] + 1;
                 }
             }
-            docs.add(new SparseArray[]{histogram(i1, W), histogram(i2, W)});
+            docs.add(new SparseIntArray[]{histogram(i1, W), histogram(i2, W)});
         }
-        final ParallelReader reader = new ParallelReader(docs.toArray(new SparseArray[docs.size()][]), W);
+        final ParallelReader reader = new ParallelReader(docs.toArray(new SparseIntArray[docs.size()][]), W);
         while ((s = in.readLine()) != null) {
             final String[] ss = s.split("\\s+");
             if (ss.length == 2) {
@@ -109,7 +109,7 @@ public class ParallelReader {
     public static ParallelReader fromFile(final File data, final int W, final int n) throws IOException {
 
         final BufferedReader in = new BufferedReader(new FileReader(data));
-        final List<SparseArray[]> docs = new ArrayList<SparseArray[]>();
+        final List<SparseIntArray[]> docs = new ArrayList<SparseIntArray[]>();
         String s;
         int Wn = W; // W ** n
         for (int i = 1; i < 1; i++) {
@@ -140,9 +140,9 @@ public class ParallelReader {
                     i2[i] = v2 = v2 % Wn * W + xi;
                 }
             }
-            docs.add(new SparseArray[]{histogram(i1, W), histogram(i2, W)});
+            docs.add(new SparseIntArray[]{histogram(i1, W), histogram(i2, W)});
         }
-        final ParallelReader reader = new ParallelReader(docs.toArray(new SparseArray[docs.size()][]), W);
+        final ParallelReader reader = new ParallelReader(docs.toArray(new SparseIntArray[docs.size()][]), W);
         while ((s = in.readLine()) != null) {
             final String[] ss = s.split("\\s+");
             if (ss.length == 2) {
@@ -152,8 +152,8 @@ public class ParallelReader {
         return reader;
     }
 
-    public static SparseArray histogram(int[] vector, int W) {
-        final SparseArray hist = new SparseArray(W);
+    public static SparseIntArray histogram(int[] vector, int W) {
+        final SparseIntArray hist = new SparseIntArray(W);
         for (int i : vector) {
             hist.inc(i);
         }

@@ -27,7 +27,7 @@
 package eu.monnetproject.translation.topics.lda;
 
 import eu.monnetproject.lang.Language;
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +45,7 @@ import java.util.Map;
 public class PolylingualGibbsData {
 
     public final int[][] N_lk;
-    public final SparseArray[][] N_lkw;
+    public final SparseIntArray[][] N_lkw;
     public final int K, W, D;
     public final double alpha, beta;
     //public final double[][][] phi;
@@ -54,7 +54,7 @@ public class PolylingualGibbsData {
     private final int L;
     public final Map<String, Integer> words;
 
-    public PolylingualGibbsData(int[][] N_lk, SparseArray[][] N_lkw, int K, int W, int D, double alpha, double beta, double[][][] phi, double[][] theta, Language[] languages, Map<String, Integer> words) {
+    public PolylingualGibbsData(int[][] N_lk, SparseIntArray[][] N_lkw, int K, int W, int D, double alpha, double beta, double[][][] phi, double[][] theta, Language[] languages, Map<String, Integer> words) {
         this.N_lk = N_lk;
         this.N_lkw = N_lkw;
         this.K = K;
@@ -170,7 +170,7 @@ public class PolylingualGibbsData {
         Language[] languages = new Language[L];
 
         int[][] N_lk = new int[L][];
-        SparseArray[][] N_lkw = new SparseArray[L][];
+        SparseIntArray[][] N_lkw = new SparseIntArray[L][];
         //double[][][] phi = new double[L][][];
         for (int l = 0; l < L; l++) {
             s = reader.readLine();
@@ -191,13 +191,13 @@ public class PolylingualGibbsData {
                 N_lk[l][k] = Integer.parseInt(N_k_str[k]);
             }
 
-            N_lkw[l] = new SparseArray[K];
+            N_lkw[l] = new SparseIntArray[K];
             for(int k = 0; k < K; k++) {
                 s = reader.readLine();
                 if (s == null) {
                     throw new GibbsFormatException("No N_wk @ index" + k);
                 }
-                N_lkw[l][k] = SparseArray.fromString(s, W, 0);
+                N_lkw[l][k] = SparseIntArray.fromString(s, W, 0);
             }
 
             //phi[l] = new double[W][];

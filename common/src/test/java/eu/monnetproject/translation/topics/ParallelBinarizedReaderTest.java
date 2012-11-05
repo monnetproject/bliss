@@ -1,5 +1,6 @@
 package eu.monnetproject.translation.topics;
 
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.ByteArrayInputStream;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -99,10 +100,10 @@ public class ParallelBinarizedReaderTest {
             0, 0, 0, 0
         };
         ParallelBinarizedReader instance = new ParallelBinarizedReader(new ByteArrayInputStream(buf));
-        SparseArray[] expResult = new SparseArray[]{
-            SparseArray.histogram(new int[]{1, 2, 3, 4}, W),
-            SparseArray.histogram(new int[]{1, 2, 5, 4}, W),};
-        SparseArray[] result = instance.nextFreqPair(W);
+        SparseIntArray[] expResult = new SparseIntArray[]{
+            SparseIntArray.histogram(new int[]{1, 2, 3, 4}, W),
+            SparseIntArray.histogram(new int[]{1, 2, 5, 4}, W),};
+        SparseIntArray[] result = instance.nextFreqPair(W);
         assertArrayEquals(expResult, result);
     }
 
@@ -136,17 +137,17 @@ public class ParallelBinarizedReaderTest {
             0, 0, 0, 0
         };
         ParallelBinarizedReader instance = new ParallelBinarizedReader(new ByteArrayInputStream(buf));
-        SparseArray[][] expResult = new SparseArray[][]{
+        SparseIntArray[][] expResult = new SparseIntArray[][]{
             {
-                SparseArray.histogram(new int[]{1, 2, 3, 4}, W),
-                SparseArray.histogram(new int[]{1, 2, 5, 4}, W)
+                SparseIntArray.histogram(new int[]{1, 2, 3, 4}, W),
+                SparseIntArray.histogram(new int[]{1, 2, 5, 4}, W)
             },
             {
-                SparseArray.histogram(new int[]{1, 2, 5, 4}, W),
-                SparseArray.histogram(new int[]{1, 2, 3, 4}, W)
+                SparseIntArray.histogram(new int[]{1, 2, 5, 4}, W),
+                SparseIntArray.histogram(new int[]{1, 2, 3, 4}, W)
             }
         };
-        SparseArray[][] result = instance.readAll(W);
+        SparseIntArray[][] result = instance.readAll(W);
         assertArrayEquals(expResult, result);
     }
 }

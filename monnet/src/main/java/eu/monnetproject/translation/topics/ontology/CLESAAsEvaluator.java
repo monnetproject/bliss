@@ -26,9 +26,9 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics.ontology;
 
+import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.translation.Translation;
 import eu.monnetproject.translation.eval.TranslationEvaluator;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.clesa.CLESA;
 import java.util.List;
 
@@ -52,8 +52,8 @@ public class CLESAAsEvaluator implements TranslationEvaluator {
         double score = 0.0;
         double n = 0;
         for(int i = 0; i < translations.size(); i++) {
-            final double[] sourceVector = clesa.simVecSource(toSparseArray(references.get(i).get(0).getTargetLabel().asString()));
-            final double[] targetVector = clesa.simVecSource(toSparseArray(translations.get(i).getTargetLabel().asString()));
+            final double[] sourceVector = clesa.simVecSource(toSparseIntArray(references.get(i).get(0).getTargetLabel().asString())).toDoubleArray();
+            final double[] targetVector = clesa.simVecSource(toSparseIntArray(translations.get(i).getTargetLabel().asString())).toDoubleArray();
             double aa = 0.0, ab = 0.0, bb = 0.0;
             for(int j = 0; j < sourceVector.length; j++) {
                 aa += sourceVector[j] * sourceVector[j];
@@ -68,9 +68,9 @@ public class CLESAAsEvaluator implements TranslationEvaluator {
         return n > 0 ? score / n : 0;
     }
     
-    private SparseArray toSparseArray(String string) {
+    private SparseIntArray toSparseIntArray(String string) {
         final String[] tokens = string.split("\\s+");
-        final SparseArray sparseArray = new SparseArray(clesa.W);
+        final SparseIntArray sparseArray = new SparseIntArray(clesa.W);
         for(String token : tokens) {
             if(clesa.words.containsKey(token.toLowerCase())) {
                 sparseArray.add(clesa.words.get(token.toLowerCase()), 1);

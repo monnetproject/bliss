@@ -26,9 +26,11 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.SparseRealArray;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +38,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 
 /**
@@ -51,20 +52,20 @@ public class LinearSurjection implements SimilarityMetric {
     public LinearSurjection(File file) throws IOException {
         final ParallelReader data = ParallelReader.fromFile(file);
         this.W = data.W();
-        final SparseArray[][] Xt = transpose(data.x);
+        final SparseIntArray[][] Xt = transpose(data.x);
         final double[][] norms = norms(Xt);
         this.surjes = calculateSurjections(Xt, norms);
     }
 
-    public LinearSurjection(SparseArray[][] x, int W) {
+    public LinearSurjection(SparseIntArray[][] x, int W) {
         this.W = W;
-        final SparseArray[][] Xt = transpose(x);
+        final SparseIntArray[][] Xt = transpose(x);
         final double[][] norms = norms(Xt);
         this.surjes = calculateSurjections(Xt, norms);
     }
 
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         double[] vec = new double[W];
         for (Map.Entry<Integer, Integer> e : termVec.entrySet()) {
             if (surjes.get(e.getKey()) != null) {
@@ -73,12 +74,12 @@ public class LinearSurjection implements SimilarityMetric {
                 }
             }
         }
-        return vec;
+        return new RealVector(vec);
     }
 
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
-        return termVec.toDoubleArray();
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+        return new Integer2DoubleVector(termVec);
     }
 
     @Override
@@ -89,13 +90,13 @@ public class LinearSurjection implements SimilarityMetric {
     /**
      * Transpose the matrix to a WxJ matrix
      */
-    private SparseArray[][] transpose(SparseArray[][] x) {
-        final SparseArray[][] Xt = new SparseArray[W][2];
+    private SparseIntArray[][] transpose(SparseIntArray[][] x) {
+        final SparseIntArray[][] Xt = new SparseIntArray[W][2];
         for (int j = 0; j < x.length; j++) {
             for (int l = 0; l < 2; l++) {
                 for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
                     if (Xt[e.getIntKey()][l] == null) {
-                        Xt[e.getIntKey()][l] = new SparseArray(x.length);
+                        Xt[e.getIntKey()][l] = new SparseIntArray(x.length);
                     }
                     Xt[e.getIntKey()][l].put(j, e.getIntValue());
                 }
@@ -108,7 +109,7 @@ public class LinearSurjection implements SimilarityMetric {
      * Calculate ||x||_2 (idx 0 and 1) and ||x||_1 (idx 2 and 3) for both
      * languages
      */
-    private double[][] norms(SparseArray[][] Xt) {
+    private double[][] norms(SparseIntArray[][] Xt) {
         double[][] norms = new double[W][4];
         for (int w = 0; w < Xt.length; w++) {
             for (int l = 0; l < 2; l++) {
@@ -127,7 +128,7 @@ public class LinearSurjection implements SimilarityMetric {
     }
     private static final Random random = new Random();
 
-    private List<List<Surj>> calculateSurjections(SparseArray[][] Xt, double[][] norms) {
+    private List<List<Surj>> calculateSurjections(SparseIntArray[][] Xt, double[][] norms) {
         final List<List<Surj>> surjections = new ArrayList<List<Surj>>(W);
         for (int w = 0; w < W; w++) {
             surjections.add(null);

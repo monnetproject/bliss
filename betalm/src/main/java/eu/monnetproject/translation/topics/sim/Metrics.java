@@ -25,7 +25,7 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.Vector;
 import java.util.Map;
 
 /**
@@ -36,37 +36,37 @@ public class Metrics {
 
     private Metrics() { }
     
-    public static double cosSim(SparseArray vec1, SparseArray vec2) {
+    public static <M extends Number, N extends Number> double cosSim(Vector<M> vec1, Vector<N> vec2) {
         double ab = 0.0;
         double a2 = 0.0;
         for (int i : vec1.keySet()) {
-            ab += (double) vec2.get(i) * (double) vec1.get(i);
-            a2 += (double) vec1.get(i) * (double) vec1.get(i);
+            ab += (double) vec2.value(i).doubleValue() * (double) vec1.value(i).doubleValue();
+            a2 += (double) vec1.value(i).doubleValue() * (double) vec1.value(i).doubleValue();
         }
         double b2 = 0.0;
         for (int i : vec2.keySet()) {
-            b2 += (double) vec2.get(i) * (double) vec2.get(i);
+            b2 += (double) vec2.value(i).doubleValue() * (double) vec2.value(i).doubleValue();
         }
         return a2 > 0 && b2 > 0 ? ab / Math.sqrt(a2) / Math.sqrt(b2) : 0;
     }
     
-    public static BetaSimFunction cosSim(final SparseArray vec1) {
+    public static BetaSimFunction cosSim(final Vector<Integer> vec1) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray vec2) {
+            public double score(Vector<Integer> vec2) {
                 return cosSim(vec1,vec2);
             }
         };
     }
     
-    public static double cosSim(double[] vec1, SparseArray vec2) {
+    public static double cosSim(double[] vec1, Vector<Integer> vec2) {
         double ab = 0.0;
         double a2 = 0.0;
         double b2 = 0.0;
         for (int i : vec2.keySet()) {
-            ab += (double) vec2.get(i) * vec1[i];
-            b2 += (double) vec2.get(i) * (double) vec2.get(i);
+            ab += (double) vec2.value(i).doubleValue() * vec1[i];
+            b2 += (double) vec2.value(i).doubleValue() * (double) vec2.value(i).doubleValue();
         }
         for (int i = 0; i < vec1.length; i++) {
             a2 += vec1[i] * vec1[i];
@@ -76,11 +76,11 @@ public class Metrics {
     
     private static final double KLD_NEG_COST = -5;
 
-    public static double kullbackLeiblerDivergence(SparseArray vec1, SparseArray vec2) {
+    public static double kullbackLeiblerDivergence(Vector<Integer> vec1, Vector<Integer> vec2) {
         final double N1 = vec1.sum(), N2 = vec2.sum();
         double kld = 0.0;
         for (Map.Entry<Integer, Integer> e : vec1.entrySet()) {
-            final int tfj = vec2.get(e.getKey());
+            final int tfj = vec2.value(e.getKey()).intValue();
             if (tfj != 0) {
                 kld += (double) e.getValue() / N1 * Math.max(KLD_NEG_COST, Math.log(N2 / N1 * e.getValue() * tfj));
             } else {
@@ -90,17 +90,17 @@ public class Metrics {
         return kld;
     }
     
-    public static BetaSimFunction kullbackLeiblerDivergence(final SparseArray vec1) {
+    public static BetaSimFunction kullbackLeiblerDivergence(final Vector<Integer> vec1) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray vec2) {
+            public double score(Vector<Integer> vec2) {
                 return kullbackLeiblerDivergence(vec1, vec2);
             }
         };
     }
 
-    public static double jaccardIndex(SparseArray vec1, SparseArray vec2) {
+    public static double jaccardIndex(Vector<Integer> vec1, Vector<Integer> vec2) {
         int intersect = 0;
         int union = 0;
 
@@ -120,17 +120,17 @@ public class Metrics {
         return union == 0 ? 0.0 : (double) intersect / union;
     }
     
-    public static BetaSimFunction jaccardIndex(final SparseArray vec1) {
+    public static BetaSimFunction jaccardIndex(final Vector<Integer> vec1) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray vec2) {
+            public double score(Vector<Integer> vec2) {
                 return jaccardIndex(vec1, vec2);
             }
         };
     }
     
-    public static double normalCosSim(SparseArray vec1, SparseArray vec2, double[] mu, double sumMu2) {
+    public static double normalCosSim(Vector<Integer> vec1, Vector<Integer> vec2, double[] mu, double sumMu2) {
         final int v1sum = vec1.sum();
         final int v2sum = vec2.sum();
         if (v1sum == 0 || v2sum == 0) {
@@ -142,8 +142,8 @@ public class Metrics {
             if (i > mu.length) {
                 continue;
             }
-            final double v1i = vec1.get(i);// / v1sum;
-            final double v2i = vec2.get(i);// / v2sum;
+            final double v1i = vec1.value(i).doubleValue();// / v1sum;
+            final double v2i = vec2.value(i).doubleValue();// / v2sum;
             ab += v2i * v1i - v2sum * mu[i] * v1i - v1sum * mu[i] * v2i;
             a2 += v1i * v1i - 2 * v1sum * mu[i] * v1i;
         }
@@ -152,7 +152,7 @@ public class Metrics {
             if (i > mu.length) {
                 continue;
             }
-            final double v2i = vec2.get(i);// / v2sum;
+            final double v2i = vec2.value(i).doubleValue();// / v2sum;
             if (!vec1.containsKey(i)) {
                 ab -= v1sum * mu[i] * v2i;
             }
@@ -161,17 +161,17 @@ public class Metrics {
         return a2 > 0 && b2 > 0 && ab > 0 ? ab / Math.sqrt(a2) / Math.sqrt(b2) : 0;
     }
     
-    public static BetaSimFunction normalCosSim(final SparseArray vec1, final double[] mu, final double sumMu2) {
+    public static BetaSimFunction normalCosSim(final Vector<Integer> vec1, final double[] mu, final double sumMu2) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray vec2) {
+            public double score(Vector<Integer> vec2) {
                 return normalCosSim(vec1, vec2, mu, sumMu2);
             }
         };
     }
 
-    public static double diceCoefficient(SparseArray vec1, SparseArray vec2) {
+    public static double diceCoefficient(Vector<Integer> vec1, Vector<Integer> vec2) {
         final int v1sum = vec1.size();
         final int v2sum = vec2.size();
         if (v1sum == 0 || v2sum == 0) {
@@ -186,17 +186,17 @@ public class Metrics {
         return 2.0 * (double) v12 / (v1sum + v2sum);
     }
     
-    public static BetaSimFunction diceCoefficient(final SparseArray vec1) {
+    public static BetaSimFunction diceCoefficient(final Vector<Integer> vec1) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray document) {
+            public double score(Vector<Integer> document) {
                 return diceCoefficient(vec1, document);
             }
         };
     }
 
-    public static double dfDiceCoefficient(SparseArray vec1, SparseArray vec2, double[] df) {
+    public static double dfDiceCoefficient(Vector<Integer> vec1, Vector<Integer> vec2, double[] df) {
         double num = 0.0, denom = 0.0;
         for (Integer i : vec1.keySet()) {
             if(i >= df.length)
@@ -214,17 +214,17 @@ public class Metrics {
         return denom == 0.0 ? 0.0 : (2.0 * num / denom);
     }
     
-    public static BetaSimFunction dfDiceCoefficient(final SparseArray vec1, final double[] df) {
+    public static BetaSimFunction dfDiceCoefficient(final Vector<Integer> vec1, final double[] df) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray document) {
+            public double score(Vector<Integer> document) {
                 return dfDiceCoefficient(vec1, document, df);
             }
         };
     }
     
-    public static double dfJaccardCoefficient(SparseArray vec1, SparseArray vec2, double[] df) {
+    public static double dfJaccardCoefficient(Vector<Integer> vec1, Vector<Integer> vec2, double[] df) {
         double num = 0.0, denom = 0.0;
         for (Integer i : vec1.keySet()) {
             if(i >= df.length)
@@ -244,19 +244,19 @@ public class Metrics {
         return denom == 0.0 ? 0.0 : num / denom;
     }
     
-    public static BetaSimFunction dfJaccardCoefficient(final SparseArray vec1, final double[] df) {
+    public static BetaSimFunction dfJaccardCoefficient(final Vector<Integer> vec1, final double[] df) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray document) {
+            public double score(Vector<Integer> document) {
                 return dfJaccardCoefficient(vec1, document, df);
             }
         };
     }
 
-    public static double rogersTanimoto(SparseArray vec1, SparseArray vec2) {
-        final int N = vec1.n();
-        assert (vec2.n() == vec1.n());
+    public static double rogersTanimoto(Vector<Integer> vec1, Vector<Integer> vec2) {
+        final int N = vec1.length();
+        assert (vec2.length() == vec1.length());
         int diff = 0;
         for (Integer i : vec1.keySet()) {
             if (!vec2.containsKey(i)) {
@@ -272,11 +272,11 @@ public class Metrics {
         return (double) (N - diff) / (double) (N + diff);
     }
     
-    public static BetaSimFunction rogersTanimoto(final SparseArray vec1) {
+    public static BetaSimFunction rogersTanimoto(final Vector<Integer> vec1) {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray document) {
+            public double score(Vector<Integer> document) {
                 return rogersTanimoto(vec1, document);
             }
         };
@@ -286,7 +286,7 @@ public class Metrics {
         return new BetaSimFunction() {
 
             @Override
-            public double score(SparseArray document) {
+            public double score(Vector<Integer> document) {
                 return (1.0 - minimal) * Math.pow(function.score(document),selectivity) + minimal;
             }
         };

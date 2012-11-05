@@ -309,6 +309,22 @@ public class CLIOpts {
             return defaultValue;
         }
     }
+    
+    public boolean flag(String name, String description) {
+        final Argument arg = new Argument(name, name, description, true);
+        argObjs.add(arg);
+        if(args.isEmpty()) {
+            return false;
+        } else {
+            for(int i = 0; i < args.size(); i++) {
+                if (args.get(i).equals("-" + name)) {
+                    args.remove(i);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public <C> Class<C> clazz(String name, Class<C> interfase, String description) {

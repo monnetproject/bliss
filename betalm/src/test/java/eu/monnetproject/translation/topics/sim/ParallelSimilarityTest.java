@@ -4,8 +4,8 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
-import eu.monnetproject.translation.topics.SparseArray;
-import static eu.monnetproject.translation.topics.SparseArray.*;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import static eu.monnetproject.math.sparse.SparseIntArray.fromArray;
 import java.util.Arrays;
 import static org.junit.Assert.*;
 import org.junit.After;
@@ -32,16 +32,16 @@ public class ParallelSimilarityTest {
     @Test
     public void testSimVec() {
         System.err.println("simVec");
-        final SparseArray[][] x = new SparseArray[][]{
-            new SparseArray[]{
+        final SparseIntArray[][] x = new SparseIntArray[][]{
+            new SparseIntArray[]{
                 fromArray(new int[]{0, 1, 2, 0, 0, 0}),
                 fromArray(new int[]{0, 0, 0, 0, 1, 2})
             },
-            new SparseArray[]{
+            new SparseIntArray[]{
                 fromArray(new int[]{2, 0, 1, 0, 0, 0}),
                 fromArray(new int[]{0, 0, 0, 2, 0, 1})
             },
-            new SparseArray[]{
+            new SparseIntArray[]{
                 fromArray(new int[]{0, 2, 1, 0, 0, 0}),
                 fromArray(new int[]{0, 0, 0, 0, 2, 1})
             }

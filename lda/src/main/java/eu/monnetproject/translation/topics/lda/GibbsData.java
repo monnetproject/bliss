@@ -26,7 +26,7 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics.lda;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,13 +42,13 @@ import java.util.Arrays;
 public class GibbsData {
 
     public final int[] N_k;
-    public final SparseArray[] N_kw;
+    public final SparseIntArray[] N_kw;
     public final int K, W, D;
     public final double alpha, beta;
     //public final double[][] phi;
     public final double[][] theta;
 
-    public GibbsData(int[] N_k, SparseArray[] N_kw, int K, int W, int D, double alpha, double beta, double[][] phi, double[][] theta) {
+    public GibbsData(int[] N_k, SparseIntArray[] N_kw, int K, int W, int D, double alpha, double beta, double[][] phi, double[][] theta) {
         this.N_k = N_k;
         this.N_kw = N_kw;
         this.K = K;
@@ -142,13 +142,13 @@ public class GibbsData {
             N_k[k] = Integer.parseInt(N_k_str[k]);
         }
 
-        SparseArray[] N_kw = new SparseArray[K];
+        SparseIntArray[] N_kw = new SparseIntArray[K];
         for (int k = 0; k < K; k++) {
             s = reader.readLine();
             if (s == null) {
                 throw new GibbsFormatException("No N_wk @ index" + k);
             }
-            N_kw[k] = SparseArray.fromString(s, W, 0);
+            N_kw[k] = SparseIntArray.fromString(s, W, 0);
         }
 
         //double[][] phi = new double[W][];

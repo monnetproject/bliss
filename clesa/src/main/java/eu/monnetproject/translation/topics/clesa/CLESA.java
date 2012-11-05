@@ -26,8 +26,10 @@
  */
 package eu.monnetproject.translation.topics.clesa;
 
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.sim.ParallelReader;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
@@ -41,8 +43,8 @@ import java.util.Map;
  */
 public class CLESA implements SimilarityMetric {
 
-    //public final SparseArray[][] x; 
-    public final SparseArray[][] xt; 
+    //public final SparseIntArray[][] x; 
+    public final SparseIntArray[][] xt; 
     public final int[] n;
     public final int[] n_f;
     public final int J;
@@ -65,7 +67,7 @@ public class CLESA implements SimilarityMetric {
         System.err.println("Finished loading CLESA data");
     }
 
-    public CLESA(SparseArray[][] x, int W, String[] words) {
+    public CLESA(SparseIntArray[][] x, int W, String[] words) {
         this.J = x.length;
         this.W = W;
         this.n = new int[J];
@@ -86,15 +88,15 @@ public class CLESA implements SimilarityMetric {
     /**
      * Transpose the matrix to a WxJ matrix
      */
-    private SparseArray[][] transpose(SparseArray[][] x) {
-        final SparseArray[][] Xt = new SparseArray[W][2];
+    private SparseIntArray[][] transpose(SparseIntArray[][] x) {
+        final SparseIntArray[][] Xt = new SparseIntArray[W][2];
         for (int j = 0; j < x.length; j++) {
             n[j] = x[j][0].sum();
             n_f[j] = x[j][0].sum();
             for (int l = 0; l < 2; l++) {
                 for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
                     if (Xt[e.getIntKey()][l] == null) {
-                        Xt[e.getIntKey()][l] = new SparseArray(x.length);
+                        Xt[e.getIntKey()][l] = new SparseIntArray(x.length);
                     }
                     final int v = e.getIntValue();
                     if(v != 0) { // So DF calculation doesn't go wrong
@@ -107,7 +109,7 @@ public class CLESA implements SimilarityMetric {
     }
 
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         double[] sim = new double[J];
         for(Map.Entry<Integer,Integer> e : termVec.entrySet()) {
             double termVecFreq = (double)e.getValue();
@@ -120,11 +122,11 @@ public class CLESA implements SimilarityMetric {
                 }
              }
         }
-        return sim;
+        return new RealVector(sim);
     }
 
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
         double[] sim = new double[J];
         for(Map.Entry<Integer,Integer> e : termVec.entrySet()) {
             double termVecFreq = (double)e.getValue();
@@ -137,7 +139,7 @@ public class CLESA implements SimilarityMetric {
                 }
              }
         }
-        return sim;
+        return new RealVector(sim);
     }
     
     private void initDF() {

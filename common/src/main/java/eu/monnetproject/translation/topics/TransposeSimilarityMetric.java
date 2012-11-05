@@ -26,6 +26,8 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics;
 
+import eu.monnetproject.math.sparse.Vector;
+
 /**
  * A cross-lingual similarity metric calculated in a transposed manner.
  * In explicit topic modelling this refers to calculating by feeding each training 
@@ -36,9 +38,9 @@ package eu.monnetproject.translation.topics;
  */
 public interface TransposeSimilarityMetric {
 
-    double[] transposeSimVecSource(SparseArray corpusDoc);
+    Vector<Double> transposeSimVecSource(Vector<Integer> corpusDoc);
     
-    double[] transposeSimVecTarget(SparseArray corpusDoc);
+    Vector<Double> transposeSimVecTarget(Vector<Integer> corpusDoc);
     
     int W();
 }

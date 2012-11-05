@@ -5,7 +5,7 @@
 package eu.monnetproject.translation.topics.lda;
 
 import eu.monnetproject.lang.Language;
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.HashMap;
@@ -43,14 +43,14 @@ public class PolylingualGibbsDataTest {
             {1,2},
             {3,4}
         };
-        SparseArray[][] N_lkw = new SparseArray[][]{
+        SparseIntArray[][] N_lkw = new SparseIntArray[][]{
             {
-                new SparseArray(8,0,1,1,2,2),
-                new SparseArray(8,0,2,2,3,3)
+                new SparseIntArray(8,0,1,1,2,2),
+                new SparseIntArray(8,0,2,2,3,3)
             },
             {
-                new SparseArray(8,0,4,4,5,5),
-                new SparseArray(8,0,6,6,7,7)
+                new SparseIntArray(8,0,4,4,5,5),
+                new SparseIntArray(8,0,6,6,7,7)
             }
         };
         double[][][] phi = new double[][][]{

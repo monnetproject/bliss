@@ -26,10 +26,13 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics.experiments;
 
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.lda.Estimator;
 import eu.monnetproject.translation.topics.lda.GibbsData;
 import eu.monnetproject.translation.topics.lda.PolylingualGibbsData;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.SimilarityMetric;
 
 /**
@@ -50,26 +53,26 @@ public class WxWLDAParaSim implements SimilarityMetric {
     }
     
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         double[] sim = new double[polylingualGibbsData.W];
         int[] d = toDocument(termVec);
         double[] p = estimator.topics(d, l1, polylingualGibbsData, 100);
         for(int w = 0; w < polylingualGibbsData.W; w++) {
             sim[w] = estimator.wordProb(w, p, data2);
         }
-        return sim;
+        return new RealVector(sim);
     }
 
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
-        return termVec.toDoubleArray();
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+        return new Integer2DoubleVector(termVec);
     }
 
-    private int[] toDocument(SparseArray termVec) {
+    private int[] toDocument(Vector<Integer> termVec) {
         final int[] vec = new int[termVec.sum()];
         int j = 0;
         for(int w : termVec.keySet()) {
-            final int n = termVec.get(w);
+            final int n = termVec.value(w);
             for(int i = 0; i < n; i++) {
                 vec[j++] = w;
             }

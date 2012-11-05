@@ -26,9 +26,12 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.SparseRealArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.SparseRealArray;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import static eu.monnetproject.translation.topics.sim.Metrics.*;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.util.Map.Entry;
 
 /**
@@ -61,7 +65,7 @@ public class BetaLMImpl implements SimilarityMetric {
     /**
      * The raw data
      */
-    public final SparseArray[][] x; // jli
+    public final SparseIntArray[][] x; // jli
     /**
      * The maximum number of words
      */
@@ -117,13 +121,13 @@ public class BetaLMImpl implements SimilarityMetric {
         this.words = pr.words;
 
         this.mu = null;
-        this.muSp = new SparseRealArray();
+        this.muSp = new SparseRealArray(W);
         this.mu_f = null;
-        this.mu_fSp = new SparseRealArray();
+        this.mu_fSp = new SparseRealArray(W);
         this.sumMu2 = initMuSp(x, this.W);
         if (method == Method.DF_DICE || method == Method.DF_JACCARD) {
             df = null;
-            this.dfSp = new SparseRealArray();
+            this.dfSp = new SparseRealArray(W);
             for (int j = 0; j < x.length; j++) {
                 for (int w : x[j][0].keySet()) {
                     dfSp.inc(w);
@@ -176,7 +180,7 @@ public class BetaLMImpl implements SimilarityMetric {
         
     }
 
-    public BetaLMImpl(SparseArray[][] x, int W, String[] words) {
+    public BetaLMImpl(SparseIntArray[][] x, int W, String[] words) {
         this.words = new HashMap<String, Integer>();
         this.x = x;
         this.W = W;
@@ -185,13 +189,13 @@ public class BetaLMImpl implements SimilarityMetric {
         }
 
         this.mu = null;
-        this.muSp = new SparseRealArray();
+        this.muSp = new SparseRealArray(W);
         this.mu_f = null;
-        this.mu_fSp = new SparseRealArray();
+        this.mu_fSp = new SparseRealArray(W);
         this.sumMu2 = initMuSp(x, this.W);
         if (method == Method.DF_DICE || method == Method.DF_JACCARD) {
             df = null;
-            this.dfSp = new SparseRealArray();
+            this.dfSp = new SparseRealArray(W);
             for (int j = 0; j < x.length; j++) {
                 for (int w : x[j][0].keySet()) {
                     dfSp.inc(w);
@@ -213,7 +217,7 @@ public class BetaLMImpl implements SimilarityMetric {
     
     
 
-    public BetaLMImpl(SparseArray[][] x, int W, int n) {
+    public BetaLMImpl(SparseIntArray[][] x, int W, int n) {
         this.words = new HashMap<String, Integer>();
         this.x = x;
         this.W = W;
@@ -241,7 +245,7 @@ public class BetaLMImpl implements SimilarityMetric {
         wxwclesa = null;
     }
 
-    private double initMu(SparseArray[][] x, int W) {
+    private double initMu(SparseIntArray[][] x, int W) {
         int N = 0;
         for (int j = 0; j < x.length; j++) {
             N++;
@@ -272,7 +276,7 @@ public class BetaLMImpl implements SimilarityMetric {
         return sM2;
     }
     
-    private double initMuSp(SparseArray[][] x, int W) {
+    private double initMuSp(SparseIntArray[][] x, int W) {
         int N = 0;
         for (int j = 0; j < x.length; j++) {
             N++;
@@ -306,13 +310,13 @@ public class BetaLMImpl implements SimilarityMetric {
     }
 
     public double[] simVec(List<String> simTerms) {
-        final SparseArray termVec = new SparseArray(W);
+        final SparseIntArray termVec = new SparseIntArray(W);
         for (String term : simTerms) {
             if (words.containsKey(term)) {
                 termVec.inc(words.get(term));
             }
         }
-        return simVecSource(termVec);
+        return simVecSource(termVec).toDoubleArray();
 
     }
     private final double cosSimPower = Double.parseDouble(System.getProperty("cosSimPower", "1.0"));
@@ -327,7 +331,7 @@ public class BetaLMImpl implements SimilarityMetric {
     }
             
     
-    private double calcCosSim(SparseArray termVec, int j, double kldSum) throws RuntimeException {
+    private double calcCosSim(Vector<Integer> termVec, int j, double kldSum) throws RuntimeException {
         switch (method) {
             case COS_SIM:
                 return Math.pow(cosSim(termVec, x[j][0]), cosSimPower());
@@ -357,8 +361,8 @@ public class BetaLMImpl implements SimilarityMetric {
      * @param termVec The term vector
      * @return The resultant n-gram prediction as a sparse array
      */
-    public SparseRealArray predictedModel(SparseArray termVec) {
-        final SparseRealArray sim = new SparseRealArray();
+    public SparseRealArray predictedModel(SparseIntArray termVec) {
+        final SparseRealArray sim = new SparseRealArray(W);
         int N = 0;
         double bestSim = 0.0;
         int ties = 0;
@@ -380,8 +384,8 @@ public class BetaLMImpl implements SimilarityMetric {
                 if ((cosSim > bestSim && (ties = 0) == 0)
                         || (cosSim == bestSim && random.nextInt(++ties) == 0)) {
                     sim.clear();
-                    for(Map.Entry<Integer,Integer> es : x[j][1].entrySet()) {
-                        sim.put(es.getKey(), es.getValue().doubleValue());
+                    for(Int2IntMap.Entry es : x[j][1].int2IntEntrySet()) {
+                        sim.put(es.getIntKey(), es.getIntValue());
                     }
                     bestSim = cosSim;
                 }
@@ -404,7 +408,7 @@ public class BetaLMImpl implements SimilarityMetric {
      * @return The predicted TF-vector in the target language
      */
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         double[] sim = new double[W];
         //double[] prior = new double[W];
         int N = 0;
@@ -443,7 +447,7 @@ public class BetaLMImpl implements SimilarityMetric {
         for (int w = 0; w < W; w++) {
             sim[w] = sim[w] / N;
         }
-        return sim;
+        return new RealVector(sim);
     }
 
     @Override
@@ -452,7 +456,7 @@ public class BetaLMImpl implements SimilarityMetric {
     }
 
     public double[] simVec(int[] doc) {
-        return simVecSource(ParallelReader.histogram(doc, W));
+        return simVecSource(ParallelReader.histogram(doc, W)).toDoubleArray();
     }
 
     /**
@@ -462,7 +466,7 @@ public class BetaLMImpl implements SimilarityMetric {
      * @return The same vector as a 'predicted' vector
      */
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
-        return termVec.toDoubleArray();
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+        return new Integer2DoubleVector(termVec);
     }
 }

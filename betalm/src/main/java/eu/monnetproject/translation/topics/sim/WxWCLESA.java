@@ -26,8 +26,11 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SparseArray;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
 import java.io.IOException;
@@ -59,10 +62,10 @@ public class WxWCLESA implements SimilarityMetric {
     // Dimensions
     private final int W, J;
     // The target WxJ matrix
-    private final SparseArray[] y; // W
+    private final SparseIntArray[] y; // W
     // The source JxW matrix. The second index is language, but we don't bother
     // with this so it should always be zero after we have calculated df and Y
-    private final SparseArray[][] Xt; // J x 2
+    private final SparseIntArray[][] Xt; // J x 2
     // The norms of Y D(Y)
     private final double[] norm;
     // The document frequency in source
@@ -114,12 +117,12 @@ public class WxWCLESA implements SimilarityMetric {
     /**
      * Transpose the matrix to a WxJ matrix
      */
-    private SparseArray[] transpose(SparseArray[][] x, int l) {
-        final SparseArray[] Xt = new SparseArray[W];
+    private SparseIntArray[] transpose(SparseIntArray[][] x, int l) {
+        final SparseIntArray[] Xt = new SparseIntArray[W];
         for (int j = 0; j < x.length; j++) {
             for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
                 if (Xt[e.getIntKey()] == null) {
-                    Xt[e.getIntKey()] = new SparseArray(x.length);
+                    Xt[e.getIntKey()] = new SparseIntArray(x.length);
                 }
                 Xt[e.getIntKey()].put(j, e.getIntValue());
             }
@@ -134,11 +137,11 @@ public class WxWCLESA implements SimilarityMetric {
      * @param termVec x
      * @return X D(X) x
      */
-    public double[] sourceVector(SparseArray termVec) {
+    public double[] sourceVector(Vector<Integer> termVec) {
         double[] sim = new double[Xt.length];
         for (int j = 0; j < Xt.length; j++) {
             for (int w : Xt[j][0].keySet()) {
-                sim[j] += (double) (termVec.get(w) * Xt[j][0].get(w)) / df[w];
+                sim[j] += (double) (termVec.value(w) * Xt[j][0].get(w)) / df[w];
             }
         }
         return sim;
@@ -146,7 +149,7 @@ public class WxWCLESA implements SimilarityMetric {
 
     
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         // Map the term vector to CLESA space
         final double[] inMapped = sourceVector(termVec);
         // Find its norm in this space
@@ -169,12 +172,12 @@ public class WxWCLESA implements SimilarityMetric {
             }
             sim[w] = sim[w] / inNorm;
         }
-        return sim;
+        return new RealVector(sim);
     }
 
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
-        return termVec.toDoubleArray();
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+        return new Integer2DoubleVector(termVec);
     }
 
     @Override

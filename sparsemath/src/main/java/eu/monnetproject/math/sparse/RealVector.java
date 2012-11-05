@@ -27,6 +27,9 @@
 package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
+import it.unimi.dsi.fastutil.ints.AbstractIntSet;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -408,5 +411,76 @@ public class RealVector implements Vector<Double> {
         public int size() {
             return data.length;
         }
+    }
+    
+    @Override
+    public IntSet keySet() {
+        return new IntStreamSet(size());
+    }
+    
+    
+    
+    private static class IntStreamSet extends AbstractIntSet {
+        private final int N;
+        
+        public IntStreamSet(int N) {
+            this.N = N;
+        }
+            
+        @Override
+        public IntIterator iterator() {
+            return new IntIterator() {
+                private int n;
+                @Override
+                public boolean hasNext() {
+                    return n < N;
+                }
+
+                @Override
+                public Integer next() {
+                    return n++;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException("Not mutable.");
+                }
+
+                @Override
+                public int nextInt() {
+                    return n++;
+                }
+
+                @Override
+                public int skip(int m) {
+                    int rval = Math.min(N-n, m);
+                    n += m;
+                    return rval;
+                }
+                
+                
+            };
+        }
+
+        @Override
+        public int size() {
+            return N;
+        }
+        
+    }
+    
+    
+    @Override
+    public boolean containsKey(int idx) {
+        return idx >= 0 && idx < length();
+    }
+
+    @Override
+    public Double sum() {
+        double i = 0;
+        for(double j : data) {
+            i+=j;
+        }
+        return i;
     }
 }

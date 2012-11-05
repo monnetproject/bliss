@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.topics;
 
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -87,24 +88,24 @@ public final class ParallelBinarizedReader {
         }
     }
 
-    public SparseArray[] nextFreqPair(int W) throws IOException {
+    public SparseIntArray[] nextFreqPair(int W) throws IOException {
         final int[][] pair = nextPair();
         if (pair == null) {
             return null;
         } else {
-            return new SparseArray[]{
-                        SparseArray.histogram(pair[0], W),
-                        SparseArray.histogram(pair[1], W)
+            return new SparseIntArray[]{
+                        SparseIntArray.histogram(pair[0], W),
+                        SparseIntArray.histogram(pair[1], W)
                     };
         }
     }
 
-    public SparseArray[][] readAll(int W) throws IOException {
-        final ArrayList<SparseArray[]> sparseArrays = new ArrayList<SparseArray[]>();
-        SparseArray[] sa;
+    public SparseIntArray[][] readAll(int W) throws IOException {
+        final ArrayList<SparseIntArray[]> sparseArrays = new ArrayList<SparseIntArray[]>();
+        SparseIntArray[] sa;
         while((sa = nextFreqPair(W)) != null) {
             sparseArrays.add(sa);
         }
-        return sparseArrays.toArray(new SparseArray[sparseArrays.size()][]);
+        return sparseArrays.toArray(new SparseIntArray[sparseArrays.size()][]);
     }
 }

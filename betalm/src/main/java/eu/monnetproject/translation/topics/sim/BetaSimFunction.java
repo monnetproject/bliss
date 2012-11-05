@@ -26,7 +26,7 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics.sim;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.Vector;
 
 /**
  *
@@ -34,5 +34,5 @@ import eu.monnetproject.translation.topics.SparseArray;
  */
 public interface BetaSimFunction {
 
-    double score(SparseArray document);
+    double score(Vector<Integer> document);
 }

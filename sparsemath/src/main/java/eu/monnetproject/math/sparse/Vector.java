@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.math.sparse;
 
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -246,4 +247,23 @@ public interface Vector<N extends Number> {
      * @return 
      */
     Vectors.Factory<N> factory();
+    
+    /**
+     * Get the set of indices with non-default value
+     * @return 
+     */
+    IntSet keySet();
+    
+    /**
+     * Is the following index in range and with non-default value
+     * @param idx
+     * @return 
+     */
+    boolean containsKey(int idx);
+    
+    /**
+     * Get the sum of all the values in this vector
+     * @return 
+     */
+    N sum();
 }

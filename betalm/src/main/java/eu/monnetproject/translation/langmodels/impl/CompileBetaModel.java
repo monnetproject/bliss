@@ -26,13 +26,12 @@
  */
 package eu.monnetproject.translation.langmodels.impl;
 
+import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.translation.langmodels.LossyWeightedCounter;
 import eu.monnetproject.translation.langmodels.WeightedCounter;
 import eu.monnetproject.translation.langmodels.WeightedNGramCountSet;
 import eu.monnetproject.translation.langmodels.smoothing.CounterWithHistory;
-import eu.monnetproject.translation.langmodels.smoothing.LossyCounterWithHistory;
 import eu.monnetproject.translation.langmodels.smoothing.LossyWeightedCounterWithHistory;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.sim.BetaSimFunction;
 import java.io.IOException;
 import java.util.Arrays;
@@ -56,7 +55,7 @@ public class CompileBetaModel extends CompileLanguageModel {
             final int[] doc2 = Arrays.copyOfRange(reader.getBuffer(), 0, reader.getBufferSize());
             final int[] docSrc = type == CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST ? doc2 : doc1;
             final int[] docTrg = type == CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST ? doc1 : doc2;
-            double v = beta.score(SparseArray.histogram(docSrc, 0));
+            double v = beta.score(SparseIntArray.histogram(docSrc, 0));
             //System.err.println("Doc #"+(++doc)+"="+v);
             if(v <= 0.0) {
                 continue;

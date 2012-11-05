@@ -4,7 +4,7 @@
  */
 package eu.monnetproject.translation.topics.lda;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import org.junit.AfterClass;
@@ -38,9 +38,9 @@ public class GibbsDataTest {
         int K = 2, W = 3, D = 3;
         double alpha = 1.0, beta = 0.01;
         int[] N_k = new int[]{1, 2};
-        SparseArray[] N_kw = new SparseArray[]{
-            new SparseArray(9,0, 1, 2, 2, 3, 5, 5, 6, 6),
-            new SparseArray(9,0, 3, 2, 4, 1, 7, 7, 8, 8)
+        SparseIntArray[] N_kw = new SparseIntArray[]{
+            new SparseIntArray(9,0, 1, 2, 2, 3, 5, 5, 6, 6),
+            new SparseIntArray(9,0, 3, 2, 4, 1, 7, 7, 8, 8)
         };
         double[][] phi = new double[][]{
             new double[]{0.1, 0.2},

@@ -26,7 +26,7 @@
  *********************************************************************************/
 package eu.monnetproject.translation.topics;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.Vector;
 
 /**
  * A cross-lingual similarity metric
@@ -40,14 +40,14 @@ public interface SimilarityMetric {
      * @param termVec The document as a term-frequency array
      * @return The vector representation of this document
      */
-    double[] simVecSource(SparseArray termVec);
+    Vector<Double> simVecSource(Vector<Integer> termVec);
     
     /**
      * The vector representation of the document in the target language
      * @param termVec The document as a term-frequency array
      * @return The vector representation of this document
      */
-    double[] simVecTarget(SparseArray termVec);
+    Vector<Double> simVecTarget(Vector<Integer> termVec);
     
     /**
      * The largest word index in the document

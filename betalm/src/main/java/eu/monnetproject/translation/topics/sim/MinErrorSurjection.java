@@ -26,9 +26,12 @@
  */
 package eu.monnetproject.translation.topics.sim;
 
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.SparseRealArray;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SparseArray;
-import eu.monnetproject.translation.topics.SparseRealArray;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -53,13 +56,13 @@ public class MinErrorSurjection implements SimilarityMetric {
     public MinErrorSurjection(File file) throws IOException {
         final ParallelReader data = ParallelReader.fromFile(file);
         this.W = data.W();
-        final SparseArray[][] Xt = transpose(data.x);
+        final SparseIntArray[][] Xt = transpose(data.x);
         this.surjes = calculateSurjections(Xt, invMap(data.words));
     }
 
-    public MinErrorSurjection(SparseArray[][] x, int W) throws FileNotFoundException {
+    public MinErrorSurjection(SparseIntArray[][] x, int W) throws FileNotFoundException {
         this.W = W;
-        final SparseArray[][] Xt = transpose(x);
+        final SparseIntArray[][] Xt = transpose(x);
         this.surjes = calculateSurjections(Xt, null);
     }
 
@@ -72,7 +75,7 @@ public class MinErrorSurjection implements SimilarityMetric {
     }
 
     @Override
-    public double[] simVecSource(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         double[] vec = new double[W];
         for (Map.Entry<Integer, Integer> e : termVec.entrySet()) {
             if (surjes.get(e.getKey()) != null) {
@@ -81,12 +84,12 @@ public class MinErrorSurjection implements SimilarityMetric {
                 }
             }
         }
-        return vec;
+        return new RealVector(vec);
     }
 
     @Override
-    public double[] simVecTarget(SparseArray termVec) {
-        return termVec.toDoubleArray();
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+        return new Integer2DoubleVector(termVec);
     }
 
     @Override
@@ -97,13 +100,13 @@ public class MinErrorSurjection implements SimilarityMetric {
     /**
      * Transpose the matrix to a WxJ matrix
      */
-    private SparseArray[][] transpose(SparseArray[][] x) {
-        final SparseArray[][] Xt = new SparseArray[W][2];
+    private SparseIntArray[][] transpose(SparseIntArray[][] x) {
+        final SparseIntArray[][] Xt = new SparseIntArray[W][2];
         for (int j = 0; j < x.length; j++) {
             for (int l = 0; l < 2; l++) {
                 for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
                     if (Xt[e.getIntKey()][l] == null) {
-                        Xt[e.getIntKey()][l] = new SparseArray(x.length);
+                        Xt[e.getIntKey()][l] = new SparseIntArray(x.length);
                     }
                     Xt[e.getIntKey()][l].put(j, e.getIntValue());
                 }
@@ -113,7 +116,7 @@ public class MinErrorSurjection implements SimilarityMetric {
     }
     private static final Random random = new Random();
 
-    private List<List<Surj>> calculateSurjections(SparseArray[][] Xt, Map<Integer, String> words) throws FileNotFoundException {
+    private List<List<Surj>> calculateSurjections(SparseIntArray[][] Xt, Map<Integer, String> words) throws FileNotFoundException {
         System.out.println("Calculating surjections");
         final PrintWriter out = words == null ? null : new PrintWriter("mesurj.corresponds");
         final List<List<Surj>> surjections = new ArrayList<List<Surj>>(W);
@@ -136,7 +139,7 @@ public class MinErrorSurjection implements SimilarityMetric {
                 if (Xt[w0][0] == null || Xt[w1][1].isEmpty()) {
                     continue;
                 }
-                final double wt = minError(Xt[w1][1], Xt[w0][0]);
+                final double wt = minError(Xt[w1][1], Xt[w0][0],W);
                 final double sim = errorDelta(Xt[w1][1], Xt[w0][0], wt);
                 if ((sim > bestSim && (ties = 0) == 0)
                         || (sim == bestSim && random.nextInt(++ties) == 0)) {
@@ -176,7 +179,7 @@ public class MinErrorSurjection implements SimilarityMetric {
         }
     }
 
-    public static double errorDelta(SparseArray x, SparseArray y, double a) {
+    public static double errorDelta(SparseIntArray x, SparseIntArray y, double a) {
         double xSum = 0.0;
         double error = 0.0;
 
@@ -196,16 +199,16 @@ public class MinErrorSurjection implements SimilarityMetric {
      * @param y The sparse array y
      * @return The weight that minimizes the error
      */
-    public static double minError(SparseArray x, SparseArray y) {
-        final SparseRealArray alpha = new SparseRealArray();
+    public static double minError(SparseIntArray x, SparseIntArray y, int W) {
+        final SparseRealArray alpha = new SparseRealArray(W);
         // d is derivate of error at -Inf
         double d = 0.0;
-        for (Map.Entry<Integer, Integer> ex : x.entrySet()) {
+        for (Int2IntMap.Entry ex : x.int2IntEntrySet()) {
             if (y.containsKey(ex.getKey())) {
                 final double yi = (double) y.get(ex.getKey());
                 if(yi == 0.0)
                     continue;
-                alpha.put(ex.getKey(), (double) ex.getValue() / yi);
+                alpha.put(ex.getIntKey(), (double) ex.getIntValue() / yi);
                 d -= yi;
             }
         }
@@ -249,7 +252,7 @@ public class MinErrorSurjection implements SimilarityMetric {
     // zero. Assuming the vectors are both positive this function is a monotonically
     // increasing step function. Therefore to evaluate we calculate the derivate only
     // at the steps
-    private static WeightD minErrorSolve(double d, Map.Entry<Integer, Double> alpha0, List<Map.Entry<Integer, Double>> left, List<Map.Entry<Integer, Double>> right, SparseArray y) {
+    private static WeightD minErrorSolve(double d, Map.Entry<Integer, Double> alpha0, List<Map.Entry<Integer, Double>> left, List<Map.Entry<Integer, Double>> right, SparseIntArray y) {
         assert (!left.isEmpty()); // as alpha0 \in left
         assert (d < 0); // as we have not found a suitable d value yet
         if (left.size() == 1) {

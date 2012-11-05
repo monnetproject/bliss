@@ -115,11 +115,19 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
                 if (i > 1) {
                     if (count < H) {
                         final double[] h = historySet.get(history);
-                        h[count]--;
-                        h[count + 1]++;
+                        if(h != null) {
+                            h[count]--;
+                            h[count + 1]++;
+                        } else {
+                            System.err.println("Warning history lost");
+                        }
                         final double[] f = historySet.get(future);
-                        f[H + count]--;
-                        f[H + count + 1]++;
+                        if(f != null) {
+                            f[H + count]--;
+                            f[H + count + 1]++;
+                        } else {
+                            System.err.println("Warning history lost");
+                        }
                     } else {
                         historySet.get(history)[H]++;
                         historySet.get(future)[2 * H]++;
@@ -177,6 +185,7 @@ public class LossyCounterWithHistory implements Counter, CounterWithHistory {
 
     protected void prune() {
         do {
+            System.err.print("P");
             b++;
             for (int i = 1; i <= N; i++) {
                 final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();

@@ -71,7 +71,7 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
     protected SparseRealArray(int n, double defaultValue, double epsilon, Int2DoubleOpenHashMap map) {
         super(map);
         this.n = n;
-        this.defaultValue = defaultValue;
+        this.defaultValue = super.defRetValue = defaultValue;
         this.epsilon = epsilon;
     }
 
@@ -221,10 +221,10 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
      *
      * @return
      */
-    public double sum() {
-        double sum = 0;
+    public Double sum() {
+        double sum = n * defaultValue;
         for (double v : values()) {
-            sum += v;
+            sum += v - defaultValue;
         }
         return sum;
     }

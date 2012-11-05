@@ -1,6 +1,6 @@
 package eu.monnetproject.translation.topics.clesa;
 
-import eu.monnetproject.translation.topics.SparseArray;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.translation.topics.sim.ParallelReader;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -37,7 +37,7 @@ public class CLESATest {
     public void testSimVecSource() {
         System.out.println("simVecSource");
         // Comparable corpus
-        final SparseArray[][] x = new SparseArray[][]{
+        final SparseIntArray[][] x = new SparseIntArray[][]{
             {
                 // Source document 1
                 ParallelReader.histogram(new int[]{0, 1, 2}, 9),
@@ -58,11 +58,11 @@ public class CLESATest {
             }
         };
         // Query document
-        SparseArray termVec = ParallelReader.histogram(new int[]{1, 3, 4}, 9);
+        SparseIntArray termVec = ParallelReader.histogram(new int[]{1, 3, 4}, 9);
         CLESA instance = new CLESA(x, 9, new String[]{});
         double[] expResult = new double[]{0.135155, 0.2703101, 0.6365142};
         // Map using source language part of comparable corpus
-        double[] result = instance.simVecSource(termVec);
+        double[] result = instance.simVecSource(termVec).toDoubleArray();
         assertArrayEquals(expResult, result, 0.0001);
     }
 
@@ -73,7 +73,7 @@ public class CLESATest {
     public void testSimVecTarget() {
         System.out.println("simVecTarget");
         // Comparable corpus
-        final SparseArray[][] x = new SparseArray[][]{
+        final SparseIntArray[][] x = new SparseIntArray[][]{
             {
                 // Source document 1
                 ParallelReader.histogram(new int[]{0, 1, 2}, 9),
@@ -94,11 +94,11 @@ public class CLESATest {
             }
         };
         // Query document
-        SparseArray termVec = ParallelReader.histogram(new int[]{4, 4, 6}, 9);
+        SparseIntArray termVec = ParallelReader.histogram(new int[]{4, 4, 6}, 9);
         CLESA instance = new CLESA(x, 9, new String[]{});
         double[] expResult = new double[]{0.7324082, 0, 0};
         // Map using target language part of comparable corpus
-        double[] result = instance.simVecTarget(termVec);
+        double[] result = instance.simVecTarget(termVec).toDoubleArray();
         assertArrayEquals(expResult, result, 0.0001);
     }
 }

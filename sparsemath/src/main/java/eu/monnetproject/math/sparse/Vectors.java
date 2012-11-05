@@ -47,12 +47,36 @@ public class Vectors {
      */
     public static interface Factory<N extends Number> {
 
+        /**
+         * Make a vector of length n with all values as defaultValue
+         * @param n The length of the vector
+         * @param defaultValue The value of all values
+         * @return The vector
+         */
         Vector<N> make(int n, double defaultValue);
         
+        /**
+         * Make a vector from the data
+         * @param data The data
+         * @return The vector
+         */
         Vector<N> make(double[] data);
         
+        /**
+         * Make a vector from a string, the format for which should be the same
+         * as the {@code toString()} function of the class this factory generates
+         * @param s The string s
+         * @param n The integer n
+         * @return The vector
+         * @throws VectorFormatException 
+         */
         Vector<N> fromString(String s, int n) throws VectorFormatException;
 
+        /**
+         * Convert a double into a value that can be stored in this vector
+         * @param value The value
+         * @return The storeable value
+         */
         N valueOf(double value);
     }
     /**

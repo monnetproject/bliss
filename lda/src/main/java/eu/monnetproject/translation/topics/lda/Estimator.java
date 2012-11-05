@@ -26,8 +26,7 @@
  */
 package eu.monnetproject.translation.topics.lda;
 
-import eu.monnetproject.translation.topics.SparseArray;
-import java.util.Arrays;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.util.Random;
 
 /**
@@ -84,9 +83,9 @@ public class Estimator {
 //        begin = System.currentTimeMillis();
 //        final int[] z_local = new int[d.length];
 //        final int[] N_k = new int[data.K];
-//        final SparseArray[] N_wk = new SparseArray[data.K];
+//        final SparseIntArray[] N_wk = new SparseIntArray[data.K];
 //        for (int k = 0; k < data.K; k++) {
-//            N_wk[k] = new SparseArray();
+//            N_wk[k] = new SparseIntArray();
 //        }
 //        for (int i = 0; i < d.length; i++) {
 //            z_local[i] = random.nextInt(data.K);
@@ -139,10 +138,10 @@ public class Estimator {
         final int[][] z_local = new int[d.length][];
         final int[] N_k = new int[data.K];
         final int[][] N_jk = new int[l.length][data.K];
-        final SparseArray[][] N_jwk = new SparseArray[l.length][data.K];
+        final SparseIntArray[][] N_jwk = new SparseIntArray[l.length][data.K];
         for(int j = 0; j < l.length; j++) {
             for (int k = 0; k < data.K; k++) {
-                N_jwk[j][k] = new SparseArray(data.W);
+                N_jwk[j][k] = new SparseIntArray(data.W);
             }
         }
         for (int j = 0; j < d.length; j++) {

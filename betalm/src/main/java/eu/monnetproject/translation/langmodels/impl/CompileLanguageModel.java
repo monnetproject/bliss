@@ -26,6 +26,7 @@
  */
 package eu.monnetproject.translation.langmodels.impl;
 
+import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.translation.langmodels.Counter;
 import eu.monnetproject.translation.langmodels.LossyCounter;
 import eu.monnetproject.translation.langmodels.NGram;
@@ -39,7 +40,6 @@ import eu.monnetproject.translation.langmodels.smoothing.NGramHistories;
 import eu.monnetproject.translation.langmodels.smoothing.NGramScorer;
 import eu.monnetproject.translation.langmodels.smoothing.SimpleNGramScorer;
 import eu.monnetproject.translation.topics.CLIOpts;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.WordMap;
 import eu.monnetproject.translation.topics.sim.BetaLMImpl;
 import eu.monnetproject.translation.topics.sim.BetaSimFunction;
@@ -207,7 +207,7 @@ public class CompileLanguageModel {
         }
     }
 
-    public static BetaSimFunction betaSimFunction(BetaLMImpl.Method method, SparseArray query, PrecomputedValues precomp) {
+    public static BetaSimFunction betaSimFunction(BetaLMImpl.Method method, SparseIntArray query, PrecomputedValues precomp) {
         switch (method) {
             case COS_SIM:
                 return Metrics.cosSim(query);
@@ -287,7 +287,7 @@ public class CompileLanguageModel {
                 System.err.println("BetaLM needs a bilingual corpus, set -t");
                 return;
             }
-            final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
+            final SparseIntArray binQuery = SparseIntArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
             if (smoothness == 1.0) {
                 betaSimFunction = betaSimFunction(betaMethod, binQuery, precomp);
             } else {

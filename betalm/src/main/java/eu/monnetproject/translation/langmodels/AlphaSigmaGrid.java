@@ -26,13 +26,13 @@
  */
 package eu.monnetproject.translation.langmodels;
 
+import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.translation.langmodels.impl.ARPALM;
 import eu.monnetproject.translation.langmodels.impl.CompileBetaModel;
 import eu.monnetproject.translation.langmodels.impl.CompileLanguageModel;
 import eu.monnetproject.translation.langmodels.impl.IntegerizedCorpusReader;
 import eu.monnetproject.translation.langmodels.smoothing.NGramScorer;
 import eu.monnetproject.translation.topics.CLIOpts;
-import eu.monnetproject.translation.topics.SparseArray;
 import eu.monnetproject.translation.topics.WordMap;
 import eu.monnetproject.translation.topics.sim.BetaLMImpl;
 import eu.monnetproject.translation.topics.sim.BetaSimFunction;
@@ -58,7 +58,7 @@ public class AlphaSigmaGrid {
         final File testDoc = new File("../wiki/en-es/ifrs.en.txt");
         final int W = 349513;
 
-        final double alphaStep = 0.1, sigmaStep = 1.0, sigmaMax = 10.0;
+        final double alphaStep = 0.01, sigmaStep = 1.0, sigmaMax = 20.0;
         final double[][] perplexity = new double[(int)Math.round(1.0/alphaStep)][(int)Math.round(sigmaMax/sigmaStep)+1];
 
         
@@ -74,7 +74,7 @@ public class AlphaSigmaGrid {
                 }
             }
 
-        for (double alpha = 0.0; alpha < 1.0; alpha += alphaStep) {
+        for (double alpha = 0.0; alpha < 0.1; alpha += alphaStep) {
             for (double sigma = 0.0; sigma <= sigmaMax; sigma += sigmaStep) {
                 final File tmpFile = File.createTempFile("lmlmlm", ".en");
                 {
@@ -82,8 +82,8 @@ public class AlphaSigmaGrid {
                     final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
 
                     final CompileLanguageModel.SourceType sourceType = CompileLanguageModel.SourceType.INTERLEAVED_USE_FIRST;
-                    final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.JACCARD;
-                    final SparseArray binQuery = SparseArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
+                    final BetaLMImpl.Method betaMethod = BetaLMImpl.Method.COS_SIM;
+                    final SparseIntArray binQuery = SparseIntArray.fromBinary(CLIOpts.openInputAsMaybeZipped(queryFile), Integer.MAX_VALUE);
                     final BetaSimFunction betaSimFunction = Metrics.smoothed(CompileLanguageModel.betaSimFunction(betaMethod, binQuery, null), sigma,alpha);
                     final CompileLanguageModel.Smoothing smoothing = CompileLanguageModel.Smoothing.NONE;
 
