@@ -50,11 +50,11 @@ public class LanczosAlgorithm {
     private static final Random random = new Random();
     private double[] v;
 
-    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w) {
+    public static Solution lanczos(VectorFunction<Double,Double> A, final Vector<Double> w) {
         return lanczos(A, w, w.size(), 1.0);
     }
 
-    public static Solution lanczos(VectorFunction<Double> A, final Vector<Double> w, int K, double rho) {
+    public static Solution lanczos(VectorFunction<Double,Double> A, final Vector<Double> w, int K, double rho) {
         final int n = w.size();
         assert (K <= n);
         if (n == 0) {

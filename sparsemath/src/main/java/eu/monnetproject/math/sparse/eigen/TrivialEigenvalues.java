@@ -260,8 +260,8 @@ public class TrivialEigenvalues<N extends Number> {
         }
 
         @Override
-        public VectorFunction<N> asVectorFunction() {
-            return new VectorFunction<N>() {
+        public VectorFunction<N,N> asVectorFunction() {
+            return new VectorFunction<N,N>() {
 
                 @Override
                 public Vector<N> apply(Vector<N> v) {

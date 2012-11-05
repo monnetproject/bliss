@@ -117,7 +117,7 @@ public class SingularValueDecomposition {
         return new Solution(null, V, S);
     }
     
-    public Solution eigen(VectorFunction<Double> apply, int W, int K, double epsilon) {
+    public Solution eigen(VectorFunction<Double,Double> apply, int W, int K, double epsilon) {
         final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(apply, randomUnitNormVector(W), K, 1.0);
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
         final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
@@ -181,7 +181,7 @@ public class SingularValueDecomposition {
         return N;
     }
 
-    public static class OuterProductMultiplication implements VectorFunction<Double> {
+    public static class OuterProductMultiplication implements VectorFunction<Double,Double> {
 
         private final IntIterable corpus;
         private final int W;
@@ -220,7 +220,7 @@ public class SingularValueDecomposition {
         }
     }
 
-    public static class InnerProductMultiplication implements VectorFunction<Double> {
+    public static class InnerProductMultiplication implements VectorFunction<Double,Double> {
 
         private final IntIterable corpus;
         private final int J;

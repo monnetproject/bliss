@@ -201,8 +201,8 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     }
 
     @Override
-    public VectorFunction<Double> asVectorFunction() {
-        return new VectorFunction<Double>() {
+    public VectorFunction<Double,Double> asVectorFunction() {
+        return new VectorFunction<Double,Double>() {
 
             @Override
             public Vector<Double> apply(Vector<Double> v) {

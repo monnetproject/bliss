@@ -68,7 +68,7 @@ public interface Matrix<N extends Number> {
     
     <M extends Number> void sub(Matrix<M> matrix);
     
-    VectorFunction<N> asVectorFunction();
+    VectorFunction<N,N> asVectorFunction();
     
     Vectors.Factory<N> factory();
 }

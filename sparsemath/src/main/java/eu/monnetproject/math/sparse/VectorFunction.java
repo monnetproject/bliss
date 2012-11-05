@@ -30,6 +30,6 @@ package eu.monnetproject.math.sparse;
  *
  * @author John McCrae
  */
-public interface VectorFunction<N extends Number> {
-    Vector<N> apply(Vector<N> v);
+public interface VectorFunction<N extends Number, M extends Number> {
+    Vector<M> apply(Vector<N> v);
 }

@@ -210,8 +210,8 @@ public class IntArrayMatrix implements Matrix<Integer> {
     }
 
     @Override
-    public VectorFunction<Integer> asVectorFunction() {
-        return new VectorFunction<Integer>() {
+    public VectorFunction<Integer,Integer> asVectorFunction() {
+        return new VectorFunction<Integer,Integer>() {
 
             @Override
             public Vector<Integer> apply(Vector<Integer> v) {
