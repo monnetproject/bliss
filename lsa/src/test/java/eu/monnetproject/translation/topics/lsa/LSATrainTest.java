@@ -1,6 +1,6 @@
 package eu.monnetproject.translation.topics.lsa;
 
-import eu.monnetproject.translation.topics.lsa.LSATrain.SkipOddZeroDataStreamIterable;
+import eu.monnetproject.translation.topics.lsa.LSATrain.LSAStreamIterable;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,7 +55,7 @@ public class LSATrainTest {
         dos.flush();
         dos.close();
         int J = 0;
-        final SkipOddZeroDataStreamIterable iterable = new LSATrain.SkipOddZeroDataStreamIterable(tmpFile, 100);
+        final LSAStreamIterable iterable = new LSATrain.LSAStreamIterable(tmpFile, 100);
         int i = 0;
         for(int j : iterable) {
             if(i % 20 == 9) {

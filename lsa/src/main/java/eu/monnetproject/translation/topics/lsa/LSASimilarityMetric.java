@@ -25,10 +25,9 @@
  */
 package eu.monnetproject.translation.topics.lsa;
 
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SparseArray;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import java.util.Arrays;
 
 /**
  *
@@ -47,37 +46,35 @@ public class LSASimilarityMetric implements SimilarityMetric {
         this.K = U1.length;
     }
     
-    
-    
     @Override
-    public double[] simVecSource(SparseArray termVec) {
-        final double[] r = doMultiplication(U1,termVec);
-        return r;
-    }
-
-    @Override
-    public double[] simVecTarget(SparseArray termVec) {
+    public Vector<Double> simVecSource(Vector<Integer> termVec) {
         final double[] r = doMultiplication(U2,termVec);
-        return r;
+        return new RealVector(r);
     }
 
-    private double[] doMultiplication(double[][] U, SparseArray termVec) {
+    @Override
+    public Vector<Double> simVecTarget(Vector<Integer> termVec) {
+        final double[] r = doMultiplication(U1,termVec);
+        return new RealVector(r);
+    }
+
+    private double[] doMultiplication(double[][] U, Vector<Integer> termVec) {
         double[] result = new double[K];
-        for(Int2IntMap.Entry e : termVec.int2IntEntrySet()) {
+        for(int i : termVec.keySet()) {
             for(int k = 0; k < K; k++) {
-                final double u = U[k][e.getIntKey()];
+                final double u = U[k][i];
                 if(Double.isInfinite(u)) {
                     continue;
                 }
                 if(Double.isNaN(u)) {
                     throw new IllegalArgumentException("Matrix contains NaN");
                 }
-                result[k] += u * e.getIntValue();
+                result[k] += u * termVec.value(i).intValue();
             }
         }
-        for(int k = 0; k < K; k++) {
-            result[k] /= S[k];
-        }
+//        for(int k = 0; k < K; k++) {
+//            result[k] *= Math.sqrt(S[k]);
+//        }
         return result;
     }
     

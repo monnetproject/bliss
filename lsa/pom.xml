@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>translation.topics.sparsemath</artifactId>
+            <artifactId>translation.topics.common</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

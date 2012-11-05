@@ -31,13 +31,14 @@ import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition.Solution;
 import eu.monnetproject.translation.topics.CLIOpts;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.NoSuchElementException;
 
 /**
@@ -49,7 +50,7 @@ public class LSATrain {
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
 
-        final double epsilon = opts.doubleValue("epsilon", 0.0001, "The error rate");
+        final double epsilon = opts.doubleValue("epsilon", 1e-50, "The error rate");
         final File corpus = opts.roFile("corpus[.gz|bz2]", "The corpus file");
 
         final int W = opts.intValue("W", "The number of distinct tokens");
@@ -64,10 +65,37 @@ public class LSATrain {
 
         final SingularValueDecomposition svd = new SingularValueDecomposition();
 
-        final Solution svdSoln = svd.calculateSymmetric(new SkipOddZeroDataStreamIterable(corpus, W), 2 * W, J, K, epsilon);
+        final Solution svdSoln = svd.calculateSymmetric(new LSAStreamIterable(corpus, W), 2 * W, J, K, epsilon);
 
         write(svdSoln, outFile);
 
+    }
+
+    private static double[][] calculateDF(File corpus, int W, int J) throws IOException {
+        double[][] df = new double[2][W];
+        int N = 0;
+        final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpus));
+        final IntSet inDoc = new IntRBTreeSet();
+        while (data.available() > 0) {
+            try {
+                int i = data.readInt();
+                if (i == 0) {
+                    N++;
+                    inDoc.clear();
+                } else if (!inDoc.contains(i)) {
+                    df[N % 2][i]++;
+                    inDoc.add(i);
+                }
+            } catch (EOFException x) {
+                break;
+            }
+        }
+        assert(J*2 == N);
+        for(int w = 0; w < W; w++) {
+            df[0][w] /= J;
+            df[1][w] /= J;
+        }
+        return df;
     }
 
     private static void write(Solution soln, File outFile) throws IOException {
@@ -89,12 +117,12 @@ public class LSATrain {
         out.close();
     }
 
-    public static class SkipOddZeroDataStreamIterable implements IntIterable {
+    public static class LSAStreamIterable implements IntIterable {
 
         private final File file;
         private final int W;
 
-        public SkipOddZeroDataStreamIterable(File file, int W) throws IOException {
+        public LSAStreamIterable(File file, int W) throws IOException {
             this.file = file;
             this.W = W;
         }
@@ -124,25 +152,23 @@ public class LSATrain {
             }
             final byte[] buf = new byte[4];
 
-            
+            public static String bytesToHex(byte[] bytes) {
+                final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+                char[] hexChars = new char[bytes.length * 3];
+                int v;
+                for (int j = 0; j < bytes.length; j++) {
+                    v = bytes[j] & 0xFF;
+                    hexChars[j * 3] = hexArray[v >>> 4];
+                    hexChars[j * 3 + 1] = hexArray[v & 0x0F];
+                    hexChars[j * 3 + 2] = ' ';
+                }
+                return new String(hexChars);
+            }
 
-    public static String bytesToHex(byte[] bytes) {
-        final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-        char[] hexChars = new char[bytes.length * 3];
-        int v;
-        for (int j = 0; j < bytes.length; j++) {
-            v = bytes[j] & 0xFF;
-            hexChars[j * 3] = hexArray[v >>> 4];
-            hexChars[j * 3 + 1] = hexArray[v & 0x0F];
-            hexChars[j * 3 + 2] = ' ';
-        }
-        return new String(hexChars);
-    }
-            
             private void advance() {
                 try {
                     int r = data.read(buf);
-                    if(r == -1) {
+                    if (r == -1) {
                         hasNext = false;
                         try {
                             data.close();
@@ -150,9 +176,9 @@ public class LSATrain {
                         }
                         return;
                     }
-                    while(r < 4) {
-                        final int r2 = data.read(buf,r,4-r);
-                        if(r2 == 0) {
+                    while (r < 4) {
+                        final int r2 = data.read(buf, r, 4 - r);
+                        if (r2 == 0) {
                             throw new RuntimeException("Broken read!");
                         }
                         r += r2;
