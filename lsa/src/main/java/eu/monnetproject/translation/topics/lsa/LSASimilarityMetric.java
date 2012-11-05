@@ -62,14 +62,14 @@ public class LSASimilarityMetric implements SimilarityMetric {
         double[] result = new double[K];
         for(int i : termVec.keySet()) {
             for(int k = 0; k < K; k++) {
-                final double u = U[k][i];
+                final double u = U[k][i-1];
                 if(Double.isInfinite(u)) {
                     continue;
                 }
                 if(Double.isNaN(u)) {
                     throw new IllegalArgumentException("Matrix contains NaN");
                 }
-                result[k] += u * termVec.value(i).intValue();
+                result[k] += u * termVec.value(i-1).intValue();
             }
         }
 //        for(int k = 0; k < K; k++) {

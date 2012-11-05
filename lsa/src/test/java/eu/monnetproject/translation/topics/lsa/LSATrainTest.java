@@ -1,9 +1,12 @@
 package eu.monnetproject.translation.topics.lsa;
 
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.translation.topics.lsa.LSATrain.LSAStreamApply;
 import eu.monnetproject.translation.topics.lsa.LSATrain.LSAStreamIterable;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -69,6 +72,73 @@ public class LSATrainTest {
             i++;
         }
         Assert.assertEquals(5, J);
+    }
+    
+    private File writeTempDoc() throws IOException {
+        final File tmpFile = File.createTempFile("matrix", ".bin");
+        tmpFile.deleteOnExit();
+        final DataOutputStream dos = new DataOutputStream(new FileOutputStream(tmpFile));
+        dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(3);
+        dos.writeInt(3);
+        dos.writeInt(4);
+        dos.writeInt(4);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(0);
+
+        dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(1);
+        dos.writeInt(2);
+        dos.writeInt(3);
+        dos.writeInt(4);
+        dos.writeInt(4);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(0);
+
+        dos.writeInt(5);
+        dos.writeInt(1);
+        dos.writeInt(3);
+        dos.writeInt(2);
+        dos.writeInt(2);
+        dos.writeInt(4);
+        dos.writeInt(1);
+        dos.writeInt(5);
+        dos.writeInt(5);
+        dos.writeInt(4);
+        dos.writeInt(0);
+
+        dos.writeInt(3);
+        dos.writeInt(5);
+        dos.writeInt(2);
+        dos.writeInt(3);
+        dos.writeInt(3);
+        dos.writeInt(2);
+        dos.writeInt(3);
+        dos.writeInt(4);
+        dos.writeInt(4);
+        dos.writeInt(1);
+        dos.writeInt(0);
+
+        dos.flush();
+        dos.close();
+
+        return tmpFile;
+    }
+    
+    @Test
+    public void testLSAApply() throws Exception {
+        File f = writeTempDoc();
+            final LSAStreamApply lsaApply = new LSATrain.LSAStreamApply(f, 5, 2, null);
+        Assert.assertArrayEquals(new double[] { 295,124,176,238,300,233,181,305,238,290 }, 
+                lsaApply.apply(new RealVector(new double[] { 1,2,3,4,5,5,4,3,2,1 })).toDoubleArray()
+                , 0.0000000001);
     }
 
 }

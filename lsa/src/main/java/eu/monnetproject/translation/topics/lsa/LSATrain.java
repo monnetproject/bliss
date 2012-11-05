@@ -26,13 +26,20 @@
  */
 package eu.monnetproject.translation.topics.lsa;
 
+import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
+import eu.monnetproject.math.sparse.VectorFunction;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition.Solution;
 import eu.monnetproject.translation.topics.CLIOpts;
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.ints.Int2IntMap.FastEntrySet;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -65,7 +72,8 @@ public class LSATrain {
 
         final SingularValueDecomposition svd = new SingularValueDecomposition();
 
-        final Solution svdSoln = svd.calculateSymmetric(new LSAStreamIterable(corpus, W), 2 * W, J, K, epsilon);
+        //final Solution svdSoln = svd.calculateSymmetric(new LSAStreamIterable(corpus, W), 2 * W, J, K, epsilon);
+        final Solution svdSoln = svd.eigen(new LSAStreamApply(corpus, W, J, null), 2*W, K, epsilon);
 
         write(svdSoln, outFile);
 
@@ -90,8 +98,8 @@ public class LSATrain {
                 break;
             }
         }
-        assert(J*2 == N);
-        for(int w = 0; w < W; w++) {
+        assert (J * 2 == N);
+        for (int w = 0; w < W; w++) {
             df[0][w] /= J;
             df[1][w] /= J;
         }
@@ -115,6 +123,79 @@ public class LSATrain {
 
         out.flush();
         out.close();
+    }
+
+    public static class LSAStreamApply implements VectorFunction<Double> {
+
+        private final File file;
+        private final int W;
+        private final int J;
+        private final double[][] df;
+
+        public LSAStreamApply(File file, int W, int J, double[][] df) throws IOException {
+            this.file = file;
+            this.W = W;
+            this.J = J;
+            this.df = df;
+        }
+
+        @Override
+        public Vector<Double> apply(Vector<Double> v) {
+            System.err.print(".");
+            try {
+                double[] mid = new double[J];
+                {
+                    final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(file));
+                    int N = 0;
+                    final SparseIntArray doc = new SparseIntArray(2 * W);
+                    while (data.available() > 0) {
+                        try {
+                            int i = data.readInt();
+                            if (i == 0) {
+                                if (N % 2 == 1) {
+                                    mid[N / 2] = doc.innerProduct(v);
+                                    doc.clear();
+                                }
+                                N++;
+                            } else {
+                                doc.inc(i + (N % 2) * W - 1);
+                            }
+                        } catch (EOFException x) {
+                            break;
+                        }
+                    }
+                }
+                {
+                    final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(file));
+                    int N = 0;
+                    double[] r = new double[2*W];
+                    final SparseIntArray doc = new SparseIntArray(2 * W);
+                    while (data.available() > 0) {
+                        try {
+                            int i = data.readInt();
+                            if (i == 0) {
+                                if (N % 2 == 1) {
+                                    final ObjectIterator<Entry> iter = doc.int2IntEntrySet().iterator();
+                                    while(iter.hasNext()) {
+                                        final Entry e = iter.next();
+                                        r[e.getIntKey()] += mid[N/2] * e.getIntValue();
+                                    }
+                                    doc.clear();
+                                }
+                                N++;
+                            } else {
+                                doc.inc(i + (N % 2) * W - 1);
+                            }
+                        } catch (EOFException x) {
+                            break;
+                        }
+                    }
+                    return new RealVector(r);
+                }
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
+        }
     }
 
     public static class LSAStreamIterable implements IntIterable {

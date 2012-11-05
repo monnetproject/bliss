@@ -114,10 +114,26 @@ public class SingularValueDecomposition {
             V[i] = iEigens[iOrder[i]];
         }
 
-        System.err.println("Eigenvalues:" + Arrays.toString(S));
-        
         return new Solution(null, V, S);
     }
+    
+    public Solution eigen(VectorFunction<Double> apply, int W, int K, double epsilon) {
+        final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(apply, randomUnitNormVector(W), K, 1.0);
+        final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
+        final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
+        final int[] iOrder = order(iQrSolve.values());
+
+        final double[] S = new double[K];
+        final double[][] V = new double[K][];
+
+        for (int i = 0; i < K; i++) {
+            S[i] = Math.sqrt(Math.abs(iLanczos.tridiagonal().alpha()[iOrder[i]]));
+            V[i] = iEigens[iOrder[i]];
+        }
+
+        return new Solution(null, V, S);
+    }
+    
     private static final Random r = new Random();
 
     protected Vector<Double> randomUnitNormVector(int J) {
