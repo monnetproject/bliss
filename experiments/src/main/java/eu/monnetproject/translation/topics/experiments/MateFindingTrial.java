@@ -115,6 +115,10 @@ public class MateFindingTrial {
                 } else {
                     cosSim = cosSim(predicted[i], foreign[j]);
                 }
+                if(Double.isNaN(cosSim) || Double.isInfinite(cosSim)) {
+                    System.err.print("N");
+                    continue;
+                }
                 if ((cosSim > bestMatch && (ties = 0) == 0)
                         || (cosSim == bestMatch && random.nextInt(++ties) == 0)) {
                     bestMatch = cosSim;
