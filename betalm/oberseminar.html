@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Bilingual Explicit Topic Adaptation for Language Modelling</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/sky.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+		<link rel="stylesheet" href="lib/css/jqmath-0.2.0.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+	<script src="lib/js/jqmath-etc-0.2.0.min.js"></script>
+	<script>M.MathPlayer = false;</script>
+	<script type="text/javascript">
+$(function () {
+    $(document).ready(function() {
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'matefinding',
+                type: 'line',
+                marginRight: 130,
+                marginBottom: 25
+            },
+            title: { text:''} ,
+            xAxis: {
+                categories: [1,10,20,30,40,50,60,70, "Infinity"],
+                title:{
+                	text: 'Selectivity'
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            yAxis: {
+                title: {
+                    text: 'Precision'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }],
+                min : 0
+            },
+            series: [{
+                name: 'Cosine',
+                data: [0.1, 0.8, 8.7, 10.7, 11.4, 11.8, 12.1, 12.4,15.3]
+            },{
+            	    name: 'Normalized Cosine',
+            	    data: [0.6, 7.3, 11.5, 13.8, 14.6, 15.0, 15.6,  15.7,17.2]
+            },{
+            	    name: 'Dice',
+            	    data: [0.2, 7.4, 11.3, 13.5, 14.0, 14.6, 15.0, 15.1,15.4]
+            },{
+            	    name: 'DF-Dice',
+            	    data: [0.2, 9.3, 12.9, 14.2, 14.7, 15.4, 15.4, 15.3, 15.2]
+            },{
+            	    name: 'Jaccard',
+            	    data: [0.2, 6.2, 9.3, 10.6, 11.8, 12.1, 12.2, 12.3,13.0]
+            },{
+            	    name: 'DF-Jaccard',
+            	    data: [0.3,  11.5,  13.9,  15.0,  15.6, 15.3, 15.1, 15.3,15.1]
+            },{
+            	    name: 'CL-ESA',
+            	    data: [4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4]
+            },{
+            	    name: 'LDA',
+            	    data: [1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6]
+            }]
+        });
+    });
+    
+});
+
+		</script>
+	</head>
+
+	<body>
+	<img src="img/UniBi_Logo_De_48mm_RGB.png" style="width:300px;position:absolute;left:50px;top:50px;"/>
+<script src="lib/js/highcharts.js"></script>
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+
+				<section>
+					<h1>Beta-LM</h1>
+					<h3>Bilingual Explicit Topic Adaptation for Language Modelling</h3>
+					<br/>
+					<h5>John M<sup style="font-size:0.6em;">c</sup>Crae. Oberseminar 6<sup style="font-size:0.6em;">th</sup> November 2011</h5>
+				</section>
+				
+				<section>
+				  <h2>Noisy channel model</h2>
+				  <p>For machine translation we use a <i>noisy channel model</i></p>
+				  <p>$t&#770;=argmax_t p(t|f)=argmax_t {p(f|t)p(t)}/{p(f)}$<br/>$t&#770;=argmax_t p(f|t)p(t)$</p>
+				  <p> <u>F</u>oreign and <u>T</u>ranslation</p>
+				  <p> $p(f|t)$ is the <i>phrase model</i> (not for today)</p>
+				  <p> $p(f)$ is the <i>language model</i></p>
+				</section>
+				
+				<section>
+				  <h2>N-gram Language Models</h2>
+				  <p>We wish to estimate:</p>
+				  <p>$$p(w_1w_2w_3)$$</p>
+				  <p>By Markov assumption:</p>
+				  <p>$$p(w_1w_2w_3)=p(w_1)p(w_2|w_1)p(w_3|w_1w_2)$$</p>
+				  <p>We can estimate this as follows</p>
+				  <p>$$p(w_3|w_1w_2) = {c(w_1w_2w_3)}/{&#x2211;&#x2199;{w}c(w_1w_2w)}$$</p>
+				</section>
+				    
+				<!--<section>
+				  <h4>Counting</h4>
+				  
+				  <section>
+				    <h3>Counting is easy, right?</h3>
+				    <pre><code>for(word in corpus) {
+  count.set(word, count(word)+1);
+}</code></pre>
+				  </section>
+
+				  <section data-state="alert">
+				    <h3>Not really</h3>
+<pre><code>java.lang.OutOfMemoryError: Java heap space
+	at it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap.rehash(Object2IntOpenHashMap.java:670)
+	at it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap.put(Object2IntOpenHashMap.java:201)
+	at eu.monnetproject.translation.langmodels.impl.ARPALM.ngramIdx(ARPALM.java:143)</code></pre>
+				  </section>
+				  				  
+				  <section>
+				    <h2>Lossy counting</h2>
+				    <ul>
+				      <li> <a href="">Manku and Motwani (2002)</a> proposed the follow scheme for <i>lossy counting</i></li>
+				      <li> Divide the corpus into $w$ equal sized bucket </li>
+				      <li> At the end of the $b^{\text"th"}$ bucket remove all entries with $count &lt; b$</li>
+				      <li> Practically end of bucket is full memory </li>
+				      <li> I modify scheme to $count &lt; b - N + n$ </li>
+				    </ul>
+				  </section>
+				</section>-->
+				  
+				<section>
+				  <h4>Explicit topics</h4>
+				  <section>
+				    <h2>Explicit semantic analysis</h2>
+				    <ul>
+				      <li> <em>Explicit Semantic Analysis</em> <a href="#/7">(Gabrilovich and Markovitch, 2007)</a> 
+				      is a method for finding similarity between documents </li>
+				      <li> Generalized to cross-lingual case by <a href="#/7">Sorg and Cimiano (2008)</a></li>
+				      <li> Each Wikipedia page is a "topic" </li>
+				      <li> $esa_C(d) = ( sim(d,c_1), &hellip;, sim(d,c_n) )^\text"T"$</li>
+				    </ul>
+				  </section>
+				  
+				  <section>
+				    <h2>CL-ESA</h2>
+				    <table width="100%">
+				     <tr>
+				       <td><h5>English Document<h5></td>
+				       <td></td>
+				       <td>
+				        <h5>EN Wiki</h5>
+				       </td>
+				       <td><h5>Index</h5></td>
+				       <td>
+				        <h5>ES Wiki</h5>
+				       </td>
+				       <td></td>
+				       <td><h5>Spanish Document</h5></td>
+				     </tr>
+				     <tr>
+				       <td></td>
+				       <td></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:-5px;margin-top:-60px;"/>
+				        <h5>Cat</h5>
+				       </td>
+				       <td style="text-align:center;vertical-align:middle;"><h3>&harr;</h3></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:-5px;margin-top:-60px;"/>
+				        <h5>Gato</h5>
+				       </td>
+				       <td></td>
+				       <td></td>
+				     </tr>
+				     <tr>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:0px;margin-top:-60px;"/>
+				       </td>
+				       <td><br/><h3>&times;</h3></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:-5px;margin-top:-60px;"/>
+				        <h5>Dog</h5>
+				       </td>
+				       <td style="text-align:center;vertical-align:middle;"><h3>&harr;</h3></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:-5px;margin-top:-60px;"/>
+				        <h5>Perro</h5>
+				       </td>
+				       <td><br/><h3>&times;</h3></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:0px;margin-top:-60px;"/>
+				       </td>
+				     </tr>
+				     <tr>
+				       <td></td>
+				       <td></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:-5px;margin-top:-60px;"/>
+				        <h5>Assets</h5>
+				       </td>
+				       <td style="text-align:center;vertical-align:middle;"><h3>&harr;</h3></td>
+				       <td style="width:150px;height:150px;text-align:center;vertical-align:middle;">
+				        <img src="img/Doc.png" style="position:absolute;border:0px;z-index:-1;opacity:0.2;width:150px;margin-left:-5px;margin-top:-60px;"/>
+				        <h5>Activos</h5>
+				       </td>
+				       <td></td>
+				       <td></td>
+				     </tr>
+				     </table>
+				  </section>
+				  
+				  <section>
+				    <h2>CL-ESA</h2>
+				    <p>$sim(d_{en},d_{es}) = cos(&phi;_{en}(d_{en}),&phi;_{es}(d_{es}))$</p>
+				    <p>$&phi;_{en,i}(d_{en}) = &sum;_{w &in; d_{en}} tf.idf(w)$</p>
+				    <p>What if we use this to modify the counts of the language model?</p>
+				    <p>We count each document not as 1.0 but by similarity to input document</p>
+				  </section>
+				</section>
+				  
+				<section>
+				  <h4>Beta-LM</h4>
+				  <section>
+				    <h2>Modified Counting</h2>
+				    <p>$c(w_1w_2w_3) = &sum;_{d &in; D} c_d(w_1w_2w_3)$</p>
+				    <p>$c_{\text"beta"}^O(w_1w_2w_3) = &sum;_{d &in; D} sim(O_f,d_f) c_{d_t}(w_1w_2w_3)$</p>
+				    <p>$O_f$&nbsp;:&nbsp; All source language labels in ontology as bag of words</p>
+				  </section>
+				  
+				  <section>
+				    <h2>Similarity Metrics for Beta-LM</h2>
+				    <p>Cosine</p>
+				    <p>${x^Ty}/{&#x2016;x&#x2016;&#x2016;y&#x2016;}={&sum;tf^x_w tf^y_w}/{&radic;({&sum;({tf^x}_w^2) * &sum;({tf^y}_w^2)})}$</p>
+				    <p>Jaccard</p>
+				    <p>${|X&cap;Y|}/{|X&cup;Y|}={#\{w : tf^x_w > 0 &#x2227; tf^y_w > 0\}}/{#\{w : tf^x_w > 0 &#x2228; tf^y_w > 0\}}$</p>
+				    <p>Dice</p>
+				    <p>${2|X&cap;Y|}/{|X|+|Y|}={2 &times;#\{w : tf^x_w > 0 &#x2227; tf^y_w > 0\}}/{#\{w : tf^x_w > 0\} + #\{w : tf^y_w > 0\}}$</p>
+				  </section>
+				  
+				  <section>
+				    <h2>Word Frequencies</h2>
+				    <p>An issue is that high-frequency words are not
+				    generally indicative of a topic</p>
+				    <p>In Cosine compensate by:</p>
+				    <p>$tf^*_{w,i} = {tf_{w,i} - &mu;_{w,i}}/{&sigma;_{w,i}}$</p>
+				    <p>Where $&mu;_{w,i} = p_wn_i$ and $&sigma;_{w,i}^2=n_ip_w(1-p_w)$ due to a Binomial assumption</p>
+				    <p>Where $p_w$ is the probability of $w$ and $n_i$ is the length of the $i^\text"th"$ document</p>
+				  </section>
+				  
+				  <section>
+				    <h2>Word Frequencies (cont)</h2>
+				    <p>For Dice and Jaccard we use <em>document frequency</em></p>
+				    <p>DF is the proportion of documents in corpus that contain a word</p>
+				    <p>Hence we define <em>DF-Jaccard</em> as</p>
+				    <p>$df-jaccard(x,y) = {&sum;_{w &in; x &wedge; w &in; y} 1 - df_w}/{&sum;_{w &in; x &vee; w &in; y} 1 - df_w}$</p>
+				  </section>
+				
+				  <section>
+				    <h2>Selection</h2>
+				    <p>Similarity scores are often too similar!</p>
+				    <p>Solution is to apply <em>selectivity</em></p>
+				    <p>$sim'(x,y) = {sim(x,y)^{&sigma;}}/{&sum;_Y sim(x,y')^&sigma;}$</p>
+				    <p>Increases the variation scores</p>
+				  </section>
+				  
+				  <section>
+				    <h2>Selection (Example)</h2>
+				    <img src="img/runif.png" width="500px"/>
+				  </section>
+				  
+				  <section>
+				    <h2>Selection (Example)</h2>
+				    <img src="img/runif5.png" width="500px"/>
+				  </section>
+				  
+				  <section>
+				    <h2>Selection (Example)</h2>
+				    <img src="img/runif50.png" width="500px"/>
+				  </section>
+				  
+				  <section>
+				    <h2>Corpus Loss</h2>
+				    <p>Some documents in Wikipedia share zero terms with ontology</p>
+				    <p>But still contain many useful $n$-grams</p>
+				    <p>Compensate as follows:</p>
+				    <p>$sim'(x,y) = (1 - &alpha;)sim(x,y) + &alpha;$</p>
+				  </section>
+				</section>
+				
+				
+				<section>
+				  <h4>Results</h4>
+				  
+				  <section>
+				    <h2>Mate-finding trials</h2>
+				    <p>Take some Wikipedia documents in English/Spanish</p>
+				    <p>Train Beta-LM using one English test document and Spanish Training set</p>
+				    <p>Choose the <i>mate</i> document which maximizes</p>
+				    <p>${&sum;p(w_i)tf(w_i)}/{||tf(w)||}$</p>
+				    <p>Precision = % Where the mate is the same as Wikipedia interlingual index</p>
+				    <p>Evaluated on 2% of Wikipedia articles (90% train, 10% test)</p>
+				  </section>
+				  
+				  <section>
+				    <h2>Mate-finding trials</h2>
+				    <div id="matefinding"></div>
+				    <small>LDA see <a href="#/7">Mimno et al. (2009)</a></small>
+				  </section>
+				  
+				  <section>
+				    <h2>Perplexity</h2>
+				    <p>Perlexity is given as:</p>
+				    <p> $2^{-{1}/{N} &sum;_{i=0}^N log(p(w_i|w_0&hellip;w_{i-1}))}$</p>
+				    <p>Essentially an average probability score</p>
+				    <p>As a LM probabilities are balanced: higher perplexity means better translation</p>
+				    <p>Training on Wikipedia, using Spanish IFRS to generate English LM</p>
+				  </section>
+				  
+				  <section>
+				    <h2>Perplexity</h2>
+				    <img src="img/alpha-sigma.png"/>
+				  </section>
+				  
+				  <section>
+				    <h2>Machine Translation</h2>
+				    <p>Evaluating English to Spanish on IFRS. Unigram model</p>
+				    <center>
+				    <table border="1">
+				      <tr>
+				        <th>Method</th>
+				        <th>BLEU</th>
+				        <th>METEOR</th>
+				        <th>NIST</th>
+				        <th>PER</th>
+				      </tr>
+				      <tr>
+				        <td>Baseline</td>
+				        <td>0.1774</td>
+				        <td>0.2896</td>
+				        <td>2.8078</td>
+				        <td>0.9212</td>
+				      </tr>
+				      <tr>
+				        <td>Cosine</td>
+				        <td>0.1849</td>
+				        <td>0.2975</td>
+				        <td>2.8727</td>
+				        <td>0.9095</td>
+				      </tr>
+				      <tr>
+				        <td>Normalized Cosine</td>
+				        <td>0.1767*</td>
+				        <td>0.2887*</td>
+				        <td>2.8873</td>
+				        <td>0.9208</td>
+				      </tr>
+				      <tr>
+				        <td>DF-Jaccard</td>
+				        <td>0.1821</td>
+				        <td>0.2936</td>
+				        <td>2.8604</td>
+				        <td>0.9114</td>
+				      </tr>
+				      <tr>
+				        <td>CL-ESA</td>
+				        <td>0.1767*</td>
+				        <td>0.2887*</td>
+				        <td>2.8018*</td>
+				        <td>0.9201</td>
+				      </tr>
+				      <tr>
+				        <td>LDA</td>
+				        <td>0.1770*</td>
+				        <td>0.2923</td>
+				        <td>2.7790*</td>
+				        <td>0.9372*</td>
+				      </tr>
+				    </table>
+				    </center>
+				  </section>
+				</section>
+				
+				<section>
+				  <h2>Conclusion</h2>
+				  <ul>
+				    <li>Beta-LM adapts language models by source document</li>
+				    <li>Improves fit of model and translation quality</li>
+				    <li>Unclear dependency on quality of cross-lingual similarity</li>
+				    <li>Cross-lingual similarity metrics are weak</li>
+				    <li>Other challenges:
+				      <ul>
+				        <li>Memory-constrained counting</li>
+				        <li>$n$-gram smoothing</li>
+				      </ul>
+				    </li>
+				</section>
+				
+				<section>
+				  <h2>References</h2>
+				  <ul>
+				   <!--<li> <small><a href="http://www.vldb.org/conf/2002/S10P03.pdf">Manku, G.S. and Motwani, R. (2002). Approximate Frequency Counts over Data Streams. In Proc. of the 28th VLDB Conference.</a></small></li>-->
+				   <li> <small><a href="http://ijcai.org/papers07/Papers/IJCAI07-259.pdf">Gabrilovich, E. and Markovitch, S. (2007). Computing semantic relatedness using wikipedia-based explicit semantic analysis. In Proc. of 20th IJCAI</a></small></li>
+				   <li> <small><a href="http://people.aifb.kit.edu/pso/publications/sorg_paperCLEF2008.pdf">Sorg, P. and Cimiano, P. (2008). Cross-lingual information retrieval with explicit semantic analysis. In: Working Notes of the Annual CLEF Meeting</a></small></li>
+				   <li> <small><a herf="http://www.cs.princeton.edu/~mimno/papers/mimno2009polylingual.pdf">Mimno, D., Wallach, H., Naradowsky, J., Smith, D. and McCallum, A. (2009). Polylingual topic models. In Proc. of EMNLP 2009.</a></small></li>
+				  </ul> 
+				  <br/> 
+				  <br/>
+				  <p>Slides created using <a href="http://lab.hakim.se/reveal-js/">reveal.js</a></p>
+				  <br/>
+				  <img src="img/cc-by_1.png" width="125px" style="border:none;"/>
+				</section>
+				
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+
+				transition: 'linear', // default/cube/page/concave/zoom/linear/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/highlight.js', async: true, callback: function() { window.hljs.initHighlightingOnLoad(); } },
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'lib/js/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'lib/js/data-markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+		</script>
+	</body>
+</html>
