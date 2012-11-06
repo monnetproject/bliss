@@ -1,0 +1,12 @@
+eu.monnetproject.math.sparse
+eu.monnetproject.math.sparse.eigen
+eu.monnetproject.translation.langmodels
+eu.monnetproject.translation.langmodels.impl
+eu.monnetproject.translation.langmodels.smoothing
+eu.monnetproject.translation.topics
+eu.monnetproject.translation.topics.clesa
+eu.monnetproject.translation.topics.experiments
+eu.monnetproject.translation.topics.lda
+eu.monnetproject.translation.topics.lsa
+eu.monnetproject.translation.topics.ontology
+eu.monnetproject.translation.topics.sim
