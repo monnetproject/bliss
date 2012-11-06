@@ -110,7 +110,9 @@ $(function () {
 					<h1>Beta-LM</h1>
 					<h3>Bilingual Explicit Topic Adaptation for Language Modelling</h3>
 					<br/>
-					<h5>John M<sup style="font-size:0.6em;">c</sup>Crae. Oberseminar 6<sup style="font-size:0.6em;">th</sup> November 2011</h5>
+					<h5>John M<sup style="font-size:0.6em;">c</sup>Crae</h5>
+					<h5>AG Semantic Computing</h5>
+					<h5>Oberseminar 6<sup style="font-size:0.6em;">th</sup> November 2012</h5>
 				</section>
 				
 				<section>
@@ -119,7 +121,7 @@ $(function () {
 				  <p>$t&#770;=argmax_t p(t|f)=argmax_t {p(f|t)p(t)}/{p(f)}$<br/>$t&#770;=argmax_t p(f|t)p(t)$</p>
 				  <p> <u>F</u>oreign and <u>T</u>ranslation</p>
 				  <p> $p(f|t)$ is the <i>phrase model</i> (not for today)</p>
-				  <p> $p(f)$ is the <i>language model</i></p>
+				  <p> $p(t)$ is the <i>language model</i></p>
 				</section>
 				
 				<section>
@@ -128,7 +130,7 @@ $(function () {
 				  <p>$$p(w_1w_2w_3)$$</p>
 				  <p>By Markov assumption:</p>
 				  <p>$$p(w_1w_2w_3)=p(w_1)p(w_2|w_1)p(w_3|w_1w_2)$$</p>
-				  <p>We can estimate this as follows</p>
+				  <p>We can estimate this as follows:</p>
 				  <p>$$p(w_3|w_1w_2) = {c(w_1w_2w_3)}/{&#x2211;&#x2199;{w}c(w_1w_2w)}$$</p>
 				</section>
 				    
@@ -246,10 +248,19 @@ $(function () {
 				  <section>
 				    <h2>CL-ESA</h2>
 				    <p>$sim(d_{en},d_{es}) = cos(&phi;_{en}(d_{en}),&phi;_{es}(d_{es}))$</p>
-				    <p>$&phi;_{en,i}(d_{en}) = &sum;_{w &in; d_{en}} tf.idf(w)$</p>
+				    <p>$&phi;_{en,i}(d_{en}) = &sum;_{w &in; d_{en}} tf_i.idf(w)$</p>
 				    <p>What if we use this to modify the counts of the language model?</p>
 				    <p>We count each document not as 1.0 but by similarity to input document</p>
 				  </section>
+				
+				  <section>
+				    <h2>CL-ESA adaptation</h2>
+				    <p>$c(w_1w_2w_3) = &sum;_{d &in; D} c_d(w_1w_2w_3)$</p>
+				    <p>$c_{\text"cl-esa"}^O(w_1w_2w_3) = &sum;_{d &in; D} sim(O_f,d) c_d(w_1w_2w_3)$</p>
+				    <p>$O_f$&nbsp;:&nbsp; All source language labels in ontology as bag of words</p>
+				    <p>$d$ is in language $t$ hence $sim$ is cross-lingual</p>
+				  </section>
+				  
 				</section>
 				  
 				<section>
@@ -257,8 +268,9 @@ $(function () {
 				  <section>
 				    <h2>Modified Counting</h2>
 				    <p>$c(w_1w_2w_3) = &sum;_{d &in; D} c_d(w_1w_2w_3)$</p>
-				    <p>$c_{\text"beta"}^O(w_1w_2w_3) = &sum;_{d &in; D} sim(O_f,d_f) c_{d_t}(w_1w_2w_3)$</p>
+				    <p>$c_{\text"beta"}^O(w_1w_2w_3) = &sum;_{(d_f,d_t) &in; D} sim(O_f,d_f) c_{d_t}(w_1w_2w_3)$</p>
 				    <p>$O_f$&nbsp;:&nbsp; All source language labels in ontology as bag of words</p>
+				    <p>Similar to CL-ESA adaptation but uses <span style="text-decoration:underline;">monolingual</span> similarity</p>
 				  </section>
 				  
 				  <section>
@@ -273,8 +285,7 @@ $(function () {
 				  
 				  <section>
 				    <h2>Word Frequencies</h2>
-				    <p>An issue is that high-frequency words are not
-				    generally indicative of a topic</p>
+				    <p>Low-frequency words are most indicative of topic, but undervalued</p>
 				    <p>In Cosine compensate by:</p>
 				    <p>$tf^*_{w,i} = {tf_{w,i} - &mu;_{w,i}}/{&sigma;_{w,i}}$</p>
 				    <p>Where $&mu;_{w,i} = p_wn_i$ and $&sigma;_{w,i}^2=n_ip_w(1-p_w)$ due to a Binomial assumption</p>
@@ -286,7 +297,7 @@ $(function () {
 				    <p>For Dice and Jaccard we use <em>document frequency</em></p>
 				    <p>DF is the proportion of documents in corpus that contain a word</p>
 				    <p>Hence we define <em>DF-Jaccard</em> as</p>
-				    <p>$df-jaccard(x,y) = {&sum;_{w &in; x &wedge; w &in; y} 1 - df_w}/{&sum;_{w &in; x &vee; w &in; y} 1 - df_w}$</p>
+				    <p>$df\text"-"jaccard(x,y) = {&sum;_{w &in; x &wedge; w &in; y} 1 - df_w}/{&sum;_{w &in; x &vee; w &in; y} 1 - df_w}$</p>
 				  </section>
 				
 				  <section>
@@ -294,7 +305,7 @@ $(function () {
 				    <p>Similarity scores are often too similar!</p>
 				    <p>Solution is to apply <em>selectivity</em></p>
 				    <p>$sim'(x,y) = {sim(x,y)^{&sigma;}}/{&sum;_Y sim(x,y')^&sigma;}$</p>
-				    <p>Increases the variation scores</p>
+				    <p>Increases the variation of scores</p>
 				  </section>
 				  
 				  <section>
@@ -318,6 +329,8 @@ $(function () {
 				    <p>But still contain many useful $n$-grams</p>
 				    <p>Compensate as follows:</p>
 				    <p>$sim'(x,y) = (1 - &alpha;)sim(x,y) + &alpha;$</p>
+				    <p>Combined:</p>
+				    <p>$sim'(x,y) = {(1-&alpha;)sim(x,y)^&sigma; + &alpha;}/{&sum;_Y (1-&alpha;)sim(x,y)^&sigma; + &alpha;}$</p>
 				  </section>
 				</section>
 				
@@ -328,17 +341,17 @@ $(function () {
 				  <section>
 				    <h2>Mate-finding trials</h2>
 				    <p>Take some Wikipedia documents in English/Spanish</p>
-				    <p>Train Beta-LM using one English test document and Spanish Training set</p>
+				    <p>Train Beta-LM using one English test document and English/Spanish Training set</p>
 				    <p>Choose the <i>mate</i> document which maximizes</p>
-				    <p>${&sum;p(w_i)tf(w_i)}/{||tf(w)||}$</p>
+				    <p>$cos(E[tf],tf) &propto; {&sum;p(w_i)tf(w_i)}/{||tf||}$</p>
 				    <p>Precision = % Where the mate is the same as Wikipedia interlingual index</p>
 				    <p>Evaluated on 2% of Wikipedia articles (90% train, 10% test)</p>
 				  </section>
 				  
 				  <section>
 				    <h2>Mate-finding trials</h2>
-				    <div id="matefinding"></div>
-				    <small>LDA see <a href="#/7">Mimno et al. (2009)</a></small>
+				    <center><div id="matefinding"></div></center>
+				    <small>(LDA see <a href="#/7">Mimno et al. (2009))</a></small>
 				  </section>
 				  
 				  <section>
@@ -346,7 +359,7 @@ $(function () {
 				    <p>Perlexity is given as:</p>
 				    <p> $2^{-{1}/{N} &sum;_{i=0}^N log(p(w_i|w_0&hellip;w_{i-1}))}$</p>
 				    <p>Essentially an average probability score</p>
-				    <p>As a LM probabilities are balanced: higher perplexity means better translation</p>
+				    <p>As a LM probabilities are balanced, higher perplexity means better translation</p>
 				    <p>Training on Wikipedia, using Spanish IFRS to generate English LM</p>
 				  </section>
 				  
@@ -365,7 +378,7 @@ $(function () {
 				        <th>BLEU</th>
 				        <th>METEOR</th>
 				        <th>NIST</th>
-				        <th>PER</th>
+				        <th>PER&dagger;</th>
 				      </tr>
 				      <tr>
 				        <td>Baseline</td>
@@ -410,6 +423,7 @@ $(function () {
 				        <td>0.9372*</td>
 				      </tr>
 				    </table>
+				  <small>&dagger;Position-independent Error Rate: Lower is better</small>
 				    </center>
 				  </section>
 				</section>
@@ -419,8 +433,8 @@ $(function () {
 				  <ul>
 				    <li>Beta-LM adapts language models by source document</li>
 				    <li>Improves fit of model and translation quality</li>
-				    <li>Unclear dependency on quality of cross-lingual similarity</li>
 				    <li>Cross-lingual similarity metrics are weak</li>
+				    <li>Beta-LM removes need for cross-lingual similarity</li>
 				    <li>Other challenges:
 				      <ul>
 				        <li>Memory-constrained counting</li>
@@ -435,7 +449,7 @@ $(function () {
 				   <!--<li> <small><a href="http://www.vldb.org/conf/2002/S10P03.pdf">Manku, G.S. and Motwani, R. (2002). Approximate Frequency Counts over Data Streams. In Proc. of the 28th VLDB Conference.</a></small></li>-->
 				   <li> <small><a href="http://ijcai.org/papers07/Papers/IJCAI07-259.pdf">Gabrilovich, E. and Markovitch, S. (2007). Computing semantic relatedness using wikipedia-based explicit semantic analysis. In Proc. of 20th IJCAI</a></small></li>
 				   <li> <small><a href="http://people.aifb.kit.edu/pso/publications/sorg_paperCLEF2008.pdf">Sorg, P. and Cimiano, P. (2008). Cross-lingual information retrieval with explicit semantic analysis. In: Working Notes of the Annual CLEF Meeting</a></small></li>
-				   <li> <small><a herf="http://www.cs.princeton.edu/~mimno/papers/mimno2009polylingual.pdf">Mimno, D., Wallach, H., Naradowsky, J., Smith, D. and McCallum, A. (2009). Polylingual topic models. In Proc. of EMNLP 2009.</a></small></li>
+				   <li> <small><a href="http://www.cs.princeton.edu/~mimno/papers/mimno2009polylingual.pdf">Mimno, D., Wallach, H., Naradowsky, J., Smith, D. and McCallum, A. (2009). Polylingual topic models. In Proc. of EMNLP 2009.</a></small></li>
 				  </ul> 
 				  <br/> 
 				  <br/>
