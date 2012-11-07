@@ -28,7 +28,7 @@ package eu.monnetproject.translation.langmodels.smoothing;
 
 import eu.monnetproject.translation.langmodels.NGram;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
 
 /**
  *
@@ -37,7 +37,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 public class NGramHistoriesImpl implements NGramHistories {
 
     private final int N;
-    private final Object2ObjectMap<NGram, double[]>[] histories;
+    private final Object2ObjectMap<NGram, float[]>[] histories;
     private final int[][] CoC;
 
     @SuppressWarnings("unchecked")
@@ -45,7 +45,7 @@ public class NGramHistoriesImpl implements NGramHistories {
         this.N = N;
         this.histories = new Object2ObjectMap[N];
         for (int i = 0; i < N; i++) {
-            histories[i] = new Object2ObjectOpenHashMap<NGram, double[]>();
+            histories[i] = new Object2ObjectRBTreeMap<NGram, float[]>();
         }
         this.CoC = new int[N][H];
     }
@@ -56,7 +56,7 @@ public class NGramHistoriesImpl implements NGramHistories {
     }
 
     @Override
-    public Object2ObjectMap<NGram, double[]> histories(int n) {
+    public Object2ObjectMap<NGram, float[]> histories(int n) {
         return histories[n - 1];
     }
 

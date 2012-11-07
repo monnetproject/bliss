@@ -28,9 +28,7 @@ package eu.monnetproject.translation.langmodels;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import java.util.Map.Entry;
+import it.unimi.dsi.fastutil.objects.Object2IntRBTreeMap;
 
 /**
  * Std NGram count set (implemented by Array of HashMaps)
@@ -40,18 +38,18 @@ import java.util.Map.Entry;
 public class NGramCountSetImpl implements NGramCountSet {
 
     private final int N;
-    private final Object2IntOpenHashMap<NGram>[] counts;
-    private final Object2IntOpenHashMap<NGram>[] historyCounts;
+    private final Object2IntRBTreeMap<NGram>[] counts;
+    private final Object2IntRBTreeMap<NGram>[] historyCounts;
     private final long[] sums;
 
     public NGramCountSetImpl(int N) {
         this.N = N;
-        counts = new Object2IntOpenHashMap[N];
-        historyCounts = new Object2IntOpenHashMap[N - 1];
+        counts = new Object2IntRBTreeMap[N];
+        historyCounts = new Object2IntRBTreeMap[N - 1];
         for (int i = 0; i < N; i++) {
-            counts[i] = new Object2IntOpenHashMap<NGram>();
+            counts[i] = new Object2IntRBTreeMap<NGram>();
             if (i > 0) {
-                historyCounts[i - 1] = new Object2IntOpenHashMap<NGram>();
+                historyCounts[i - 1] = new Object2IntRBTreeMap<NGram>();
             }
         }
         sums = new long[N];
@@ -78,18 +76,15 @@ public class NGramCountSetImpl implements NGramCountSet {
             return sums[0];
         } else {
             return historyCounts[history.ngram.length-1].getInt(history);
-            /*long s = 0;
-            final Object2IntOpenHashMap<NGram> futureCounts = counts[history.ngram.length];
-            final ObjectIterator<Object2IntMap.Entry<NGram>> futureIter = futureCounts.object2IntEntrySet().iterator();
-            while (futureIter.hasNext()) {
-                final Object2IntMap.Entry<NGram> e = futureIter.next();
-                if (e.getKey().history().equals(history)) {
-                    s += e.getIntValue();
-                }
-            }
-            return s;*/
         }
     }
+
+    @Override
+    public long[] sums() {
+        return sums;
+    }
+    
+    
 
     @Override
     public void inc(int n) {
@@ -153,6 +148,15 @@ public class NGramCountSetImpl implements NGramCountSet {
         @Override
         public double mean(int n) {
             return 1.0;
+        }
+
+        @Override
+        public double[] sums() {
+            double[] s = new double[sums.length];
+            for(int i = 0; i < s.length; i++) {
+                s[i] = sums[i];
+            }
+            return s;
         }
         
         

@@ -48,7 +48,7 @@ public class Object2IntAsDoubleMap<E> extends AbstractObject2DoubleMap<E> {
     @Override
     @SuppressWarnings("unchecked")
     public double getDouble(Object key) {
-        return o.get((E)key);
+        return o.getInt(    key);
     }
 
     @Override

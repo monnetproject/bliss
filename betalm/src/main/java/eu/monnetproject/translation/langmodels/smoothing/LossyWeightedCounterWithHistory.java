@@ -40,149 +40,14 @@ import java.util.Arrays;
  *
  * @author John McCrae
  */
-public class LossyWeightedCounterWithHistory implements WeightedCounter, CounterWithHistory {
+public class LossyWeightedCounterWithHistory extends AbstractWeightedCounterWithHistory {
 
-    private final int N, H;
-    private final NGramCarousel carousel;
-    private final WeightedNGramCountSetImpl nGramCountSet;
-    private final NGramHistories histories;
-    private int[] b;
-    private double[] bStep;
-    /**
-     * Number of tokens read
-     */
-    protected long[] p;
-    protected long allp;
-    private final double critical = Double.parseDouble(System.getProperty("sampling.critical", "0.2"));
-
-    /**
-     * Create a lossy counter that also records histories
-     *
-     * @param N The largest n-gram to count
-     * @param H The largest history to store
-     */
-    @SuppressWarnings("unchecked")
-    public LossyWeightedCounterWithHistory(int N, int H) {
-        this.N = N;
-        this.H = H;
-        this.b = new int[N];
-        Arrays.fill(b, 1);
-        this.p = new long[N];
-        this.bStep = new double[N];
-        Arrays.fill(bStep, 1.0);
-        this.carousel = new NGramCarousel(N);
-        this.nGramCountSet = new WeightedNGramCountSetImpl(N);
-        this.histories = new NGramHistoriesImpl(N, H + 1);
-    }
-
-    /**
-     * Create a lossy counter that also records histories
-     *
-     * @param N The largest n-gram to count
-     * @param H The largest history to store
-     */
     public LossyWeightedCounterWithHistory(int N) {
-        this(N, 3);
+        super(N);
     }
 
-    @Override
-    public int N() {
-        return N;
-    }
-
-    @Override
-    public void offer(int w, double v) {
-        carousel.offer(w);
-        for (int i = 1; i <= carousel.maxNGram(); i++) {
-            final NGram ngram = carousel.ngram(i);
-            final NGram history;
-            final NGram future;
-            final Object2ObjectMap<NGram, double[]> historySet;
-            final Object2ObjectMap<NGram, double[]> futureHistorySet;
-            if (i > 1) {
-                history = ngram.history();
-                future = ngram.future();
-                historySet = histories.histories(i - 1);
-                if (i > 2) {
-                    futureHistorySet = histories.histories(i - 2);
-                } else {
-                    futureHistorySet = null;
-                }
-            } else {
-                history = null;
-                future = null;
-                historySet = null;
-                futureHistorySet = null;
-            }
-            final Object2DoubleMap<NGram> ngcs = nGramCountSet.ngramCount(i);
-            nGramCountSet.add(i, v);
-            if (ngcs.containsKey(ngram)) {
-                final int count = (int) Math.ceil(ngcs.getDouble(ngram) * bStep[i - 1]);
-                if (i > 1) {
-                    if (count < H) {
-                        final double[] h = historySet.get(history);
-                        h[count]--;
-                        h[count + 1]++;
-                        final double[] f = historySet.get(future);
-                        f[H + count]--;
-                        f[H + count + 1]++;
-                    } else {
-                        historySet.get(history)[H]++;
-                        historySet.get(future)[2 * H]++;
-                    }
-                }
-                if (count <= H) {
-                    histories.countOfCounts()[i-1][count - 1]--;
-                    histories.countOfCounts()[i-1][count]++;
-                } else if(count == H+1) {
-                    histories.countOfCounts()[i-1][count-1]--;
-                }
-                ngcs.put(ngram, ngcs.getDouble(ngram) + v);
-            } else {
-                if (i > 1) {
-                    if (!historySet.containsKey(history)) {
-                        historySet.put(history, new double[2 * H + 1]);
-                    }
-                    if (!historySet.containsKey(future)) {
-                        historySet.put(future, new double[2 * H + 1]);
-                    }
-                    historySet.get(history)[1]++;
-                    historySet.get(future)[H + 1]++;
-                    if (i > 2) {
-                        final NGram futureHistory = future.history();
-                        if (!futureHistorySet.containsKey(futureHistory)) {
-                            futureHistorySet.put(futureHistory, new double[2 * H + 1]);
-                        }
-                        final double[] fh = futureHistorySet.get(futureHistory);
-                        fh[0]++;
-                    }
-                }
-                histories.countOfCounts()[i-1][0]++;
-                ngcs.put(ngram, v);
-            }
-
-            if (i > 1) {
-                final Object2DoubleMap<NGram> hcs = nGramCountSet.historyCount(i - 1);
-                if (hcs.containsKey(history)) {
-                    hcs.put(history, hcs.getDouble(history) + v);
-                } else {
-                    hcs.put(history, v);
-                }
-            }
-            p[i - 1]++;
-            bStep[i - 1] *= (double) (p[i - 1] - 1) / (double) p[i - 1];
-            bStep[i - 1] += v / p[i - 1];
-            nGramCountSet.setMean(i, bStep[i - 1]);
-        }
-        allp++;
-        if (allp % 1000 == 0 && memoryCritical()) {
-            prune();
-        }
-    }
-    private final Runtime runtime = Runtime.getRuntime();
-
-    private boolean memoryCritical() {
-        return (double) (runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory()) / (double) runtime.maxMemory() < critical;
+    public LossyWeightedCounterWithHistory(int N, int H) {
+        super(N, H);
     }
 
     protected void prune() {
@@ -207,11 +72,6 @@ public class LossyWeightedCounterWithHistory implements WeightedCounter, Counter
             }
             System.gc();
         } while (memoryCritical());
-    }
-
-    @Override
-    public void docEnd() {
-        carousel.reset();
     }
 
     @Override

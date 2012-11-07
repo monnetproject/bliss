@@ -92,8 +92,6 @@ public class KneserNeySmoothing implements NGramScorer {
             return Math.log10(d);
         }
     }
-
-    //private static final NGram RIGOROUSLY = new NGram(new int[] { 30411 });
     
     @Override
     public double[] ngramScores(NGram nGram, WeightedNGramCountSet countSet) {
@@ -104,7 +102,7 @@ public class KneserNeySmoothing implements NGramScorer {
             final double l = countSet.sum(nGram.history());
             return new double[]{log10((c - d[n - 1][ci]) / l)};
         } else {
-            final double[] history = histories.histories(n).get(nGram);
+            final float[] history = histories.histories(n).get(nGram);
             if(history == null) {
                 // Can happen... shouldn't but can
                 return new double[]{log10((c - d[n - 1][ci]) / countSet.sum(nGram.history()))};
@@ -144,7 +142,7 @@ public class KneserNeySmoothing implements NGramScorer {
     
     private double sumHistory(NGram nGram, int H) {
         if (nGram.ngram.length > 0) {
-            final Object2ObjectMap<NGram, double[]> hists = histories.histories(nGram.ngram.length);
+            final Object2ObjectMap<NGram, float[]> hists = histories.histories(nGram.ngram.length);
             if (hists != null) {
                 if (hists.containsKey(nGram)) {
                     return hists.get(nGram)[0];

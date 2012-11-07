@@ -24,59 +24,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.langmodels.smoothing;
+package eu.monnetproject.translation.topics.sim;
 
-import eu.monnetproject.translation.langmodels.NGram;
-import eu.monnetproject.translation.langmodels.NGramCountSet;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.translation.topics.ParallelBinarizedReader;
+import eu.monnetproject.translation.topics.SimilarityMetric;
+import eu.monnetproject.translation.topics.SimilarityMetricFactory;
+import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  *
  * @author John McCrae
  */
-public class LossyCounterWithHistory extends AbstractCounterWithHistory {
+public class BetaLMSimilarityFactory implements SimilarityMetricFactory<ParallelBinarizedReader> {
 
-    public LossyCounterWithHistory(int N) {
-        super(N);
-    }
-
-    public LossyCounterWithHistory(int N, int H) {
-        super(N, H);
-    }
-    
-    
-    protected void prune() {
-        do {
-            System.err.print("P");
-            b++;
-            for (int i = 1; i <= N; i++) {
-                final ObjectIterator<Object2IntMap.Entry<NGram>> iter = nGramCountSet.ngramCount(i).object2IntEntrySet().iterator();
-                while (iter.hasNext()) {
-                    final Object2IntMap.Entry<NGram> entry = iter.next();
-                    if (entry.getValue() < (b - N + i)) {
-                        final NGram key = entry.getKey();
-                        nGramCountSet.sub(i, entry.getIntValue());
-                        iter.remove();
-                        histories.histories(key.ngram.length).remove(key);
-                        if (i != N) {
-                            nGramCountSet.historyCount(i).remove(key);
-                        }
-                    }
-                }
+    @Override
+    public SimilarityMetric makeMetric(ParallelBinarizedReader data, int W) throws IOException {
+        final ArrayList<SparseIntArray[]> x = new ArrayList<SparseIntArray[]>();
+        while (true) {
+            final SparseIntArray[] nextFreqPair = data.nextFreqPair(W);
+            if(nextFreqPair == null) {
+                break;
+            } else {
+                x.add(nextFreqPair);
             }
-            System.gc();
-        } while (memoryCritical());
+        }
+        return new BetaLMImpl(x.toArray(new SparseIntArray[x.size()][]), W, null);
     }
 
     @Override
-    public NGramCountSet counts() {
-        return nGramCountSet;
-    }
-
-    
-    @Override
-    public NGramHistories histories() {
-        return histories;
+    public Class<ParallelBinarizedReader> datatype() {
+        return ParallelBinarizedReader.class;
     }
 }

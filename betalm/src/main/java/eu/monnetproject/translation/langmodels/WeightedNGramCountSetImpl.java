@@ -26,9 +26,8 @@
 package eu.monnetproject.translation.langmodels;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.Object2DoubleRBTreeMap;
 
 /**
  *
@@ -36,20 +35,20 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
  */
 public class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
     private final int N;
-    private final Object2DoubleOpenHashMap<NGram>[] counts;
-    private final Object2DoubleOpenHashMap<NGram>[] historyCounts;
+    private final Object2DoubleRBTreeMap<NGram>[] counts;
+    private final Object2DoubleRBTreeMap<NGram>[] historyCounts;
     private final double[] sums;
     private final double[] mean;
 
     @SuppressWarnings(value = "unchecked")
     public WeightedNGramCountSetImpl(int N) {
         this.N = N;
-        counts = new Object2DoubleOpenHashMap[N];
-        historyCounts = new Object2DoubleOpenHashMap[N - 1];
+        counts = new Object2DoubleRBTreeMap[N];
+        historyCounts = new Object2DoubleRBTreeMap[N - 1];
         for (int i = 0; i < N; i++) {
-            counts[i] = new Object2DoubleOpenHashMap<NGram>();
+            counts[i] = new Object2DoubleRBTreeMap<NGram>();
             if (i > 0) {
-                historyCounts[i - 1] = new Object2DoubleOpenHashMap<NGram>();
+                historyCounts[i - 1] = new Object2DoubleRBTreeMap<NGram>();
             }
         }
         sums = new double[N];
@@ -102,5 +101,10 @@ public class WeightedNGramCountSetImpl implements WeightedNGramCountSet {
 
     public void setMean(int n, double mean) {
         this.mean[n-1] = mean;
+    }
+
+    @Override
+    public double[] sums() {
+        return sums;
     }
 }

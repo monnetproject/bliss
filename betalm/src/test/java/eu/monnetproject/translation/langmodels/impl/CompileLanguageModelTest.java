@@ -99,7 +99,7 @@ public class CompileLanguageModelTest {
         expResult.historyCount(1).put(new NGram(new int[]{1}), 3);
         expResult.historyCount(1).put(new NGram(new int[]{2}), 1);
         expResult.historyCount(1).put(new NGram(new int[]{3}), 1);
-        NGramCountSet result = instance.doCount(N, reader, type, CompileLanguageModel.Smoothing.NONE);
+        NGramCountSet result = instance.doCount(N, reader, type, CompileLanguageModel.Smoothing.NONE,false);
         for (int i = 1; i <= N; i++) {
             final Object2IntMap<NGram> ngramExp = expResult.ngramCount(i);
             final Object2IntMap<NGram> ngramRes = result.ngramCount(i);
@@ -176,17 +176,17 @@ public class CompileLanguageModelTest {
                 + "ngram 2=5" + ls
                 + "" + ls
                 + "\\1-grams:" + ls
-                + "-0.6532125137753437\tb" + ls
-                + "-0.9542425094393249\td" + ls
-                + "-0.6532125137753437\tc" + ls
                 + "-0.35218251811136253\ta" + ls
+                + "-0.6532125137753437\tb" + ls
+                + "-0.6532125137753437\tc" + ls
+                + "-0.9542425094393249\td" + ls
                 + ls
                 + "\\2-grams:" + ls
-                + "0.0\tb c" + ls
-                + "-0.47712125471966244\ta b" + ls
                 + "-0.47712125471966244\ta a" + ls
-                + "0.0\tc d" + ls
+                + "-0.47712125471966244\ta b" + ls
                 + "-0.47712125471966244\ta c" + ls
+                + "0.0\tb c" + ls
+                + "0.0\tc d" + ls
                 + ls
                 + "\\end\\" + ls;
         assertEquals(expResult, new String(baos.toByteArray()));

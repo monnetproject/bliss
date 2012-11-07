@@ -33,7 +33,7 @@ import java.util.Arrays;
  *
  * @author John McCrae
  */
-public class NGram {
+public class NGram implements Comparable<NGram> {
 
     public final int[] ngram;
 
@@ -84,5 +84,22 @@ public class NGram {
             }
         }
         return true;
+    }
+
+    @Override
+    public int compareTo(NGram o) {
+        if(o.ngram.length < this.ngram.length) {
+            return -1;
+        } else if(o.ngram.length > this.ngram.length) {
+            return +1;
+        } else {
+            for(int i = 0; i < this.ngram.length; i++) {
+                final int c = Integer.compare(this.ngram[i], o.ngram[i]);
+                if(c != 0) {
+                    return c;
+                }
+            }
+            return 0;
+        }
     }
 }

@@ -61,6 +61,8 @@ public interface NGramCountSet {
      */
     long sum(NGram history);
     
+    long[] sums();
+    
     /**
      * Increment the total count of n-grams
      * @param n At length n

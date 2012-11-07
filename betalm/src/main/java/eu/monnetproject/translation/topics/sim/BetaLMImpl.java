@@ -48,10 +48,12 @@ import java.util.Map.Entry;
  * @author John McCrae
  */
 public class BetaLMImpl implements SimilarityMetric {
+
     /**
      * Enum capturing various similarity methods supported by Beta-LM
      */
     public enum Method {
+
         COS_SIM,
         NORMAL_COS_SIM,
         KLD,
@@ -107,13 +109,13 @@ public class BetaLMImpl implements SimilarityMetric {
             df = null;
             dfSp = null;
         }
-        if(method == Method.WxWCLESA) {
+        if (method == Method.WxWCLESA) {
             wxwclesa = new WxWCLESA(data);
         } else {
             wxwclesa = null;
         }
     }
-    
+
     public BetaLMImpl(File data, int W, int n) throws IOException {
         final ParallelReader pr = ParallelReader.fromFile(data, W, n);
         this.W = pr.W();
@@ -140,18 +142,18 @@ public class BetaLMImpl implements SimilarityMetric {
             df = null;
             dfSp = null;
         }
-        if(method == Method.WxWCLESA) {
+        if (method == Method.WxWCLESA) {
             wxwclesa = new WxWCLESA(data);
         } else {
             wxwclesa = null;
         }
     }
-    
+
     public BetaLMImpl(File srcData, File trgData, File freqs, int J, int W) throws IOException {
         this.W = W;
         this.x = BinaryReader.read2FromFile(srcData, trgData, J, W);
         this.words = freqs == null ? null : BinaryReader.readWords(freqs);
-        
+
         this.mu = new double[this.W];
         this.muSp = null;
         this.mu_f = new double[this.W];
@@ -172,20 +174,22 @@ public class BetaLMImpl implements SimilarityMetric {
             df = null;
             dfSp = null;
         }
-        if(method == Method.WxWCLESA) {
+        if (method == Method.WxWCLESA) {
             throw new UnsupportedOperationException("TODO");
         } else {
             wxwclesa = null;
         }
-        
+
     }
 
     public BetaLMImpl(SparseIntArray[][] x, int W, String[] words) {
         this.words = new HashMap<String, Integer>();
         this.x = x;
         this.W = W;
-        for (int i = 0; i < words.length; i++) {
-            this.words.put(words[i], i);
+        if (words != null) {
+            for (int i = 0; i < words.length; i++) {
+                this.words.put(words[i], i);
+            }
         }
 
         this.mu = null;
@@ -208,20 +212,18 @@ public class BetaLMImpl implements SimilarityMetric {
             df = null;
             dfSp = null;
         }
-        if(method == Method.WxWCLESA) {
+        if (method == Method.WxWCLESA) {
             throw new IllegalArgumentException();
         } else {
             wxwclesa = null;
         }
     }
-    
-    
 
     public BetaLMImpl(SparseIntArray[][] x, int W, int n) {
         this.words = new HashMap<String, Integer>();
         this.x = x;
         this.W = W;
-        
+
         this.mu = new double[this.W];
         this.muSp = null;
         this.mu_f = new double[this.W];
@@ -275,7 +277,7 @@ public class BetaLMImpl implements SimilarityMetric {
         }
         return sM2;
     }
-    
+
     private double initMuSp(SparseIntArray[][] x, int W) {
         int N = 0;
         for (int j = 0; j < x.length; j++) {
@@ -294,16 +296,16 @@ public class BetaLMImpl implements SimilarityMetric {
             if (sum_f != 0) {
                 for (int w : x[j][1].keySet()) {
                     final double fw = (double) x[j][1].get(w);
-                    mu_fSp.add(w,fw / sum_f);
+                    mu_fSp.add(w, fw / sum_f);
                 }
             }
         }
         double sM2 = 0;
-        for(Entry<Integer, Double> muSp_w : muSp.entrySet()) {
+        for (Entry<Integer, Double> muSp_w : muSp.entrySet()) {
             muSp_w.setValue(muSp_w.getValue() / N);
             sM2 += muSp_w.getValue() * muSp_w.getValue();
         }
-        for(Entry<Integer, Double> mu_fSp_w : mu_fSp.entrySet()) {
+        for (Entry<Integer, Double> mu_fSp_w : mu_fSp.entrySet()) {
             mu_fSp_w.setValue(mu_fSp_w.getValue() / N);
         }
         return sM2;
@@ -325,18 +327,17 @@ public class BetaLMImpl implements SimilarityMetric {
     private double cosSimPower() {
         return Double.isInfinite(cosSimPower) ? 1.0 : cosSimPower;
     }
-    
+
     private boolean isInfiniteCosSim() {
         return Double.isInfinite(cosSimPower);
     }
-            
-    
+
     private double calcCosSim(Vector<Integer> termVec, int j, double kldSum) throws RuntimeException {
         switch (method) {
             case COS_SIM:
                 return Math.pow(cosSim(termVec, x[j][0]), cosSimPower());
             case NORMAL_COS_SIM:
-                return Math.pow(normalCosSim(termVec, x[j][0],mu,sumMu2), cosSimPower());
+                return Math.pow(normalCosSim(termVec, x[j][0], mu, sumMu2), cosSimPower());
             case KLD:
                 return Math.pow(kullbackLeiblerDivergence(termVec, x[j][0]), cosSimPower()) / kldSum;
             case JACCARD:
@@ -346,18 +347,19 @@ public class BetaLMImpl implements SimilarityMetric {
             case ROGERS_TANIMOTO:
                 return Math.pow(rogersTanimoto(termVec, x[j][0]), cosSimPower());
             case DF_DICE:
-                return Math.pow(dfDiceCoefficient(termVec, x[j][0],df), cosSimPower());
+                return Math.pow(dfDiceCoefficient(termVec, x[j][0], df), cosSimPower());
             case DF_JACCARD:
-                return Math.pow(dfJaccardCoefficient(termVec, x[j][0],df), cosSimPower());
+                return Math.pow(dfJaccardCoefficient(termVec, x[j][0], df), cosSimPower());
             case WxWCLESA:
                 return cosSim(wxwclesa.simVecSource(termVec), x[j][0]);
             default:
                 throw new RuntimeException();
         }
     }
-    
+
     /**
      * Use this to output higher n-grams
+     *
      * @param termVec The term vector
      * @return The resultant n-gram prediction as a sparse array
      */
@@ -384,14 +386,14 @@ public class BetaLMImpl implements SimilarityMetric {
                 if ((cosSim > bestSim && (ties = 0) == 0)
                         || (cosSim == bestSim && random.nextInt(++ties) == 0)) {
                     sim.clear();
-                    for(Int2IntMap.Entry es : x[j][1].int2IntEntrySet()) {
+                    for (Int2IntMap.Entry es : x[j][1].int2IntEntrySet()) {
                         sim.put(es.getIntKey(), es.getIntValue());
                     }
                     bestSim = cosSim;
                 }
             } else {
                 for (int w : x[j][1].keySet()) {
-                    sim.add(w,cosSim * x[j][1].get(w) / sum);
+                    sim.add(w, cosSim * x[j][1].get(w) / sum);
                 }
             }
         }
@@ -399,11 +401,12 @@ public class BetaLMImpl implements SimilarityMetric {
             sim.divide(w, N);
         }
         return sim;
-        
+
     }
-    
+
     /**
      * Generate the predicted TF-vector (for information retrieval experiments)
+     *
      * @param termVec The TF-vector in the source language
      * @return The predicted TF-vector in the target language
      */
@@ -462,6 +465,7 @@ public class BetaLMImpl implements SimilarityMetric {
     /**
      * For compatibility in the IR experiments: this returns the 'predicted'
      * TF-vector in the target language, which is of course the same vector
+     *
      * @param termVec The term vector in the target language
      * @return The same vector as a 'predicted' vector
      */

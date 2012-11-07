@@ -90,4 +90,6 @@ public interface WeightedNGramCountSet {
      * @param v counts
      */
     void sub(int n, double v);
+    
+    double[] sums();
 }
