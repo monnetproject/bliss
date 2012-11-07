@@ -26,26 +26,27 @@
  */
 package eu.monnetproject.translation.topics.lsa;
 
+import eu.monnetproject.math.sparse.Integer2DoubleVector;
 import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.SparseRealArray;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition.Solution;
 import eu.monnetproject.translation.topics.CLIOpts;
-import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
-import it.unimi.dsi.fastutil.ints.Int2IntMap.FastEntrySet;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -57,6 +58,7 @@ public class LSATrain {
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
 
+        final boolean tfidf = opts.flag("tfidf", "Apply log(TF).IDF transformation");
         final double epsilon = opts.doubleValue("epsilon", 1e-50, "The error rate");
         final File corpus = opts.roFile("corpus[.gz|bz2]", "The corpus file");
 
@@ -73,7 +75,7 @@ public class LSATrain {
         final SingularValueDecomposition svd = new SingularValueDecomposition();
 
         //final Solution svdSoln = svd.calculateSymmetric(new LSAStreamIterable(corpus, W), 2 * W, J, K, epsilon);
-        final Solution svdSoln = svd.eigen(new LSAStreamApply(corpus, W, J, null), 2*W, K, epsilon);
+        final Solution svdSoln = svd.eigen(new LSAStreamApply(corpus, W, J, tfidf ? calculateDF(corpus, W, J) : null), 2*W, K, epsilon);
 
         write(svdSoln, outFile);
 
@@ -125,18 +127,48 @@ public class LSATrain {
         out.close();
     }
 
-    public static class LSAStreamApply implements VectorFunction<Double> {
+    public static class TFIDFApply implements VectorFunction<Integer,Double> {
+        private final double[][] df;
+        private final int W;
+
+        public TFIDFApply(double[][] df, int W) {
+            this.df = df;
+            this.W = W;
+        }
+
+
+        @Override
+        public Vector<Double> apply(Vector<Integer> v) {
+            final Vector<Double> tfidf = new SparseRealArray(v.length());
+            for(int w : v.keySet()) {
+                final int tf = v.intValue(w);
+                tfidf.put(w, Math.log(tf+1) / Math.log(df[w/W][w-W]));
+            }
+            return tfidf;
+        }
+    }
+    
+    public static class IdentityApply implements VectorFunction<Integer,Double> {
+
+        @Override
+        public Vector<Double> apply(Vector<Integer> v) {
+            return new Integer2DoubleVector(v);
+        }
+        
+    }
+    
+    public static class LSAStreamApply implements VectorFunction<Double,Double> {
 
         private final File file;
         private final int W;
         private final int J;
-        private final double[][] df;
+        private final VectorFunction<Integer,Double> tfidf;
 
         public LSAStreamApply(File file, int W, int J, double[][] df) throws IOException {
             this.file = file;
             this.W = W;
             this.J = J;
-            this.df = df;
+            this.tfidf = df == null ? new IdentityApply() : new TFIDFApply(df, W);
         }
 
         @Override
@@ -153,7 +185,7 @@ public class LSATrain {
                             int i = data.readInt();
                             if (i == 0) {
                                 if (N % 2 == 1) {
-                                    mid[N / 2] = doc.innerProduct(v);
+                                    mid[N / 2] = tfidf.apply(doc).innerProduct(v);
                                     doc.clear();
                                 }
                                 N++;
@@ -175,10 +207,10 @@ public class LSATrain {
                             int i = data.readInt();
                             if (i == 0) {
                                 if (N % 2 == 1) {
-                                    final ObjectIterator<Entry> iter = doc.int2IntEntrySet().iterator();
+                                    final Iterator<Map.Entry<Integer, Double>> iter = tfidf.apply(doc).entrySet().iterator();
                                     while(iter.hasNext()) {
-                                        final Entry e = iter.next();
-                                        r[e.getIntKey()] += mid[N/2] * e.getIntValue();
+                                        final Map.Entry<Integer, Double> e = iter.next();
+                                        r[e.getKey()] += mid[N/2] * e.getValue();
                                     }
                                     doc.clear();
                                 }
