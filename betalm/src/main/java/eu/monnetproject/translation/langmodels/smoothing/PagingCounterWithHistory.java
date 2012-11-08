@@ -142,9 +142,9 @@ public class PagingCounterWithHistory extends AbstractCounterWithHistory {
     
     @Override
     public NGramHistories histories() {
-        //if(pages.size() == 0) {
-        //    return histories;
-        //}
+        if(pages.size() == 0) {
+            return histories;
+        }
         if(reader == null) {
             prune();
             final int[][] CoC = histories.countOfCounts();
@@ -156,9 +156,9 @@ public class PagingCounterWithHistory extends AbstractCounterWithHistory {
 
     @Override
     public NGramCountSet counts() {
-//        if(pages.size() == 0) {
-//            return nGramCountSet;
-//        }
+        if(pages.size() == 0) {
+            return nGramCountSet;
+        }
         if(reader == null) {
             prune();
             final int[][] CoC = histories.countOfCounts();

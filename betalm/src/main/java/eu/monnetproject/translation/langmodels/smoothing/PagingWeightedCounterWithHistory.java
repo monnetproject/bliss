@@ -139,9 +139,9 @@ public class PagingWeightedCounterWithHistory extends AbstractWeightedCounterWit
     
     @Override
     public NGramHistories histories() {
-        //if(pages.size() == 0) {
-        //    return histories;
-        //}
+        if(pages.size() == 0) {
+            return histories;
+        }
         if(reader == null) {
             prune();
             final int[][] CoC = histories.countOfCounts();
@@ -153,9 +153,9 @@ public class PagingWeightedCounterWithHistory extends AbstractWeightedCounterWit
 
     @Override
     public WeightedNGramCountSet counts() {
-//        if(pages.size() == 0) {
-//            return nGramCountSet;
-//        }
+        if(pages.size() == 0) {
+            return nGramCountSet;
+        }
         if(reader == null) {
             prune();
             final int[][] CoC = histories.countOfCounts();
