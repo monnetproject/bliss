@@ -142,7 +142,8 @@ public class LSATrain {
             final Vector<Double> tfidf = new SparseRealArray(v.length());
             for(int w : v.keySet()) {
                 final int tf = v.intValue(w);
-                tfidf.put(w, Math.log(tf+1) / Math.log(df[w/W][w-W]));
+                final int l = w/W;
+                tfidf.put(w, Math.log(tf+1) / Math.log(df[l][w-W*l]));
             }
             return tfidf;
         }
