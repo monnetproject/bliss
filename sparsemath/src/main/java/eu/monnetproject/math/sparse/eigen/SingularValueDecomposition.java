@@ -114,7 +114,7 @@ public class SingularValueDecomposition {
             V[i] = iEigens[iOrder[i]];
         }
 
-        return new Solution(null, V, S);
+        return new Solution(V, null, S);
     }
     
     public Solution eigen(VectorFunction<Double,Double> apply, int W, int K, double epsilon) {
@@ -131,7 +131,7 @@ public class SingularValueDecomposition {
             V[i] = iEigens[iOrder[i]];
         }
 
-        return new Solution(null, V, S);
+        return new Solution(V, null, S);
     }
     
     private static final Random r = new Random();
@@ -258,9 +258,23 @@ public class SingularValueDecomposition {
         }
     }
 
+    /**
+     * The solution to a SVD or eigen-problem
+     */
     public static class Solution {
-
-        public final double[][] U, V;
+        /**
+         * The KxW orthogonal matrix (if the original problem is WxJ) or the KxW 
+         * eigenvectors (if the original problem is symmetric WxW)
+         */
+        public final double[][] U;
+        /**
+         * The KxJ orthogonal matrix (if the original problem is WxJ) or null if
+         * eigen-solve
+         */
+        public final double[][] V;
+        /**
+         * The KxK diagonal matrix (if the original problem is WxJ) or K top eigenvectors
+         */
         public final double[] S;
 
         public Solution(double[][] U, double[][] V, double[] S) {

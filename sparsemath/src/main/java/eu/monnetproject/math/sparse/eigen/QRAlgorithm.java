@@ -232,81 +232,81 @@ public class QRAlgorithm {
         }
     }
 
-    public static <N extends Number> List<double[]> eigenvector(Matrix<N> A, double lambda) {
-        assert (A.rows() == A.cols());
-        final int n = A.rows();
-        final SparseRealArray[] B = new SparseRealArray[n];
-
-        for (int i = 0; i < n; i++) {
-            B[i] = new SparseRealArray(n);
-            for (Map.Entry<Integer, N> e : A.row(i).entrySet()) {
-                B[i].put(e.getKey().intValue(), e.getValue().doubleValue());
-            }
-            B[i].sub(i, lambda);
-        }
-
-        MAIN:
-        for (int i = 0; i < n - 1; i++) {
-            if (B[i].get(i) == 0.0) {
-                BLOCK:
-                {
-                    for (int j = i + 1; j < n; j++) {
-                        if (B[j].get(i) != 0.0) {
-                            for (Map.Entry<Integer, Double> entry : B[j].entrySet()) {
-                                B[i].add(entry.getKey(), entry.getValue());
-                            }
-                            break BLOCK;
-                        }
-                    }
-                    continue MAIN;
-                }
-            }
-            for (int j = i + 1; j < n; j++) {
-                final double mu = B[j].get(i) / B[i].get(i);
-                if (mu != 0.0) {
-                    for (Map.Entry<Integer, Double> entry : B[i].entrySet()) {
-                        if (entry.getKey() > i) {
-                            B[j].sub(entry.getKey(), mu * entry.getValue());
-                        }
-                    }
-                    B[j].remove(i);
-                }
-            }
-        }
-
-        final ArrayList<double[]> eigenvectors = new ArrayList<double[]>();
-
-        eigenvectors.add(new double[n]);
-
-        for (int i = n - 1; i >= 0; i--) {
-            if (Math.abs(B[i].get(i)) < 1e-8) {
-                final double[] nextEigen = new double[n];
-                nextEigen[i] = 1.0;
-                eigenvectors.add(nextEigen);
-            } else {
-                for (double[] eigenvector : eigenvectors) {
-                    eigenvecIter(B, i, eigenvector);
-                }
-            }
-        }
-
-        return eigenvectors.subList(1, eigenvectors.size());
-    }
-
-    private static void eigenvecIter(final SparseRealArray[] B, int i, double[] eigenvector) {
-        if (B[i].get(i) != 0.0) {
-            for (Map.Entry<Integer, Double> entry : B[i].entrySet()) {
-                if (entry.getKey() > i) {
-                    eigenvector[i] -= entry.getValue() * eigenvector[entry.getKey()];
-                }
-            }
-            eigenvector[i] /= B[i].get(i);
-        } else {
-            // If we have a singular column all non-zero below this
-            eigenvector[i] = 1.0;
-        }
-    }
-    
+//    public static <N extends Number> List<double[]> eigenvector(Matrix<N> A, double lambda) {
+//        assert (A.rows() == A.cols());
+//        final int n = A.rows();
+//        final SparseRealArray[] B = new SparseRealArray[n];
+//
+//        for (int i = 0; i < n; i++) {
+//            B[i] = new SparseRealArray(n);
+//            for (Map.Entry<Integer, N> e : A.row(i).entrySet()) {
+//                B[i].put(e.getKey().intValue(), e.getValue().doubleValue());
+//            }
+//            B[i].sub(i, lambda);
+//        }
+//
+//        MAIN:
+//        for (int i = 0; i < n - 1; i++) {
+//            if (B[i].get(i) == 0.0) {
+//                BLOCK:
+//                {
+//                    for (int j = i + 1; j < n; j++) {
+//                        if (B[j].get(i) != 0.0) {
+//                            for (Map.Entry<Integer, Double> entry : B[j].entrySet()) {
+//                                B[i].add(entry.getKey(), entry.getValue());
+//                            }
+//                            break BLOCK;
+//                        }
+//                    }
+//                    continue MAIN;
+//                }
+//            }
+//            for (int j = i + 1; j < n; j++) {
+//                final double mu = B[j].get(i) / B[i].get(i);
+//                if (mu != 0.0) {
+//                    for (Map.Entry<Integer, Double> entry : B[i].entrySet()) {
+//                        if (entry.getKey() > i) {
+//                            B[j].sub(entry.getKey(), mu * entry.getValue());
+//                        }
+//                    }
+//                    B[j].remove(i);
+//                }
+//            }
+//        }
+//
+//        final ArrayList<double[]> eigenvectors = new ArrayList<double[]>();
+//
+//        eigenvectors.add(new double[n]);
+//
+//        for (int i = n - 1; i >= 0; i--) {
+//            if (Math.abs(B[i].get(i)) < 1e-8) {
+//                final double[] nextEigen = new double[n];
+//                nextEigen[i] = 1.0;
+//                eigenvectors.add(nextEigen);
+//            } else {
+//                for (double[] eigenvector : eigenvectors) {
+//                    eigenvecIter(B, i, eigenvector);
+//                }
+//            }
+//        }
+//
+//        return eigenvectors.subList(1, eigenvectors.size());
+//    }
+//
+//    private static void eigenvecIter(final SparseRealArray[] B, int i, double[] eigenvector) {
+//        if (B[i].get(i) != 0.0) {
+//            for (Map.Entry<Integer, Double> entry : B[i].entrySet()) {
+//                if (entry.getKey() > i) {
+//                    eigenvector[i] -= entry.getValue() * eigenvector[entry.getKey()];
+//                }
+//            }
+//            eigenvector[i] /= B[i].get(i);
+//        } else {
+//            // If we have a singular column all non-zero below this
+//            eigenvector[i] = 1.0;
+//        }
+//    }
+//    
     public static class Solution {
         private final double[] values;
         private final SequenceOfGivens givensSeq;

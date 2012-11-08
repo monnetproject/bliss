@@ -1,6 +1,7 @@
 package eu.monnetproject.math.sparse.eigen;
 
 import eu.monnetproject.math.sparse.DataStreamIterable;
+import eu.monnetproject.math.sparse.DoubleArrayMatrix;
 import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
@@ -99,7 +100,7 @@ public class SingularValueDecompositionTest {
         }
         assertArrayEquals(expResult.S, result.S, 0.2);
     }
-    
+
     @Test
     public void testCalculateSymmetric() throws Exception {
         System.out.println("calculateSymmetric");
@@ -147,7 +148,7 @@ public class SingularValueDecompositionTest {
     public void testInnerProduct() throws Exception {
         System.out.println("innerProduct");
         File matrixFile = writeTempDoc();
-        final VectorFunction<Double,Double> innerProduct = new SingularValueDecomposition.InnerProductMultiplication(new DataStreamIterable(matrixFile), 4);
+        final VectorFunction<Double, Double> innerProduct = new SingularValueDecomposition.InnerProductMultiplication(new DataStreamIterable(matrixFile), 4);
         final RealVector v = new RealVector(new double[]{1, 2, 3, 4, 5});
         final Vector<Double> apply = innerProduct.apply(v);
         assertEquals(new RealVector(new double[]{283, 160, 242, 250, 324}), apply);
@@ -157,7 +158,7 @@ public class SingularValueDecompositionTest {
     public void testOuterProduct() throws Exception {
         System.out.println("outerProduct");
         File matrixFile = writeTempDoc();
-        final VectorFunction<Double,Double> outerProduct = new SingularValueDecomposition.OuterProductMultiplication(new DataStreamIterable(matrixFile), 5);
+        final VectorFunction<Double, Double> outerProduct = new SingularValueDecomposition.OuterProductMultiplication(new DataStreamIterable(matrixFile), 5);
         final RealVector v = new RealVector(new double[]{1, 2, 3, 4});
         final Vector<Double> apply = outerProduct.apply(v);
         assertEquals(new RealVector(new double[]{189, 228, 202, 206}), apply);
@@ -220,8 +221,7 @@ public class SingularValueDecompositionTest {
 
         return tmpFile;
     }
-    
-    
+
     private File writeTempDoc2() throws IOException {
         final File tmpFile = File.createTempFile("matrix", ".bin");
         tmpFile.deleteOnExit();
@@ -240,7 +240,7 @@ public class SingularValueDecompositionTest {
         dos.writeInt(1);
         dos.writeInt(5);
         dos.writeInt(0);
-        
+
         dos.writeInt(1);
         dos.writeInt(7);
         dos.writeInt(10);
@@ -252,7 +252,7 @@ public class SingularValueDecompositionTest {
         dos.writeInt(6);
         dos.writeInt(4);
         dos.writeInt(0);
-        
+
         dos.writeInt(10);
         dos.writeInt(1);
         dos.writeInt(8);
@@ -264,7 +264,7 @@ public class SingularValueDecompositionTest {
         dos.writeInt(3);
         dos.writeInt(3);
         dos.writeInt(0);
-                
+
         dos.writeInt(7);
         dos.writeInt(10);
         dos.writeInt(3);
@@ -276,7 +276,7 @@ public class SingularValueDecompositionTest {
         dos.writeInt(8);
         dos.writeInt(8);
         dos.writeInt(0);
-        
+
         dos.writeInt(6);
         dos.writeInt(7);
         dos.writeInt(5);
@@ -288,8 +288,8 @@ public class SingularValueDecompositionTest {
         dos.writeInt(8);
         dos.writeInt(9);
         dos.writeInt(0);
-        
-        
+
+
         dos.writeInt(3);
         dos.writeInt(3);
         dos.writeInt(8);
@@ -301,7 +301,7 @@ public class SingularValueDecompositionTest {
         dos.writeInt(3);
         dos.writeInt(3);
         dos.writeInt(0);
-        
+
         dos.writeInt(2);
         dos.writeInt(2);
         dos.writeInt(6);
@@ -313,7 +313,7 @@ public class SingularValueDecompositionTest {
         dos.writeInt(5);
         dos.writeInt(6);
         dos.writeInt(0);
-        
+
         dos.writeInt(4);
         dos.writeInt(4);
         dos.writeInt(6);
@@ -325,8 +325,8 @@ public class SingularValueDecompositionTest {
         dos.writeInt(2);
         dos.writeInt(6);
         dos.writeInt(0);
-        
-        
+
+
         dos.writeInt(8);
         dos.writeInt(10);
         dos.writeInt(1);
@@ -338,9 +338,9 @@ public class SingularValueDecompositionTest {
         dos.writeInt(8);
         dos.writeInt(3);
         dos.writeInt(0);
-        
-        
-        
+
+
+
         dos.writeInt(2);
         dos.writeInt(4);
         dos.writeInt(6);
@@ -357,5 +357,27 @@ public class SingularValueDecompositionTest {
         dos.close();
 
         return tmpFile;
+    }
+
+    @Test
+    public void testEigenSolve() {
+        double[][] M = {
+            {4.4, 1.8, 0, 0},
+            {1.8, 2.6, 0, 0},
+            {0, 0, 9, 0},
+            {0, 0, 0, 2.4}
+        };
+        final Solution result = new SingularValueDecomposition().eigen(new DoubleArrayMatrix(M).asVectorFunction(), 4, 4, 1e-50);
+        double[][] expResult = {
+            {0, 0, 1, 0},
+            {0.851, 0.526, 0, 0},
+            {0, 0, 0, 1},
+            {-0.526, 0.851, 0, 0}
+        };
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                assertEquals(Math.abs(expResult[i][j]), Math.abs(result.U[i][j]), 0.1);
+            }
+        }
     }
 }
