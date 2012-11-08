@@ -94,11 +94,21 @@ public class NGram implements Comparable<NGram> {
             return +1;
         } else {
             for(int i = 0; i < this.ngram.length; i++) {
-                final int c = Integer.compare(this.ngram[i], o.ngram[i]);
+                final int c = compare(this.ngram[i], o.ngram[i]);
                 if(c != 0) {
                     return c;
                 }
             }
+            return 0;
+        }
+    }
+
+    private int compare(int i, int i0) {
+        if(i < i0) {
+            return -1;
+        } else if(i > i0) {
+            return 1;
+        } else {
             return 0;
         }
     }
