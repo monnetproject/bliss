@@ -233,19 +233,7 @@ public class QRAlgorithmTest {
             assertArrayEquals(expected, result, 0.01);
         }
     }
-    
-    @Test
-    public void testHessenbergQRSolve() {
-        System.out.println("hessenbergQRSolve");
-        final DoubleArrayMatrix A = new DoubleArrayMatrix(new double[][] {
-                                        {1,2,3},
-                                        {1,1,2},
-                                        {0,1,1}
-                                    });
-        final Solution solution = QRAlgorithm.hessenbergQRSolve(A);
-        assertArrayEquals(new double[] { 3.302776, -0.302775, 0 }, solution.values(), 0.0001);
-    }
-
+   
 //    @Test
 //    public void testEigenvector2() {
 //        System.err.println("eigenvector");

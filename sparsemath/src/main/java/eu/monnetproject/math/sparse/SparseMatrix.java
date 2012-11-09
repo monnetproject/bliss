@@ -644,6 +644,28 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
             using = (Factory<N>) AS_SPARSE_INTS;
         }
     }
+    
+    
+    @Override
+    public <M extends Number> Matrix<N> product(Matrix<M> B) {
+        if(this.cols() != B.rows()) {
+            throw new IllegalArgumentException("Matrix dimensions not suitable for product");
+        }
+        if(defaultValue != 0.0 || (B instanceof SparseMatrix && ((SparseMatrix)B).defaultValue != 0.0)) {
+            throw new UnsupportedOperationException();
+        }
+        Vector<N>[] res = new Vector[this.rows()];
+        for(int i = 0; i < this.rows(); i++) {
+            res[i] = using.make(B.cols(),0.0);
+            for(int j : this.arr[i].keySet()) {
+                final Vector<M> r = B.row(j);
+                for(int k : r.keySet()) {
+                    res[i].add(k,this.arr[i].doubleValue(j) * B.doubleValue(j, k));
+                }
+            }
+        }
+        return new SparseMatrix<N>(this.rows(), res, using);
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -686,4 +708,14 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
     }
     
     
+    @Override
+    public double[][] toDoubleArray() {
+        double[][] d = new double[rows()][cols()];
+        for(int i = 0; i < rows(); i++) {
+            for(int j = 0; j < rows(); j++) {
+                d[i][j] = doubleValue(i, j);
+            }
+        }
+        return d;
+    }
 }

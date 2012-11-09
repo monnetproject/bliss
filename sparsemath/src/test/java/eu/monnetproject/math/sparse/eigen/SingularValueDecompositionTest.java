@@ -29,6 +29,7 @@ public class SingularValueDecompositionTest {
 
     @BeforeClass
     public static void setUpClass() {
+        System.setProperty("SEED", "5");
     }
 
     @AfterClass
@@ -53,28 +54,29 @@ public class SingularValueDecompositionTest {
         int W = 5;
         int J = 4;
         int K = 4;
-        double epsilon = 1e-20;
+        double epsilon = 1e-50;
         final Random r = new Random(J);
-        SingularValueDecomposition instance = new SingularValueDecomposition() {
-            @Override
-            protected Vector<Double> randomUnitNormVector(int J) {
-
-                final double[] rv = new double[J];
-                double norm = 0.0;
-                for (int j = 0; j < J; j++) {
-                    rv[j] = r.nextDouble();
-                    norm += rv[j] * rv[j];
-                }
-
-                norm = Math.sqrt(norm);
-
-                for (int j = 0; j < J; j++) {
-                    rv[j] /= norm;
-                }
-
-                return new RealVector(rv);
-            }
-        };
+        SingularValueDecomposition instance = new SingularValueDecomposition();
+//        = new SingularValueDecomposition() {
+//            @Override
+//            protected Vector<Double> randomUnitNormVector(int J) {
+//
+//                final double[] rv = new double[J];
+//                double norm = 0.0;
+//                for (int j = 0; j < J; j++) {
+//                    rv[j] = r.nextDouble();
+//                    norm += rv[j] * rv[j];
+//                }
+//
+//                norm = Math.sqrt(norm);
+//
+//                for (int j = 0; j < J; j++) {
+//                    rv[j] /= norm;
+//                }
+//
+//                return new RealVector(rv);
+//            }
+//        };
         Solution expResult = new Solution(new double[][]{
                     {-0.4711454, -0.5780836, -0.4914296, -0.4498203},
                     {-0.05076119, -0.47792513, -0.17556759, 0.85917803},
@@ -110,27 +112,27 @@ public class SingularValueDecompositionTest {
         int K = 10;
         double epsilon = 1e-20;
         final Random r = new Random(J);
-        SingularValueDecomposition instance = new SingularValueDecomposition() {
-            @Override
-            protected Vector<Double> randomUnitNormVector(int J) {
-
-                final double[] rv = new double[J];
-                double norm = 0.0;
-                for (int j = 0; j < J; j++) {
-                    rv[j] = r.nextDouble();
-                    norm += rv[j] * rv[j];
-                }
-
-                norm = Math.sqrt(norm);
-
-                for (int j = 0; j < J; j++) {
-                    rv[j] /= norm;
-                }
-
-                return new RealVector(rv);
-            }
-        };
-        Solution result = instance.calculateSymmetric(new DataStreamIterable(matrixFile), W, J, K, epsilon);
+//        SingularValueDecomposition instance = new SingularValueDecomposition() {
+//            @Override
+//            protected Vector<Double> randomUnitNormVector(int J) {
+//
+//                final double[] rv = new double[J];
+//                double norm = 0.0;
+//                for (int j = 0; j < J; j++) {
+//                    rv[j] = r.nextDouble();
+//                    norm += rv[j] * rv[j];
+//                }
+//
+//                norm = Math.sqrt(norm);
+//
+//                for (int j = 0; j < J; j++) {
+//                    rv[j] /= norm;
+//                }
+//
+//                return new RealVector(rv);
+//            }
+//        };
+        Solution result = SingularValueDecomposition.calculateSymmetric(new DataStreamIterable(matrixFile), W, J, K, epsilon);
     }
 
     public double[] positive(double[] exp, double[] act) {
@@ -378,6 +380,29 @@ public class SingularValueDecompositionTest {
             for (int j = 0; j < 4; j++) {
                 assertEquals(Math.abs(expResult[i][j]), Math.abs(result.U[i][j]), 0.1);
             }
+        }
+    }
+
+    @Test
+    public void testNonsymmEigen() {
+        System.out.println("nonsymmEigen");
+        final DoubleArrayMatrix A = new DoubleArrayMatrix(new double[][]{
+                    {1, 2, 1},
+                    {6, -1, 0},
+                    {-1, -2, -1}
+                });
+        final Solution soln = SingularValueDecomposition.nonsymmEigen(A.asVectorFunction(), 3, 3, 1e-50);
+        final double[][] vectors = new double[][]{
+            {0.4082, -0.8165, -0.4082},
+            {0.4851, 0.7276, -0.4851},
+            {0.0697, 0.4181, -0.9057}
+        };
+        for (int i = 0; i < 3; i++) {
+            final double s = Math.signum(soln.U[i][0]);
+            for (int j = 0; j < 3; j++) {
+                soln.U[i][j] *= s;
+            }
+            assertArrayEquals(vectors[i], soln.U[i], 0.01);
         }
     }
 }

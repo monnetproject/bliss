@@ -66,6 +66,8 @@ public interface Matrix<N extends Number> {
     
     <M extends Number, O extends Number> Vector<O> mult(Vector<M> x, Vectors.Factory<O> using);
     
+    <M extends Number> Matrix<N> product(Matrix<M> B);
+    
     <M extends Number> void add(Matrix<M> matrix);
     
     <M extends Number> void sub(Matrix<M> matrix);
@@ -73,4 +75,6 @@ public interface Matrix<N extends Number> {
     VectorFunction<N,N> asVectorFunction();
     
     Vectors.Factory<N> factory();
+    
+    double[][] toDoubleArray();
 }

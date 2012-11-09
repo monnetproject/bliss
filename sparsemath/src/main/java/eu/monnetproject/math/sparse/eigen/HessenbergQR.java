@@ -45,6 +45,8 @@ public class HessenbergQR {
     }
 
     public static Solution solve(int N, double[][] H) {
+
+
         //  This is derived from the Algol procedure hqr2,
         //  by Martin and Wilkinson, Handbook for Auto. Comp.,
         //  Vol.ii-Linear Algebra, and the corresponding
@@ -54,6 +56,8 @@ public class HessenbergQR {
         double[] d = new double[N];
         double[] e = new double[N];
         double[][] V = new double[N][N];
+
+        orthes(N, H, V);
 
         int nn = N;
         int n = nn - 1;
@@ -330,176 +334,289 @@ public class HessenbergQR {
 
         // Backsubstitute to find vectors of upper triangular form
 
-        if (norm != 0.0) {
-
-            for (n = nn - 1; n >= 0; n--) {
-                p = d[n];
-                q = e[n];
-
-                // Real vector
-
-                if (q == 0) {
-                    int l = n;
-                    H[n][n] = 1.0;
-                    for (int i = n - 1; i >= 0; i--) {
-                        w = H[i][i] - p;
-                        r = 0.0;
-                        for (int j = l; j <= n; j++) {
-                            r = r + H[i][j] * H[j][n];
-                        }
-                        if (e[i] < 0.0) {
-                            z = w;
-                            s = r;
-                        } else {
-                            l = i;
-                            if (e[i] == 0.0) {
-                                if (w != 0.0) {
-                                    H[i][n] = -r / w;
-                                } else {
-                                    H[i][n] = -r / (eps * norm);
-                                }
-
-                                // Solve real equations
-
-                            } else {
-                                x = H[i][i + 1];
-                                y = H[i + 1][i];
-                                q = (d[i] - p) * (d[i] - p) + e[i] * e[i];
-                                t = (x * s - z * r) / q;
-                                H[i][n] = t;
-                                if (Math.abs(x) > Math.abs(z)) {
-                                    H[i + 1][n] = (-r - w * t) / x;
-                                } else {
-                                    H[i + 1][n] = (-s - y * t) / z;
-                                }
-                            }
-
-                            // Overflow control
-
-                            t = Math.abs(H[i][n]);
-                            if ((eps * t) * t > 1) {
-                                for (int j = i; j <= n; j++) {
-                                    H[j][n] = H[j][n] / t;
-                                }
-                            }
-                        }
-                    }
-
-                    // Complex vector
-
-                } else if (q < 0) {
-                    int l = n - 1;
-
-                    // Last vector component imaginary so matrix is triangular
-
-                    if (Math.abs(H[n][n - 1]) > Math.abs(H[n - 1][n])) {
-                        H[n - 1][n - 1] = q / H[n][n - 1];
-                        H[n - 1][n] = -(H[n][n] - p) / H[n][n - 1];
-                    } else {
-                        final double[] cdiv = cdiv(0.0, -H[n - 1][n], H[n - 1][n - 1] - p, q);
-                        H[n - 1][n - 1] = cdiv[0];
-                        H[n - 1][n] = cdiv[0];
-                    }
-                    H[n][n - 1] = 0.0;
-                    H[n][n] = 1.0;
-                    for (int i = n - 2; i >= 0; i--) {
-                        double ra, sa, vr, vi;
-                        ra = 0.0;
-                        sa = 0.0;
-                        for (int j = l; j <= n; j++) {
-                            ra = ra + H[i][j] * H[j][n - 1];
-                            sa = sa + H[i][j] * H[j][n];
-                        }
-                        w = H[i][i] - p;
-
-                        if (e[i] < 0.0) {
-                            z = w;
-                            r = ra;
-                            s = sa;
-                        } else {
-                            l = i;
-                            if (e[i] == 0) {
-                                final double[] cdiv = cdiv(-ra, -sa, w, q);
-                                H[i][n - 1] = cdiv[0];
-                                H[i][n] = cdiv[1];
-                            } else {
-
-                                // Solve complex equations
-
-                                x = H[i][i + 1];
-                                y = H[i + 1][i];
-                                vr = (d[i] - p) * (d[i] - p) + e[i] * e[i] - q * q;
-                                vi = (d[i] - p) * 2.0 * q;
-                                if (vr == 0.0 & vi == 0.0) {
-                                    vr = eps * norm * (Math.abs(w) + Math.abs(q)
-                                            + Math.abs(x) + Math.abs(y) + Math.abs(z));
-                                }
-                                final double[] cdiv = cdiv(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi);
-                                H[i][n - 1] = cdiv[0];
-                                H[i][n] = cdiv[1];
-                                if (Math.abs(x) > (Math.abs(z) + Math.abs(q))) {
-                                    H[i + 1][n - 1] = (-ra - w * H[i][n - 1] + q * H[i][n]) / x;
-                                    H[i + 1][n] = (-sa - w * H[i][n] - q * H[i][n - 1]) / x;
-                                } else {
-                                    final double[] cdiv1 = cdiv(-r - y * H[i][n - 1], -s - y * H[i][n], z, q);
-                                    H[i + 1][n - 1] = cdiv1[0];
-                                    H[i + 1][n] = cdiv1[1];
-                                }
-                            }
-
-                            // Overflow control
-
-                            t = Math.max(Math.abs(H[i][n - 1]), Math.abs(H[i][n]));
-                            if ((eps * t) * t > 1) {
-                                for (int j = i; j <= n; j++) {
-                                    H[j][n - 1] = H[j][n - 1] / t;
-                                    H[j][n] = H[j][n] / t;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Vectors of isolated roots
-
-            for (int i = 0; i < nn; i++) {
-                if (i < low | i > high) {
-                    for (int j = i; j < nn; j++) {
-                        V[i][j] = H[i][j];
-                    }
-                }
-            }
-
-            // Back transformation to get eigenvectors of original matrix
-
-            for (int j = nn - 1; j >= low; j--) {
-                for (int i = low; i <= high; i++) {
-                    z = 0.0;
-                    for (int k = low; k <= Math.min(j, high); k++) {
-                        z = z + V[i][k] * H[k][j];
-                    }
-                    V[i][j] = z;
-                }
-            }
-
+        if (norm == 0.0) {
+            return new Solution(V, d);
         }
 
+        for (n = nn - 1; n >= 0; n--) {
+            p = d[n];
+            q = e[n];
+
+            // Real vector
+
+            if (q == 0) {
+                int l = n;
+                H[n][n] = 1.0;
+                for (int i = n - 1; i >= 0; i--) {
+                    w = H[i][i] - p;
+                    r = 0.0;
+                    for (int j = l; j <= n; j++) {
+                        r = r + H[i][j] * H[j][n];
+                    }
+                    if (e[i] < 0.0) {
+                        z = w;
+                        s = r;
+                    } else {
+                        l = i;
+                        if (e[i] == 0.0) {
+                            if (w != 0.0) {
+                                H[i][n] = -r / w;
+                            } else {
+                                H[i][n] = -r / (eps * norm);
+                            }
+
+                            // Solve real equations
+
+                        } else {
+                            x = H[i][i + 1];
+                            y = H[i + 1][i];
+                            q = (d[i] - p) * (d[i] - p) + e[i] * e[i];
+                            t = (x * s - z * r) / q;
+                            H[i][n] = t;
+                            if (Math.abs(x) > Math.abs(z)) {
+                                H[i + 1][n] = (-r - w * t) / x;
+                            } else {
+                                H[i + 1][n] = (-s - y * t) / z;
+                            }
+                        }
+
+                        // Overflow control
+
+                        t = Math.abs(H[i][n]);
+                        if ((eps * t) * t > 1) {
+                            for (int j = i; j <= n; j++) {
+                                H[j][n] = H[j][n] / t;
+                            }
+                        }
+                    }
+                }
+
+                // Complex vector
+
+            } else if (q < 0) {
+                int l = n - 1;
+
+                // Last vector component imaginary so matrix is triangular
+
+                if (Math.abs(H[n][n - 1]) > Math.abs(H[n - 1][n])) {
+                    H[n - 1][n - 1] = q / H[n][n - 1];
+                    H[n - 1][n] = -(H[n][n] - p) / H[n][n - 1];
+                } else {
+                    final CDiv cdiv = cdiv(0.0, -H[n - 1][n], H[n - 1][n - 1] - p, q);
+                    H[n - 1][n - 1] = cdiv.r;
+                    H[n - 1][n] = cdiv.i;
+                }
+                H[n][n - 1] = 0.0;
+                H[n][n] = 1.0;
+                for (int i = n - 2; i >= 0; i--) {
+                    double ra, sa, vr, vi;
+                    ra = 0.0;
+                    sa = 0.0;
+                    for (int j = l; j <= n; j++) {
+                        ra = ra + H[i][j] * H[j][n - 1];
+                        sa = sa + H[i][j] * H[j][n];
+                    }
+                    w = H[i][i] - p;
+
+                    if (e[i] < 0.0) {
+                        z = w;
+                        r = ra;
+                        s = sa;
+                    } else {
+                        l = i;
+                        if (e[i] == 0) {
+                            final CDiv cdiv = cdiv(-ra, -sa, w, q);
+                            H[i][n - 1] = cdiv.r;
+                            H[i][n] = cdiv.i;
+                        } else {
+
+                            // Solve complex equations
+
+                            x = H[i][i + 1];
+                            y = H[i + 1][i];
+                            vr = (d[i] - p) * (d[i] - p) + e[i] * e[i] - q * q;
+                            vi = (d[i] - p) * 2.0 * q;
+                            if (vr == 0.0 & vi == 0.0) {
+                                vr = eps * norm * (Math.abs(w) + Math.abs(q)
+                                        + Math.abs(x) + Math.abs(y) + Math.abs(z));
+                            }
+                            final CDiv cdiv = cdiv(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi);
+                            H[i][n - 1] = cdiv.r;
+                            H[i][n] = cdiv.i;
+                            if (Math.abs(x) > (Math.abs(z) + Math.abs(q))) {
+                                H[i + 1][n - 1] = (-ra - w * H[i][n - 1] + q * H[i][n]) / x;
+                                H[i + 1][n] = (-sa - w * H[i][n] - q * H[i][n - 1]) / x;
+                            } else {
+                                final CDiv cdiv2 = cdiv(-r - y * H[i][n - 1], -s - y * H[i][n], z, q);
+                                H[i + 1][n - 1] = cdiv2.r;
+                                H[i + 1][n] = cdiv2.i;
+                            }
+                        }
+
+                        // Overflow control
+
+                        t = Math.max(Math.abs(H[i][n - 1]), Math.abs(H[i][n]));
+                        if ((eps * t) * t > 1) {
+                            for (int j = i; j <= n; j++) {
+                                H[j][n - 1] = H[j][n - 1] / t;
+                                H[j][n] = H[j][n] / t;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Vectors of isolated roots
+
+        for (int i = 0; i < nn; i++) {
+            if (i < low | i > high) {
+                for (int j = i; j < nn; j++) {
+                    V[i][j] = H[i][j];
+                }
+            }
+        }
+
+        // Back transformation to get eigenvectors of original matrix
+
+        for (int j = nn - 1; j >= low; j--) {
+            for (int i = low; i <= high; i++) {
+                z = 0.0;
+                for (int k = low; k <= Math.min(j, high); k++) {
+                    z = z + V[i][k] * H[k][j];
+                }
+                V[i][j] = z;
+            }
+        }
+
+
+        for(int i = 0; i < nn; i++) {
+            norm =0.0;
+            for(int j = 0; j < nn; j++) {
+                norm += V[j][i] * V[j][i];
+            }
+            norm = Math.sqrt(norm);
+            for(int j = 0; j < nn; j++) {
+                V[j][i] /= norm;
+            }
+        }
+        
         return new Solution(V, d);
     }
 
-    private static double[] cdiv(double xr, double xi, double yr, double yi) {
+    private static class CDiv {
+
+        final double r, i;
+
+        public CDiv(double r, double i) {
+            this.r = r;
+            this.i = i;
+        }
+    }
+
+    private static CDiv cdiv(double xr, double xi, double yr, double yi) {
         double r, d;
         if (Math.abs(yr) > Math.abs(yi)) {
             r = yi / yr;
             d = yr + r * yi;
-            return new double[]{(xr + r * xi) / d,
-                        (xi - r * xr) / d};
+            return new CDiv((xr + r * xi) / d,
+                    (xi - r * xr) / d);
         } else {
             r = yr / yi;
             d = yi + r * yr;
-            return new double[]{(r * xr + xi) / d,
-                        (r * xi - xr) / d};
+            return new CDiv((r * xr + xi) / d,
+                    (r * xi - xr) / d);
+        }
+    }
+
+    private static void orthes(int n, double[][] H, double[][] V) {
+        //  This is derived from the Algol procedures orthes and ortran,
+        //  by Martin and Wilkinson, Handbook for Auto. Comp.,
+        //  Vol.ii-Linear Algebra, and the corresponding
+        //  Fortran subroutines in EISPACK.
+
+        int low = 0;
+        int high = n - 1;
+        double[] ort = new double[n];
+
+        for (int m = low + 1; m <= high - 1; m++) {
+
+            // Scale column.
+
+            double scale = 0.0;
+            for (int i = m; i <= high; i++) {
+                scale = scale + Math.abs(H[i][m - 1]);
+            }
+            if (scale != 0.0) {
+
+                // Compute Householder transformation.
+
+                double h = 0.0;
+                for (int i = high; i >= m; i--) {
+                    ort[i] = H[i][m - 1] / scale;
+                    h += ort[i] * ort[i];
+                }
+                double g = Math.sqrt(h);
+                if (ort[m] > 0) {
+                    g = -g;
+                }
+                h = h - ort[m] * g;
+                ort[m] = ort[m] - g;
+
+                // Apply Householder similarity transformation
+                // H = (I-u*u'/h)*H*(I-u*u')/h)
+
+                for (int j = m; j < n; j++) {
+                    double f = 0.0;
+                    for (int i = high; i >= m; i--) {
+                        f += ort[i] * H[i][j];
+                    }
+                    f = f / h;
+                    for (int i = m; i <= high; i++) {
+                        H[i][j] -= f * ort[i];
+                    }
+                }
+
+                for (int i = 0; i <= high; i++) {
+                    double f = 0.0;
+                    for (int j = high; j >= m; j--) {
+                        f += ort[j] * H[i][j];
+                    }
+                    f = f / h;
+                    for (int j = m; j <= high; j++) {
+                        H[i][j] -= f * ort[j];
+                    }
+                }
+                ort[m] = scale * ort[m];
+                H[m][m - 1] = scale * g;
+            }
+        }
+
+        // Accumulate transformations (Algol's ortran).
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                V[i][j] = (i == j ? 1.0 : 0.0);
+            }
+        }
+
+        for (int m = high - 1; m >= low + 1; m--) {
+            if (H[m][m - 1] != 0.0) {
+                for (int i = m + 1; i <= high; i++) {
+                    ort[i] = H[i][m - 1];
+                }
+                for (int j = m; j <= high; j++) {
+                    double g = 0.0;
+                    for (int i = m; i <= high; i++) {
+                        g += ort[i] * V[i][j];
+                    }
+                    // Double division avoids possible underflow
+                    g = (g / ort[m]) / H[m][m - 1];
+                    for (int i = m; i <= high; i++) {
+                        V[i][j] += g * ort[i];
+                    }
+                }
+            }
         }
     }
 

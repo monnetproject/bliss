@@ -243,4 +243,27 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     public Factory<Double> factory() {
         return Vectors.AS_REALS;
     }
+
+    @Override
+    public <M extends Number> Matrix<Double> product(Matrix<M> B) {
+        if(this.cols() != B.rows()) {
+            throw new IllegalArgumentException("Matrix dimensions not suitable for product");
+        }
+        double[][] res = new double[this.rows()][B.cols()];
+        for(int i = 0; i < this.rows(); i++) {
+            for(int j = 0; j < this.cols(); j++) {
+                for(int k = 0; k < B.cols(); k++) {
+                    res[i][k] += data[i][j] * B.doubleValue(j, k);
+                }
+            }
+        }
+        return new DoubleArrayMatrix(res);
+    }
+
+    @Override
+    public double[][] toDoubleArray() {
+        return data;
+    }
+    
+    
 }

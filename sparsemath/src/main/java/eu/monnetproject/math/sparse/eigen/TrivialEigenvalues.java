@@ -94,13 +94,14 @@ public class TrivialEigenvalues<N extends Number> {
     }
 
     public boolean isTrivial() {
-        for(boolean trivial : filter) {
-            if(trivial)
+        for (boolean trivial : filter) {
+            if (trivial) {
                 return true;
+            }
         }
         return false;
     }
-    
+
     /**
      * For the matrix compute the columns with trivial eigenvalues. This is
      * defined as the columns for which there is only one non-zero value (i.e.,
@@ -269,14 +270,29 @@ public class TrivialEigenvalues<N extends Number> {
         }
 
         @Override
-        public VectorFunction<N,N> asVectorFunction() {
-            return new VectorFunction<N,N>() {
-
+        public VectorFunction<N, N> asVectorFunction() {
+            return new VectorFunction<N, N>() {
                 @Override
                 public Vector<N> apply(Vector<N> v) {
-                    return mult(v,v.factory());
+                    return mult(v, v.factory());
                 }
             };
+        }
+
+        @Override
+        public <M extends Number> Matrix<N> product(Matrix<M> B) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public double[][] toDoubleArray() {
+            double[][] d = new double[rows()][cols()];
+            for (int i = 0; i < rows(); i++) {
+                for (int j = 0; j < rows(); j++) {
+                    d[i][j] = doubleValue(i, j);
+                }
+            }
+            return d;
         }
 
         @Override

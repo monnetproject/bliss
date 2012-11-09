@@ -445,4 +445,22 @@ public class TridiagonalMatrix implements Matrix<Double> {
     public <M extends Number> Vector<Double> multTransposed(Vector<M> x) {
         return mult(x);
     }
+
+    
+    @Override
+    public <M extends Number> Matrix<Double> product(Matrix<M> B) {
+        if(this.cols() != B.rows()) {
+            throw new IllegalArgumentException("Matrix dimensions not suitable for product");
+        }
+        double[][] res = new double[this.rows()][B.cols()];
+        for(int i = 0; i < this.rows(); i++) {
+                for(int k = 0; k < B.cols(); k++) {
+                    res[i][k] = (i > 0 ? beta[i-1] * B.doubleValue(i-1, k) : 0.0) +
+                            alpha[i] * B.doubleValue(i, k) +
+                            (i + 1 != this.rows() ? beta[i] * B.doubleValue(i+1, k) : 0.0);
+            }
+        }
+        return new DoubleArrayMatrix(res);
+    }
+    
 }

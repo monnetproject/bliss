@@ -26,10 +26,14 @@
  */
 package eu.monnetproject.math.sparse.eigen;
 
+import eu.monnetproject.math.sparse.DoubleArrayMatrix;
+import eu.monnetproject.math.sparse.Matrix;
 import eu.monnetproject.math.sparse.RealVector;
+import eu.monnetproject.math.sparse.SparseMatrix;
 import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
+import eu.monnetproject.math.sparse.Vectors;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.Arrays;
@@ -43,7 +47,7 @@ import java.util.Random;
  * @author John McCrae
  */
 public class SingularValueDecomposition {
-
+    
     private static void toR(TridiagonalMatrix tm) {
         System.out.print("tridiag(c(");
         for (int i = 0; i < tm.alpha().length; i++) {
@@ -61,7 +65,7 @@ public class SingularValueDecomposition {
         }
         System.out.println("))");
     }
-
+    
     private static void toR(double[][] m) {
         System.out.print("matrix(c(");
         for (int i = 0; i < m[0].length; i++) {
@@ -75,84 +79,115 @@ public class SingularValueDecomposition {
         System.out.println(")," + m.length + ")");
     }
     
-
-    public Solution calculate(IntIterable corpus, int W, int J, int K, double epsilon) {
+    public static Solution calculate(IntIterable corpus, int W, int J, int K, double epsilon) {
         final LanczosAlgorithm.Solution oLanczos = LanczosAlgorithm.lanczos(new OuterProductMultiplication(corpus, W), randomUnitNormVector(J), K, 1.0);
         final QRAlgorithm.Solution oQrSolve = QRAlgorithm.qrSolve(epsilon, oLanczos.tridiagonal(), null);
         final double[][] oEigens = oQrSolve.givensSeq().applyTo(oLanczos.q());
         final int[] oOrder = order(oQrSolve.values());
-
+        
         final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 1.0);
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
         final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
         final int[] iOrder = order(iQrSolve.values());
-
+        
         final double[][] V = new double[K][];
         final double[][] U = new double[K][];
         final double[] S = new double[K];
-
+        
         for (int i = 0; i < K; i++) {
             S[i] = Math.sqrt(Math.abs((oLanczos.tridiagonal().alpha()[oOrder[i]] + iLanczos.tridiagonal().alpha()[iOrder[i]]) / 2.0));
             U[i] = oEigens[oOrder[i]];
             V[i] = iEigens[iOrder[i]];
         }
-
+        
         return new Solution(U, V, S);
     }
-
-    public Solution calculateSymmetric(IntIterable corpus, int W, int J, int K, double epsilon) {
+    
+    public static Solution calculateSymmetric(IntIterable corpus, int W, int J, int K, double epsilon) {
         final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(new InnerProductMultiplication(corpus, J), randomUnitNormVector(W), K, 1.0);
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
         final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
         final int[] iOrder = order(iQrSolve.values());
-
+        
         final double[] S = new double[K];
         final double[][] V = new double[K][];
-
+        
         for (int i = 0; i < K; i++) {
             S[i] = Math.sqrt(Math.abs(iLanczos.tridiagonal().alpha()[iOrder[i]]));
             V[i] = iEigens[iOrder[i]];
         }
-
+        
         return new Solution(V, null, S);
     }
     
-    public Solution eigen(VectorFunction<Double,Double> apply, int W, int K, double epsilon) {
+    public static Solution eigen(VectorFunction<Double, Double> apply, int W, int K, double epsilon) {
         final LanczosAlgorithm.Solution iLanczos = LanczosAlgorithm.lanczos(apply, randomUnitNormVector(W), K, 1.0);
         final QRAlgorithm.Solution iQrSolve = QRAlgorithm.qrSolve(epsilon, iLanczos.tridiagonal(), null);
         final double[][] iEigens = iQrSolve.givensSeq().applyTo(iLanczos.q());
         final int[] iOrder = order(iQrSolve.values());
-
+        
         final double[] S = new double[K];
         final double[][] V = new double[K][];
-
+        
         for (int i = 0; i < K; i++) {
             S[i] = Math.sqrt(Math.abs(iLanczos.tridiagonal().alpha()[iOrder[i]]));
             V[i] = iEigens[iOrder[i]];
         }
-
+        
         return new Solution(V, null, S);
     }
     
-    private static final Random r = new Random();
-
-    protected Vector<Double> randomUnitNormVector(int J) {
+    public static Solution nonsymmEigen(VectorFunction<Double, Double> A, int W, int K, double epsilon) {
+        final ArnoldiAlgorithm.Solution arnoldi = ArnoldiAlgorithm.solve(A, randomUnitNormVector(W), K);
+        toR(arnoldi.h);
+        toR(new SparseMatrix(3,arnoldi.q,Vectors.AS_REALS).toDoubleArray());
+        final HessenbergQR.Solution soln = HessenbergQR.solve(arnoldi.K, arnoldi.h);
+        final int[] order = order(soln.d);
+        
+        double[][] U = new double[arnoldi.K][W];
+        
+        for(int i = 0; i < W; i++) {
+            for(int j = 0; j < arnoldi.K; j++) {
+                for(int k = 0; k < arnoldi.K; k++) {
+                    U[j][i] += arnoldi.q[k].doubleValue(i) * soln.V[k][order[j]];
+                }
+            }
+        }
+        
+        
+        double[] S = new double[arnoldi.K];
+        for(int i = 0; i < arnoldi.K; i++) {
+            S[i] = soln.d[order[i]];
+        }
+        
+        return new Solution(U,null,soln.d);
+    }
+    private static Random random;
+    
+    private static Random r() {
+        if(random == null) {
+            random = System.getProperty("SEED") != null ? new Random(Long.parseLong(System.getProperty("SEED"))) : new Random();
+        }
+        return random;
+    }
+    
+    protected static Vector<Double> randomUnitNormVector(int J) {
         final double[] rv = new double[J];
         double norm = 0.0;
         for (int j = 0; j < J; j++) {
-            rv[j] = r.nextDouble();
+            rv[j] = r().nextDouble();
             norm += rv[j] * rv[j];
         }
-
+        
         norm = Math.sqrt(norm);
-
+        
         for (int j = 0; j < J; j++) {
             rv[j] /= norm;
         }
-
+        
         return new RealVector(rv);
     }
-
+    
     private static int[] order(final double[] d) {
         final Integer[] order = new Integer[d.length];
         for (int i = 0; i < d.length; i++) {
@@ -161,7 +196,7 @@ public class SingularValueDecomposition {
         Arrays.sort(order, new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
-                return -Double.compare(d[o1], d[o2]);
+                return -Double.compare(Math.abs(d[o1]), Math.abs(d[o2]));
             }
         });
         final int[] order2 = new int[d.length];
@@ -170,7 +205,7 @@ public class SingularValueDecomposition {
         }
         return order2;
     }
-
+    
     private static double[][] transpose(double[][] M) {
         final double[][] N = new double[M[0].length][M.length];
         for (int i = 0; i < M.length; i++) {
@@ -180,17 +215,17 @@ public class SingularValueDecomposition {
         }
         return N;
     }
-
-    public static class OuterProductMultiplication implements VectorFunction<Double,Double> {
-
+    
+    public static class OuterProductMultiplication implements VectorFunction<Double, Double> {
+        
         private final IntIterable corpus;
         private final int W;
-
+        
         public OuterProductMultiplication(IntIterable corpus, int W) {
             this.corpus = corpus;
             this.W = W;
         }
-
+        
         @Override
         public Vector<Double> apply(Vector<Double> v) {
             double[] mid = new double[W];
@@ -216,20 +251,20 @@ public class SingularValueDecomposition {
                 }
             }
             return new RealVector(a);
-
+            
         }
     }
-
-    public static class InnerProductMultiplication implements VectorFunction<Double,Double> {
-
+    
+    public static class InnerProductMultiplication implements VectorFunction<Double, Double> {
+        
         private final IntIterable corpus;
         private final int J;
-
+        
         public InnerProductMultiplication(IntIterable corpus, int J) {
             this.corpus = corpus;
             this.J = J;
         }
-
+        
         @Override
         public Vector<Double> apply(Vector<Double> v) {
             double[] mid = new double[J];
@@ -262,8 +297,9 @@ public class SingularValueDecomposition {
      * The solution to a SVD or eigen-problem
      */
     public static class Solution {
+
         /**
-         * The KxW orthogonal matrix (if the original problem is WxJ) or the KxW 
+         * The KxW orthogonal matrix (if the original problem is WxJ) or the KxW
          * eigenvectors (if the original problem is symmetric WxW)
          */
         public final double[][] U;
@@ -273,16 +309,17 @@ public class SingularValueDecomposition {
          */
         public final double[][] V;
         /**
-         * The KxK diagonal matrix (if the original problem is WxJ) or K top eigenvectors
+         * The KxK diagonal matrix (if the original problem is WxJ) or K top
+         * eigenvectors
          */
         public final double[] S;
-
+        
         public Solution(double[][] U, double[][] V, double[] S) {
             this.U = U;
             this.V = V;
             this.S = S;
         }
-
+        
         @Override
         public int hashCode() {
             int hash = 3;
@@ -291,7 +328,7 @@ public class SingularValueDecomposition {
             hash = 59 * hash + Arrays.hashCode(this.S);
             return hash;
         }
-
+        
         @Override
         public boolean equals(Object obj) {
             if (obj == null) {

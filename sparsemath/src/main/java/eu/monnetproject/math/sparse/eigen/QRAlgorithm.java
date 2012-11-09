@@ -232,36 +232,6 @@ public class QRAlgorithm {
         }
     }
 
-    public static Solution hessenbergQRSolve(Matrix<Double> A) {
-        final int n = A.cols();
-        final SequenceOfGivens sog = new SequenceOfGivens();
-        for (int j = 0; j < n - 1; j++) {
-            final double[] g = givens(A.doubleValue(j, j), A.doubleValue(j + 1, j));
-            for (int i = j; i < n; i++) {
-                double t1 = g[0] * A.doubleValue(j, i) - g[1] * A.doubleValue(j + 1, i);
-                A.set(j + 1, i, g[1] * A.doubleValue(j, i) + g[0] * A.doubleValue(j + 1, i));
-                A.set(j, i, t1);
-            }
-            sog.add(j, j + 1, g[0], g[1]);
-        }
-        for (int j = n - 2; j >= 0; j--) {
-            double c = sog.c(j);
-            double s = sog.s(j);
-            for (int i = 0; i <= j; i++) {
-                double t = c * A.doubleValue(i, j) - s * A.doubleValue(i, j + 1);
-                A.set(i, j + 1, s * A.doubleValue(i, j) + c * A.doubleValue(i, j + 1));
-                A.set(i, j, t);
-            }
-        }
-
-        double[] S = new double[n];
-        for (int i = 0; i < n; i++) {
-            S[i] = A.doubleValue(i, i);
-        }
-
-        return new Solution(S, sog);
-    }
-
 //    public static <N extends Number> List<double[]> eigenvector(Matrix<N> A, double lambda) {
 //        assert (A.rows() == A.cols());
 //        final int n = A.rows();

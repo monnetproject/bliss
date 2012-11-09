@@ -282,5 +282,35 @@ public class IntArrayMatrix implements Matrix<Integer> {
         out.flush();
         out.close();
     }
+    
+    
+    @Override
+    public <M extends Number> Matrix<Integer> product(Matrix<M> B) {
+        if(this.cols() != B.rows()) {
+            throw new IllegalArgumentException("Matrix dimensions not suitable for product");
+        }
+        int[][] res = new int[this.rows()][B.cols()];
+        for(int i = 0; i < this.rows(); i++) {
+            for(int j = 0; j < this.cols(); j++) {
+                for(int k = 0; k < B.cols(); k++) {
+                    res[i][k] += data[i][j] * B.doubleValue(j, k);
+                }
+            }
+        }
+        return new IntArrayMatrix(res);
+    }
+
+    @Override
+    public double[][] toDoubleArray() {
+        double[][] d = new double[rows()][cols()];
+        for(int i = 0; i < rows(); i++) {
+            for(int j = 0; j < rows(); j++) {
+                d[i][j] = doubleValue(i, j);
+            }
+        }
+        return d;
+    }
+    
+    
 }
 
