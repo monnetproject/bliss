@@ -98,8 +98,8 @@ public class QRAlgorithm {
             final double[] cs = givens(x, z);
             final double c = cs[0];
             final double s = cs[1];
-            givensSeq.add(k, k+1, c, s);
-            
+            givensSeq.add(k, k + 1, c, s);
+
             // T = G_k^T T G_k where G_k = G(k,k+1,c,s)
             // t00 is T_{k-1,k-1}
             double t01 = k > 0 ? c * beta[o + k - 1] - s * z : 0;
@@ -126,7 +126,7 @@ public class QRAlgorithm {
             }
         }
     }
-    
+
     /**
      * Find the eigenvalues of sparse matrix by means of a Lanczos-QR method.
      *
@@ -137,25 +137,25 @@ public class QRAlgorithm {
     public static Solution qrSolve(SparseMatrix<Double> A, double epsilon) {
         assert (A.rows() == A.cols());
         assert (A.isSymmetric());
-        
+
         // It turns out that Lanczos sucks at the easy columns so we remove these
         // on the first pass
         final TrivialEigenvalues<Double> trivial = TrivialEigenvalues.find(A, true);
-        if(trivial.nonTrivial == null) {
+        if (trivial.nonTrivial == null) {
             return new Solution(trivial.eigenvalues, new SequenceOfGivens());
         }
-        
+
         final TridiagonalMatrix tridiag = LanczosAlgorithm.lanczos(trivial.nonTrivial).tridiagonal();
         return qrSolve(epsilon, tridiag, trivial);
     }
-    
+
     public static <N extends Number> Solution qrSolve(double epsilon, TridiagonalMatrix tridiag, TrivialEigenvalues<N> trivial) {
         final int n = tridiag.rows();
-        if(n == 0) {
+        if (n == 0) {
             return new Solution(trivial.eigenvalues, new SequenceOfGivens());
-        } else if(n == 1) {
+        } else if (n == 1) {
             throw new RuntimeException("Trivial reduction failed");
-        } else if(n == 2) {
+        } else if (n == 2) {
             double lambda1, lambda2;
             lambda1 = lambda2 = tridiag.alpha()[0] + tridiag.alpha()[1];
             double t = Math.sqrt((tridiag.alpha()[0] + tridiag.alpha()[1]) * (tridiag.alpha()[0] + tridiag.alpha()[1]) - 4.0 * (tridiag.alpha()[0] * tridiag.alpha()[1] - tridiag.beta()[0] * tridiag.beta()[0]));
@@ -172,12 +172,12 @@ public class QRAlgorithm {
             // c^2 + s^2 = 1 
             // =>   c = sqrt(1/(1+u^2)
             double u = (lambda1 + tridiag.alpha()[1]) / tridiag.beta()[0];
-            double c = Math.sqrt(1.0 / (1.0 + u * u ));
+            double c = Math.sqrt(1.0 / (1.0 + u * u));
             double s = c / u;
             return new Solution(eigenvalues, new SequenceOfGivens().add(0, 1, c, s));
         }
         final SequenceOfGivens givensSeq = new SequenceOfGivens();
-        
+
         int p = 0;
         int q = 0;
         int iterTotal = 0;
@@ -195,7 +195,7 @@ public class QRAlgorithm {
                     if (!qFound) {
                         q++;
                     } else {
-                        p = i+1;
+                        p = i + 1;
                         break;
                     }
                 } else {
@@ -205,10 +205,10 @@ public class QRAlgorithm {
                 }
             }
 
-            if(p == q) { // The first and last zero are the same
+            if (p == q) { // The first and last zero are the same
                 p = 0;
             }
-                        
+
             if (q < n) {
                 if (n - p - q >= 2) {
                     wilkinsonShift(tridiag.alpha(), tridiag.beta(), p, n - p - q, givensSeq);
@@ -216,7 +216,7 @@ public class QRAlgorithm {
                     q++;
                 }
             }
-            if(++iterTotal > n * 100) {
+            if (++iterTotal > n * 100) {
                 System.err.println(tridiag);
                 throw new RuntimeException("Iteration limit on QR solve");
             }
@@ -225,11 +225,41 @@ public class QRAlgorithm {
         if (trivial == null || trivial.eigenvalues.length == 0) {
             return new Solution(tridiag.alpha(), givensSeq);
         } else {
-            double[] eigenvalues = new double[n+trivial.eigenvalues.length];
+            double[] eigenvalues = new double[n + trivial.eigenvalues.length];
             System.arraycopy(tridiag.alpha(), 0, eigenvalues, 0, n);
             System.arraycopy(trivial.eigenvalues, 0, eigenvalues, n, trivial.eigenvalues.length);
             return new Solution(eigenvalues, givensSeq);
         }
+    }
+
+    public static Solution hessenbergQRSolve(Matrix<Double> A) {
+        final int n = A.cols();
+        final SequenceOfGivens sog = new SequenceOfGivens();
+        for (int j = 0; j < n - 1; j++) {
+            final double[] g = givens(A.doubleValue(j, j), A.doubleValue(j + 1, j));
+            for (int i = j; i < n; i++) {
+                double t1 = g[0] * A.doubleValue(j, i) - g[1] * A.doubleValue(j + 1, i);
+                A.set(j + 1, i, g[1] * A.doubleValue(j, i) + g[0] * A.doubleValue(j + 1, i));
+                A.set(j, i, t1);
+            }
+            sog.add(j, j + 1, g[0], g[1]);
+        }
+        for (int j = n - 2; j >= 0; j--) {
+            double c = sog.c(j);
+            double s = sog.s(j);
+            for (int i = 0; i <= j; i++) {
+                double t = c * A.doubleValue(i, j) - s * A.doubleValue(i, j + 1);
+                A.set(i, j + 1, s * A.doubleValue(i, j) + c * A.doubleValue(i, j + 1));
+                A.set(i, j, t);
+            }
+        }
+
+        double[] S = new double[n];
+        for (int i = 0; i < n; i++) {
+            S[i] = A.doubleValue(i, i);
+        }
+
+        return new Solution(S, sog);
     }
 
 //    public static <N extends Number> List<double[]> eigenvector(Matrix<N> A, double lambda) {
@@ -308,6 +338,7 @@ public class QRAlgorithm {
 //    }
 //    
     public static class Solution {
+
         private final double[] values;
         private final SequenceOfGivens givensSeq;
 

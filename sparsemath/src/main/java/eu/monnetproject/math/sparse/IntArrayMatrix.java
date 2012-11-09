@@ -32,9 +32,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -96,6 +94,34 @@ public class IntArrayMatrix implements Matrix<Integer> {
             }
         }
         return using.make(product);
+    }
+    
+     @Override
+    public <M extends Number> Vector<Integer> multTransposed(Vector<M> x) {
+        assert (x.length() == n);
+        double[] product = new double[m];
+        if (x instanceof RealVector) {
+            final double[] x2 = ((RealVector) x).data();
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < n; j++) {
+                    product[i] += data[j][i] * x2[j];
+                }
+            }
+        } else if (x instanceof IntVector) {
+            final int[] x2 = ((IntVector) x).data();
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < n; j++) {
+                    product[i] += data[j][i] * x2[j];
+                }
+            }
+        } else {
+            for (int i = 0; i < m; i++) {
+                for (Map.Entry<Integer, M> e : x.entrySet()) {
+                    product[i] += data[e.getKey()][i] * e.getValue().doubleValue();
+                }
+            }
+        }
+        return Vectors.AS_INTS.make(product);
     }
 
     @Override

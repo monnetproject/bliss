@@ -84,6 +84,14 @@ public class SequenceOfGivens {
         return buf.toString();
     }
     
+    public double c(int i) {
+        return seq.get(i).c;
+    }
+    
+    public double s(int i) {
+        return seq.get(i).s;
+    }
+    
     private static class Givens {
         int j,k;
         double c,s;

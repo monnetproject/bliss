@@ -147,6 +147,19 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
             return y;
         }
     }
+    
+    @Override
+    public <M extends Number> Vector<N> multTransposed(Vector<M> x) {
+        assert (m == cols());
+        double[] result = new double[m];
+        Arrays.fill(result, m*defaultValue);
+        for(int i = 0; i < arr.length; i++) {
+            for (Map.Entry<Integer, N> e : arr[i].entrySet()) {
+                result[e.getKey().intValue()] += e.getValue().doubleValue() - defaultValue;
+            }
+        }
+        return using.make(result);
+    }
 
     /**
      * Multiply this matrix by a column vector

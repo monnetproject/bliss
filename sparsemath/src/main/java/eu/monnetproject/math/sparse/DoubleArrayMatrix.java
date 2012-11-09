@@ -92,6 +92,34 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     }
 
     @Override
+    public <M extends Number> Vector<Double> multTransposed(Vector<M> x) {
+        assert (x.length() == n);
+        double[] product = new double[m];
+        if (x instanceof RealVector) {
+            final double[] x2 = ((RealVector) x).data();
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < n; j++) {
+                    product[i] += data[j][i] * x2[j];
+                }
+            }
+        } else if (x instanceof IntVector) {
+            final int[] x2 = ((IntVector) x).data();
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < n; j++) {
+                    product[i] += data[j][i] * x2[j];
+                }
+            }
+        } else {
+            for (int i = 0; i < m; i++) {
+                for (Map.Entry<Integer, M> e : x.entrySet()) {
+                    product[i] += data[e.getKey()][i] * e.getValue().doubleValue();
+                }
+            }
+        }
+        return new RealVector(product);
+    }
+    
+    @Override
     public boolean isSymmetric() {
         for(int i = 0; i < m; i++) {
             for(int j = i+1; j < n; j++) {

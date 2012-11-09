@@ -212,4 +212,12 @@ public class Vectors {
             return (int)value;
         }
     }
+    
+    public static RealVector make(double... vals) {
+        return new RealVector(vals);
+    }
+    
+    public static IntVector make(int... vals) {
+        return new IntVector(vals);
+    }
 }

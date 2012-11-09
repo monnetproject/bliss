@@ -239,6 +239,15 @@ public class TrivialEigenvalues<N extends Number> {
             throw new UnsupportedOperationException("Not supported yet (specify using).");
         }
 
+        @Override
+        public <M extends Number> Vector<N> multTransposed(Vector<M> x) {
+            final Vector<N> x2 = A.factory().make(A.rows(), 0.0);
+            for (Map.Entry<Integer, M> e : x.entrySet()) {
+                x2.put(map[e.getKey()], e.getValue().doubleValue());
+            }
+            return invMap(A.multTransposed(x2), A.factory());
+        }
+
         private <O extends Number> Vector<O> invMap(Vector<O> x, Factory<O> using) {
             final Vector<O> x2 = using.make(map.length, 0.0);
             for (Map.Entry<Integer, O> e : x.entrySet()) {

@@ -12,7 +12,7 @@
  * of its contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE MONNET PROJECT BE LIABLE FOR ANY
@@ -123,7 +123,7 @@ public class TridiagonalMatrix implements Matrix<Double> {
             throw new UnsupportedOperationException("Attempt to set index on non-tridiagonal matrix would make it non-tridiagonal");
         }
     }
-    
+
     @Override
     public void add(int i, int j, int v) {
         if (i == j) {
@@ -278,9 +278,8 @@ public class TridiagonalMatrix implements Matrix<Double> {
     }
 
     @Override
-    public VectorFunction<Double,Double> asVectorFunction() {
-        return new VectorFunction<Double,Double>() {
-
+    public VectorFunction<Double, Double> asVectorFunction() {
+        return new VectorFunction<Double, Double>() {
             @Override
             public Vector<Double> apply(Vector<Double> v) {
                 return mult(v);
@@ -337,8 +336,6 @@ public class TridiagonalMatrix implements Matrix<Double> {
     public String toString() {
         return "TridiagonalMatrix{" + "alpha=" + Arrays.toString(alpha) + ", beta=" + Arrays.toString(beta) + '}';
     }
-    
-    
 
     public static TridiagonalMatrix fromFile(File file) throws IOException {
         final BufferedReader in = new BufferedReader(new FileReader(file));
@@ -357,7 +354,7 @@ public class TridiagonalMatrix implements Matrix<Double> {
         }
         final double[] alpha = new double[n];
         for (int i = 0; i < alpha.length; i++) {
-            alpha[i] = Double.parseDouble(ssAlpha[i].replaceAll("\\[\\]\\s", ""));
+            alpha[i] = Double.parseDouble(ssAlpha[i].replaceAll("[\\[\\]\\s]", ""));
         }
         final String sBeta = in.readLine();
         if (sBeta == null) {
@@ -369,7 +366,7 @@ public class TridiagonalMatrix implements Matrix<Double> {
         }
         final double[] beta = new double[n - 1];
         for (int i = 0; i < beta.length; i++) {
-            beta[i] = Double.parseDouble(ssBeta[i].replaceAll("\\[\\[\\s", ""));
+            beta[i] = Double.parseDouble(ssBeta[i].replaceAll("[\\[\\]\\s]", ""));
         }
         return new TridiagonalMatrix(alpha, beta);
     }
@@ -377,20 +374,75 @@ public class TridiagonalMatrix implements Matrix<Double> {
     public void toFile(File file) throws IOException {
         final PrintWriter out = new PrintWriter(file);
         out.println(alpha.length);
-        out.print(Arrays.toString(alpha));
-        out.print(Arrays.toString(beta));
+        out.println(Arrays.toString(alpha));
+        out.println(Arrays.toString(beta));
         out.flush();
         out.close();
     }
-    
+
     public double[][] toDoubleArray() {
         final double[][] M = new double[cols()][cols()];
-        for(int i = 0; i < cols(); i++) {
+        for (int i = 0; i < cols(); i++) {
             M[i][i] = alpha[i];
         }
-        for(int i = 1; i < cols(); i++) {
-            M[i-1][i] = M[i][i-1] = beta[i-1];
+        for (int i = 1; i < cols(); i++) {
+            M[i - 1][i] = M[i][i - 1] = beta[i - 1];
         }
         return M;
+    }
+
+    /**
+     * Find w, such that Mw = v
+     *
+     * @param v the vector
+     * @return w
+     */
+    public Vector<Double> invMult(Vector<Double> v) {
+        final int n = v.length();
+        if (n != alpha.length) {
+            throw new IllegalArgumentException();
+        }
+        double[] delta = new double[n - 1];
+        double[] gamma = new double[n - 1];
+
+        delta[0] = v.doubleValue(0) / alpha[0];
+        gamma[0] = -1.0 * beta[0] / alpha[0];
+
+        for (int i = 1; i < n - 1; i++) {
+            final double bga = beta[i - 1] * gamma[i - 1] + alpha[i];
+            if (bga != 0.0) {
+                delta[i] = (v.doubleValue(i) - beta[i - 1] * delta[i - 1]) / bga;
+                gamma[i] = -1.0 * beta[i] / bga;
+            } else {
+                final double bga2 = beta[i] * gamma[i] + alpha[i + 1];
+                if (bga2 == 0.0) {
+                    // Value is 'free'
+                    delta[i] = delta[i+1] = 1.0;
+                } else {
+                    gamma[i + 1] = (v.doubleValue(i + 1) - beta[i] * delta[i]) / bga2;
+                    delta[i + 1] = -1.0 * beta[i + 1] / bga2;
+                    gamma[i] = -(alpha[i + 1] * gamma[i + 1] + beta[i + 1]) / beta[i];
+                    delta[i] = beta[i + 1] * delta[i + 1] / beta[i] * gamma[i + 1];
+                    i++;
+                }
+            }
+        }
+
+        double[] w = new double[n];
+        final double bga3 = beta[n - 2] * gamma[n - 2] + alpha[n - 1];
+        if(bga3 == 0.0) {
+            w[n-1] = 1.0; // value is 'free'
+        } else {
+            w[n - 1] = (v.doubleValue(n - 1) - beta[n - 2] * delta[n - 2]) / bga3;
+        }
+        for (int i = n - 2; i >= 0; i--) {
+            w[i] = gamma[i] * w[i + 1] + delta[i];
+        }
+        return new RealVector(w);
+    }
+
+    @Override
+    public <M extends Number> Vector<Double> multTransposed(Vector<M> x) {
+        return mult(x);
     }
 }

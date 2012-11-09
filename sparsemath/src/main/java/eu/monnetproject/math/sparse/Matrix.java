@@ -62,6 +62,8 @@ public interface Matrix<N extends Number> {
     
     <M extends Number> Vector<N> mult(Vector<M> x);
     
+    <M extends Number> Vector<N> multTransposed(Vector<M> x);
+    
     <M extends Number, O extends Number> Vector<O> mult(Vector<M> x, Vectors.Factory<O> using);
     
     <M extends Number> void add(Matrix<M> matrix);

@@ -50,19 +50,19 @@ public class LanczosAlgorithm {
     private static final Random random = new Random();
     private double[] v;
 
-    public static Solution lanczos(VectorFunction<Double,Double> A, final Vector<Double> w) {
+    public static Solution lanczos(VectorFunction<Double, Double> A, final Vector<Double> w) {
         return lanczos(A, w, w.size(), 1.0);
     }
 
-    public static Solution lanczos(VectorFunction<Double,Double> A, final Vector<Double> w, int K, double rho) {
+    public static Solution lanczos(VectorFunction<Double, Double> A, final Vector<Double> w, int K, double rho) {
         final int n = w.size();
         assert (K <= n);
         if (n == 0) {
-            return new Solution(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0],0.0);
+            return new Solution(new TridiagonalMatrix(new double[0], new double[0]), new double[0][0], 0.0);
         } else if (n == 1) {
             final Vector<Double> unitVector = Vectors.AS_REALS.make(new double[]{1.0});
             final double a11 = A.apply(unitVector).doubleValue(0);
-            return new Solution(new TridiagonalMatrix(new double[]{a11}, new double[0]), new double[][]{{1}},0.0);
+            return new Solution(new TridiagonalMatrix(new double[]{a11}, new double[0]), new double[][]{{1}}, 0.0);
         } else if (n == 2) {
             final Vector<Double> unit1Vector = Vectors.AS_REALS.make(new double[]{1.0, 0.0});
             final Vector<Double> unit2Vector = Vectors.AS_REALS.make(new double[]{0.0, 1.0});
@@ -72,7 +72,7 @@ public class LanczosAlgorithm {
                     new double[]{a1[1]}), new double[][]{
                         {1, 0},
                         {0, 1}
-                    },0.0);
+                    }, 0.0);
         }
 
         // v = 0; \beta_0 = 1; j = 0
@@ -114,33 +114,38 @@ public class LanczosAlgorithm {
                 alpha[j] += v[i] * r[i];
             }
 
-            beta[j+1] = 0.0;
+            beta[j + 1] = 0.0;
             // r = r - \alpha_j v_j
-            // \beta_j = ||r||
             for (int i = 0; i < n; i++) {
                 r[i] -= alpha[j] * v[i];
-                beta[j+1] += r[i] * r[i];
+                beta[j + 1] += r[i] * r[i];
             }
-            beta[j+1] = Math.sqrt(beta[j+1]);
+            beta[j + 1] = Math.sqrt(beta[j + 1]);
 
             // if (||r|| <  \rho \sqrt{\alpha_j^2 + \beta_{j-1}^2}) {
-            if (j > 1 && beta[j+1] < rho * Math.sqrt(alpha[j] * alpha[j] + beta[j] * beta[j])) {
+            if (j > 0 && beta[j + 1] < rho * Math.sqrt(alpha[j] * alpha[j] + beta[j] * beta[j])) {
                 // s = V_j^T r
-                double[] s = new double[j];
-                for (int i = 0; i < j; i++) {
+                double[] s = new double[j + 1];
+                for (int i = 0; i <= j; i++) {
                     for (int k = 0; k < n; k++) {
                         s[i] += q[i][k] * r[k];
                     }
                 }
                 // r = r - V_j s
                 for (int i = 0; i < n; i++) {
-                    for (int k = 0; k < j; k++) {
+                    for (int k = 0; k <= j; k++) {
                         r[i] -= q[k][i] * s[k];
                     }
                 }
                 // \alpha_j = \alpha_j + s_j ; \beta_j = \beta_j + s_{j-1}
-                alpha[j] = alpha[j] + s[j - 1];
-                beta[j] = beta[j] + s[j - 2];
+                alpha[j] = alpha[j] + s[j];
+                //beta[j+1] = beta[j+1] + s[j - 1];
+                beta[j + 1] = 0.0;
+                // r = r - \alpha_j v_j
+                for (int i = 0; i < n; i++) {
+                    beta[j + 1] += r[i] * r[i];
+                }
+                beta[j + 1] = Math.sqrt(beta[j + 1]);
             }
             // j = j + 1
             j++;
@@ -162,6 +167,11 @@ public class LanczosAlgorithm {
         assert (A.rows() == A.cols());
         assert (A.isSymmetric());
         final int n = A.rows();
+
+        return lanczos(A.asVectorFunction(), randomUnit(n));
+    }
+
+    public static Vector<Double> randomUnit(int n) {
         double[] w = new double[n];
 
         // w is a random vector with 2-norm = 1
@@ -175,14 +185,14 @@ public class LanczosAlgorithm {
         }
         w2sum = Math.sqrt(w2sum);
 
-        if(w2sum == 0.0)  {
-            return lanczos(A);
+        if (w2sum == 0.0) {
+            return randomUnit(n);
         }
-        
+
         for (int i = 0; i < n; i++) {
             w[i] = w[i] / w2sum;
         }
-        return lanczos(A.asVectorFunction(), Vectors.AS_REALS.make(w));
+        return Vectors.AS_REALS.make(w);
     }
 
     public static class Solution {
