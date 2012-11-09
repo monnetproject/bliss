@@ -28,34 +28,19 @@ package eu.monnetproject.translation.topics.lda;
 //
 import eu.monnetproject.translation.topics.Tokenizer;
 import eu.monnetproject.lang.Language;
-import eu.monnetproject.lang.Script;
-import eu.monnetproject.framework.services.Services;
 import eu.monnetproject.translation.topics.PTBTokenizer;
-//import eu.monnetproject.tokens.Token;
-//import eu.monnetproject.tokenizer.Tokenizer;
-//import eu.monnetproject.tokenizer.TokenizerFactory;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-//
-///**
-// *
-// * @author John McCrae
-// */
+
+/**
+ *
+ * @author John McCrae
+ */
 public class LDA {
-//
-//    //private static final Logger log = Logging.getLogger(LDA.class);
-//    private final TokenizerFactory tokenizerFactory = Services.get(TokenizerFactory.class);
-//    private final HashMap<Script, Tokenizer> tokenizers = new HashMap<Script, Tokenizer>();
-//
     public GibbsInput makeInput(TextCorpus corpus, int K, int minFreq) {
         return makeInput(corpus, K, minFreq, 1);
     }
