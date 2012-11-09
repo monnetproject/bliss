@@ -37,9 +37,11 @@ import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition.Solution;
 import eu.monnetproject.translation.topics.CLIOpts;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * Train a model using Kernel Canonical Correlation Analysis as described in
@@ -68,14 +70,17 @@ public class KCCATrain {
     //    Q T^-1 Q^T B a = p a
     // We do not calculate T^-1 but calculate the inverse vector as required
     
-    public double[][][] train(File corpus, int W, int J, int K, double kappa) throws IOException {
+    public static double[][][] train(File corpus, int W, int J, int K, double kappa) throws IOException {
+        System.err.print("Lanczos step");
         final LanczosAlgorithm.Solution lancozSoln = LanczosAlgorithm.lanczos(new D(corpus, J, W, kappa), LanczosAlgorithm.randomUnit(2*J));
+        System.err.print("\nArnoldi step");
         final SingularValueDecomposition svd = new SingularValueDecomposition();
-        final Solution eigen1 = svd.eigen(new B(corpus, J, W, lancozSoln), W, K, 1e-50);
+        final Solution eigen1 = svd.nonsymmEigen(new B(corpus, J, W, lancozSoln), W, K, 1e-50);
+        System.err.println("\nCalculating final vectors");
         return apply(corpus, W, J, K, eigen1.U);
     }
 
-    private double[][][] apply(File corpus, int W, int J, int K, double[][] Z) throws IOException {
+    private static double[][][] apply(File corpus, int W, int J, int K, double[][] Z) throws IOException {
         double[][][] Z2 = new double[2][W][K];
         final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpus));
         int N = 0;
@@ -116,6 +121,7 @@ public class KCCATrain {
         @Override
         public Vector<Double> apply(Vector<Double> v) {
             try {
+                System.err.print(".");
                 final Vector<Double> v1 = calcKxKyv(v, J, W, corpus);
                 // As B = ( K_x  0  ) (  0  K_y )
                 //      = (  0  K_y ) ( K_x  0  )
@@ -152,6 +158,7 @@ public class KCCATrain {
         @Override
         public Vector<Double> apply(Vector<Double> v) {
             try {
+                System.err.print(".");
                 final Vector<Double> v1 = KxKyv(v);
                 final Vector<Double> v2 = KxKyv(v1);
                 v1.multiply(kappa);
@@ -221,5 +228,34 @@ public class KCCATrain {
             }
         }
         return new RealVector(v1);
+    }
+    
+    public static void main(String[] args) throws Exception {
+        final CLIOpts opts = new CLIOpts(args);
+        final double kappa = opts.doubleValue("kappa", 1.5, "The kappa value");
+        final File corpus = opts.roFile("corpus[.gz|.bz2]", "The training corpus");
+        final int W = opts.intValue("W", "The number of distinct tokens in the corpus");
+        final int J = opts.intValue("J", "The number of documents (per language)");
+        final int K = opts.intValue("K", "The number of topics to use");
+        final File outFile = opts.woFile("model", "The file to save the model to");
+        
+        if(!opts.verify(KCCATrain.class)) {
+            return;
+        }
+        final double[][][] model = train(corpus, W, J, K, kappa);
+        System.err.println("Writing model");
+        final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(outFile));
+        out.writeInt(2);
+        out.writeInt(W);
+        out.writeInt(K);
+        for(int l = 0; l < 2; l++) {
+            for(int w = 0; w < W; w++) {
+                for(int k = 0; k < K; k++) {
+                    out.writeDouble(model[l][w][k]);
+                }
+            }
+        }
+        out.flush();
+        out.close();
     }
 }

@@ -69,26 +69,29 @@ public class KCCATrainTest {
         double kappa = 0.8;
         KCCATrain instance = new KCCATrain();
         final double[][][] result = instance.train(corpus, 4, 2, 4, 0.8);
-        final double[][][] expResult = new double[][][] {
-            { 
-                { -0.77213183, 0.77213183 , 0.3268787 , -0.3268787 },
-                { -0.08785732, 0.08785732 ,-0.7181914 , 0.7181914 },
-                {-0.77213183, 0.77213183 , 0.3268787, -0.3268787 },
-                {-0.85998914, 0.85998914 ,-0.3913126 , 0.3913126 }
+        final double[][][] expResult = new double[][][]{
+            {
+                {0.7210178, 0.2218516, 4.100756e-01, 0.5125945},
+                {1.4420356, 0.4437033, 2.220446e-16, 0.0000000},
+                {0.7210178, 0.2218516, 4.100756e-01, 0.5125945},
+                {0.7210178, 0.2218516, 4.100756e-01, 0.5125945}
             },
             {
-                { 1.0834526 ,1.0834526 ,-0.19137578 ,-0.19137578 },
-                {0.3203532 ,0.3203532 , 0.60679100 , 0.60679100 },
-                {0.3203532 ,0.3203532 , 0.60679100 , 0.60679100 },
-                {0.5417263 ,0.5417263 ,-0.09568789 ,-0.09568789 }
+                {1.1338934, 1.1338934, 0.3779645, 1.1338934},
+                {0.5669467, 0.5669467, 0.1889822, 0.5669467},
+                {0.5669467, 0.5669467, 0.1889822, 0.5669467},
+                {0.5669467, 0.5669467, 0.1889822, 0.5669467}
             }
         };
-        for(int l = 0; l < 2; l++) {
-            for(int w = 0; w < 4; w++) {
-                assertArrayEquals(expResult[l][w], result[l][w],0.001);
+        for (int l = 0; l < 2; l++) {
+            for (int w = 0; w < 4; w++) {
+                for (int j = 0; j < 4; j++) {
+                    result[l][w][j] = Math.abs(result[l][w][j]);
+                }
+                assertArrayEquals(expResult[l][w], result[l][w], 0.001);
             }
         }
-        
+
     }
 
     @Test
@@ -117,7 +120,7 @@ public class KCCATrainTest {
         assertArrayEquals(new double[]{6.1, 5.6, 3.26, 3.76}, result.toDoubleArray(), 0.0001);
 
     }
-    
+
     @Test
     public void testNormalizer2() throws Exception {
         final File corpus = File.createTempFile("corpus", ".bin");
@@ -142,7 +145,6 @@ public class KCCATrainTest {
         final D normalizer = new KCCATrain.D(corpus, 2, 4, 0.8);
         final RealVector v = new RealVector(new double[]{1.0, 0.5, 0.2, 0.7});
         final Vector<Double> result = normalizer.apply(v);
-        assertArrayEquals(new double[]{3.5,4.0,1.8,1.68}, result.toDoubleArray(), 0.0001);
+        assertArrayEquals(new double[]{3.5, 4.0, 1.8, 1.68}, result.toDoubleArray(), 0.0001);
     }
-
 }
