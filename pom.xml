@@ -48,12 +48,13 @@
        <module>betalm</module>
        <module>clesa</module>
        <module>common</module>
+       <module>cplsa</module>
        <module>experiments</module>
+       <module>kcca</module>
        <module>lda</module>
        <module>lsa</module>
        <module>monnet</module>
        <module>sparsemath</module>
-    <module>kcca</module>
   </modules>
 
     <build>
