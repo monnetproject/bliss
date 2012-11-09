@@ -72,10 +72,9 @@ public class KCCATrain {
     
     public static double[][][] train(File corpus, int W, int J, int K, double kappa) throws IOException {
         System.err.print("Lanczos step");
-        final LanczosAlgorithm.Solution lancozSoln = LanczosAlgorithm.lanczos(new D(corpus, J, W, kappa), LanczosAlgorithm.randomUnit(2*J));
+        final LanczosAlgorithm.Solution lancozSoln = LanczosAlgorithm.lanczos(new D(corpus, J, W, kappa), LanczosAlgorithm.randomUnit(2*J), Math.min(2*J,2*K), 1.0);
         System.err.print("\nArnoldi step");
-        final SingularValueDecomposition svd = new SingularValueDecomposition();
-        final Solution eigen1 = svd.nonsymmEigen(new B(corpus, J, W, lancozSoln), W, K, 1e-50);
+        final Solution eigen1 = SingularValueDecomposition.nonsymmEigen(new B(corpus, J, W, lancozSoln), W, K, 1e-50);
         System.err.println("\nCalculating final vectors");
         return apply(corpus, W, J, K, eigen1.U);
     }
