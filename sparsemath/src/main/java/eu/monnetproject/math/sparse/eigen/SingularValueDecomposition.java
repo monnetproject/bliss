@@ -26,14 +26,10 @@
  */
 package eu.monnetproject.math.sparse.eigen;
 
-import eu.monnetproject.math.sparse.DoubleArrayMatrix;
-import eu.monnetproject.math.sparse.Matrix;
 import eu.monnetproject.math.sparse.RealVector;
-import eu.monnetproject.math.sparse.SparseMatrix;
 import eu.monnetproject.math.sparse.TridiagonalMatrix;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
-import eu.monnetproject.math.sparse.Vectors;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.Arrays;
@@ -139,8 +135,6 @@ public class SingularValueDecomposition {
     
     public static Solution nonsymmEigen(VectorFunction<Double, Double> A, int W, int K, double epsilon) {
         final ArnoldiAlgorithm.Solution arnoldi = ArnoldiAlgorithm.solve(A, randomUnitNormVector(W), K);
-        toR(arnoldi.h);
-        toR(new SparseMatrix(3,arnoldi.q,Vectors.AS_REALS).toDoubleArray());
         final HessenbergQR.Solution soln = HessenbergQR.solve(arnoldi.K, arnoldi.h);
         final int[] order = order(soln.d);
         
@@ -166,7 +160,7 @@ public class SingularValueDecomposition {
     
     private static Random r() {
         if(random == null) {
-            random = System.getProperty("SEED") != null ? new Random(Long.parseLong(System.getProperty("SEED"))) : new Random();
+            random = System.getProperty("SEED") != null ? new Random(Long.parseLong(System.getProperty("SEED"))) : new Random(4);
         }
         return random;
     }

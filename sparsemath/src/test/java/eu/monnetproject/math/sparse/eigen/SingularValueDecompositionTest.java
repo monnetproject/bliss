@@ -55,28 +55,6 @@ public class SingularValueDecompositionTest {
         int J = 4;
         int K = 4;
         double epsilon = 1e-50;
-        final Random r = new Random(J);
-        SingularValueDecomposition instance = new SingularValueDecomposition();
-//        = new SingularValueDecomposition() {
-//            @Override
-//            protected Vector<Double> randomUnitNormVector(int J) {
-//
-//                final double[] rv = new double[J];
-//                double norm = 0.0;
-//                for (int j = 0; j < J; j++) {
-//                    rv[j] = r.nextDouble();
-//                    norm += rv[j] * rv[j];
-//                }
-//
-//                norm = Math.sqrt(norm);
-//
-//                for (int j = 0; j < J; j++) {
-//                    rv[j] /= norm;
-//                }
-//
-//                return new RealVector(rv);
-//            }
-//        };
         Solution expResult = new Solution(new double[][]{
                     {-0.4711454, -0.5780836, -0.4914296, -0.4498203},
                     {-0.05076119, -0.47792513, -0.17556759, 0.85917803},
@@ -92,7 +70,7 @@ public class SingularValueDecompositionTest {
                 new double[]{
                     9.1774677, 3.4735260, 1.8760096, 0.4350767
                 });
-        Solution result = instance.calculate(new DataStreamIterable(matrixFile), W, J, K, epsilon);
+        Solution result = SingularValueDecomposition.calculate(new DataStreamIterable(matrixFile), W, J, K, epsilon);
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
