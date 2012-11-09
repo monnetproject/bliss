@@ -43,13 +43,6 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
  */
 public class CountFrequencies {
 
-    private static void fail(String message) {
-        System.err.println(message);
-        System.err.println("\nUsage:\n"
-                + "\tmvn exec:java -Dexec.mainClass=\"" + CountFrequencies.class.getName() + "\" -Dexec.args=\"corpus W topN out\"");
-        System.exit(-1);
-    }
-
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
         final File corpusFile = opts.roFile("corpus[.gz|.bz2]", "The corpus");

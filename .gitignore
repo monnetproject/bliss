@@ -4,6 +4,7 @@ WikiExtractor.py
 experiments/tmp*
 wiki/
 *.out
+tmp/
 
 /cplsa/docs/cplsa.dvi
 /cplsa/docs/cplsa.log

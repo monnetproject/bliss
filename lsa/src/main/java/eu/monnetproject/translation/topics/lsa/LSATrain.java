@@ -111,11 +111,11 @@ public class LSATrain {
     private static void write(Solution soln, File outFile) throws IOException {
         final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(outFile));
         out.writeInt(soln.S.length);
-        out.writeInt(soln.V[0].length);
+        out.writeInt(soln.U[0].length);
 
-        for (int i = 0; i < soln.V.length; i++) {
-            for (int j = 0; j < soln.V[i].length; j++) {
-                out.writeDouble(soln.V[i][j]);
+        for (int i = 0; i < soln.U.length; i++) {
+            for (int j = 0; j < soln.U[i].length; j++) {
+                out.writeDouble(soln.U[i][j]);
             }
         }
 

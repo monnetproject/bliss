@@ -48,13 +48,6 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
 public class CleanCorpus {
     public static final int BUF_SIZE = 1048576;
 
-    private static void fail(String message) {
-        System.err.println(message);
-        System.err.println("\nUsage:\n"
-                + "\tmvn exec:java -Dexec.mainClass=\"" + CleanCorpus.class.getName() + "\" -Dexec.args=\"corpus W freqs freqMin freqMax lenMin\"");
-        System.exit(-1);
-    }
-
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
 
