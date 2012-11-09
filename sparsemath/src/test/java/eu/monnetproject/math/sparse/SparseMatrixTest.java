@@ -47,7 +47,7 @@ public class SparseMatrixTest {
         instance.set(1, 1, 1);
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
-        Vector expResult = new RealVector(new double[] { 3.0, 8.0, 6.0 });
+        Vector expResult = new RealVector(new double[]{3.0, 8.0, 6.0});
         Vector result = instance.mult(x);
         assertEquals(expResult, result);
     }
@@ -66,7 +66,7 @@ public class SparseMatrixTest {
         instance.set(1, 1, 0.5);
         instance.set(1, 2, 1.0);
         instance.set(2, 1, 1.5);
-        Vector<Double> expResult = SparseRealArray.fromArray(new double[] { 1.5, 4.0, 3.0 });
+        Vector<Double> expResult = SparseRealArray.fromArray(new double[]{1.5, 4.0, 3.0});
         Vector result = instance.mult(x, using);
         assertEquals(expResult, result);
     }
@@ -84,7 +84,7 @@ public class SparseMatrixTest {
         instance.set(1, 1, 1);
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
-        int[] expResult = new int[] {3, 8, 6 } ;
+        int[] expResult = new int[]{3, 8, 6};
         int[] result = instance.multIntDense(x);
         assertArrayEquals(expResult, result);
     }
@@ -102,9 +102,9 @@ public class SparseMatrixTest {
         instance.set(1, 1, 1);
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
-        double[] expResult = { 3.0, 8.0, 6.0 };
+        double[] expResult = {3.0, 8.0, 6.0};
         double[] result = instance.multRealDense(x);
-        assertArrayEquals(expResult, result,0.0);
+        assertArrayEquals(expResult, result, 0.0);
     }
 
     /**
@@ -121,15 +121,15 @@ public class SparseMatrixTest {
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
         instance.selfOuterProduct(outerProduct);
-        assertEquals(2,outerProduct.value(0, 0).doubleValue(),1e-6);
-        assertEquals(1,outerProduct.value(0, 1).doubleValue(),1e-6);
-        assertEquals(3,outerProduct.value(0, 2).doubleValue(),1e-6);
-        assertEquals(1,outerProduct.value(1, 0).doubleValue(),1e-6);
-        assertEquals(5,outerProduct.value(1, 1).doubleValue(),1e-6);
-        assertEquals(3,outerProduct.value(1, 2).doubleValue(),1e-6);
-        assertEquals(3,outerProduct.value(2, 0).doubleValue(),1e-6);
-        assertEquals(3,outerProduct.value(2, 1).doubleValue(),1e-6);
-        assertEquals(9,outerProduct.value(2, 2).doubleValue(),1e-6);
+        assertEquals(2, outerProduct.value(0, 0).doubleValue(), 1e-6);
+        assertEquals(1, outerProduct.value(0, 1).doubleValue(), 1e-6);
+        assertEquals(3, outerProduct.value(0, 2).doubleValue(), 1e-6);
+        assertEquals(1, outerProduct.value(1, 0).doubleValue(), 1e-6);
+        assertEquals(5, outerProduct.value(1, 1).doubleValue(), 1e-6);
+        assertEquals(3, outerProduct.value(1, 2).doubleValue(), 1e-6);
+        assertEquals(3, outerProduct.value(2, 0).doubleValue(), 1e-6);
+        assertEquals(3, outerProduct.value(2, 1).doubleValue(), 1e-6);
+        assertEquals(9, outerProduct.value(2, 2).doubleValue(), 1e-6);
     }
 
     /**
@@ -146,15 +146,15 @@ public class SparseMatrixTest {
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
         instance.selfInnerProduct(innerProduct);
-        assertEquals(1,innerProduct.value(0, 0).doubleValue(),1e-6);
-        assertEquals(1,innerProduct.value(0, 1).doubleValue(),1e-6);
-        assertEquals(0,innerProduct.value(0, 2).doubleValue(),1e-6);
-        assertEquals(1,innerProduct.value(1, 0).doubleValue(),1e-6);
-        assertEquals(11,innerProduct.value(1, 1).doubleValue(),1e-6);
-        assertEquals(2,innerProduct.value(1, 2).doubleValue(),1e-6);
-        assertEquals(0,innerProduct.value(2, 0).doubleValue(),1e-6);
-        assertEquals(2,innerProduct.value(2, 1).doubleValue(),1e-6);
-        assertEquals(4,innerProduct.value(2, 2).doubleValue(),1e-6);
+        assertEquals(1, innerProduct.value(0, 0).doubleValue(), 1e-6);
+        assertEquals(1, innerProduct.value(0, 1).doubleValue(), 1e-6);
+        assertEquals(0, innerProduct.value(0, 2).doubleValue(), 1e-6);
+        assertEquals(1, innerProduct.value(1, 0).doubleValue(), 1e-6);
+        assertEquals(11, innerProduct.value(1, 1).doubleValue(), 1e-6);
+        assertEquals(2, innerProduct.value(1, 2).doubleValue(), 1e-6);
+        assertEquals(0, innerProduct.value(2, 0).doubleValue(), 1e-6);
+        assertEquals(2, innerProduct.value(2, 1).doubleValue(), 1e-6);
+        assertEquals(4, innerProduct.value(2, 2).doubleValue(), 1e-6);
     }
 
     /**
@@ -169,7 +169,7 @@ public class SparseMatrixTest {
         instance.set(1, 1, 1);
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
-        SparseMatrix expResult =  new SparseMatrix<Double>(3, 3, Vectors.AS_REALS);
+        SparseMatrix expResult = new SparseMatrix<Double>(3, 3, Vectors.AS_REALS);
         expResult.set(0, 0, 1);
         expResult.set(1, 0, 1);
         expResult.set(1, 1, 1);
@@ -192,13 +192,13 @@ public class SparseMatrixTest {
         instance.set(1, 2, 2);
         instance.set(2, 1, 3);
         double[][] expResult = {
-            { 1.0, 1.0, 0.0 },
-            { 0.0, 1.0, 2.0 },
-            { 0.0, 3.0, 0.0 }
+            {1.0, 1.0, 0.0},
+            {0.0, 1.0, 2.0},
+            {0.0, 3.0, 0.0}
         };
         double[][] result = instance.toArrays();
-        for(int i = 0; i < 3; i++) {
-            assertArrayEquals(expResult[i], result[i],0.0);
+        for (int i = 0; i < 3; i++) {
+            assertArrayEquals(expResult[i], result[i], 0.0);
         }
     }
 
@@ -209,9 +209,9 @@ public class SparseMatrixTest {
     public void testFromArray_doubleArrArr() {
         System.out.println("fromArray");
         double[][] arrs = {
-            { 1.0, 1.0, 0.0 },
-            { 0.0, 1.0, 2.0 },
-            { 0.0, 3.0, 0.0 }
+            {1.0, 1.0, 0.0},
+            {0.0, 1.0, 2.0},
+            {0.0, 3.0, 0.0}
         };
         SparseMatrix expResult = new SparseMatrix<Double>(3, 3, Vectors.AS_SPARSE_REALS);
         expResult.set(0, 0, 1);
@@ -230,9 +230,9 @@ public class SparseMatrixTest {
     public void testFromArray_intArrArr() {
         System.out.println("fromArray");
         int[][] arrs = {
-            { 1, 1, 0 },
-            { 0, 1, 2 },
-            { 0, 3, 0 }
+            {1, 1, 0},
+            {0, 1, 2},
+            {0, 3, 0}
         };
         SparseMatrix expResult = new SparseMatrix<Integer>(3, 3, Vectors.AS_SPARSE_INTS);
         expResult.set(0, 0, 1);
@@ -357,15 +357,15 @@ public class SparseMatrixTest {
         instance.set(1, 1, 1);
         instance.set(2, 1, 3);
         instance.add(matrix);
-        assertEquals(4, instance.doubleValue(0,0),0.0);
-        assertEquals(1.5, instance.doubleValue(0,1),0.0);
-        assertEquals(1.5, instance.doubleValue(0,2),0.0);
-        assertEquals(2, instance.doubleValue(1,0),0.0);
-        assertEquals(2, instance.doubleValue(1,1),0.0);
-        assertEquals(2, instance.doubleValue(1,2),0.0);
-        assertEquals(0, instance.doubleValue(2,0),0.0);
-        assertEquals(6, instance.doubleValue(2,1),0.0);
-        assertEquals(0, instance.doubleValue(2,2),0.0);
+        assertEquals(4, instance.doubleValue(0, 0), 0.0);
+        assertEquals(1.5, instance.doubleValue(0, 1), 0.0);
+        assertEquals(1.5, instance.doubleValue(0, 2), 0.0);
+        assertEquals(2, instance.doubleValue(1, 0), 0.0);
+        assertEquals(2, instance.doubleValue(1, 1), 0.0);
+        assertEquals(2, instance.doubleValue(1, 2), 0.0);
+        assertEquals(0, instance.doubleValue(2, 0), 0.0);
+        assertEquals(6, instance.doubleValue(2, 1), 0.0);
+        assertEquals(0, instance.doubleValue(2, 2), 0.0);
     }
 
     /**
@@ -387,15 +387,15 @@ public class SparseMatrixTest {
         instance.set(1, 1, 1);
         instance.set(2, 1, 3);
         matrix.sub(instance);
-        assertEquals(-2.0, matrix.doubleValue(0,0),0.0);
-        assertEquals(1.5, matrix.doubleValue(0,1),0.0);
-        assertEquals(-1.5, matrix.doubleValue(0,2),0.0);
-        assertEquals(-2, matrix.doubleValue(1,0),0.0);
-        assertEquals(0, matrix.doubleValue(1,1),0.0);
-        assertEquals(2, matrix.doubleValue(1,2),0.0);
-        assertEquals(0, matrix.doubleValue(2,0),0.0);
-        assertEquals(0, matrix.doubleValue(2,1),0.0);
-        assertEquals(0, matrix.doubleValue(2,2),0.0);
+        assertEquals(-2.0, matrix.doubleValue(0, 0), 0.0);
+        assertEquals(1.5, matrix.doubleValue(0, 1), 0.0);
+        assertEquals(-1.5, matrix.doubleValue(0, 2), 0.0);
+        assertEquals(-2, matrix.doubleValue(1, 0), 0.0);
+        assertEquals(0, matrix.doubleValue(1, 1), 0.0);
+        assertEquals(2, matrix.doubleValue(1, 2), 0.0);
+        assertEquals(0, matrix.doubleValue(2, 0), 0.0);
+        assertEquals(0, matrix.doubleValue(2, 1), 0.0);
+        assertEquals(0, matrix.doubleValue(2, 2), 0.0);
     }
 
     /**
@@ -413,7 +413,7 @@ public class SparseMatrixTest {
         boolean expResult = false;
         boolean result = instance.isSymmetric();
         assertEquals(expResult, result);
-        final SparseMatrix<Double> aat = new SparseMatrix<Double>(3,3,Vectors.AS_REALS);
+        final SparseMatrix<Double> aat = new SparseMatrix<Double>(3, 3, Vectors.AS_REALS);
         instance.selfInnerProduct(aat);
         assertEquals(true, aat.isSymmetric());
     }
@@ -433,5 +433,4 @@ public class SparseMatrixTest {
     public void testToFile() throws Exception {
         System.out.println("toFile");
     }
-
 }

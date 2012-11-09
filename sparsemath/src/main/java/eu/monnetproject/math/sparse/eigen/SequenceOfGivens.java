@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,16 +41,16 @@ public class SequenceOfGivens {
 
     public SequenceOfGivens() {
     }
-    
+
     public SequenceOfGivens add(int j, int k, double c, double s) {
         seq.add(new Givens(j, k, c, s));
         return this;
     }
-    
+
     public double[][] applyTo(double[][] matrix) {
         int n = matrix[0].length;
-        for(Givens g : seq) {
-            for(int i = 0; i < n; i++) {
+        for (Givens g : seq) {
+            for (int i = 0; i < n; i++) {
                 final double t = matrix[g.j][i] * g.s + matrix[g.k][i] * g.c;
                 matrix[g.j][i] = matrix[g.j][i] * g.c - matrix[g.k][i] * g.s;
                 matrix[g.k][i] = t;
@@ -57,11 +58,11 @@ public class SequenceOfGivens {
         }
         return matrix;
     }
-    
+
     public double[][] applyTransposed(double[][] matrix) {
         int n = matrix[0].length;
-        for(Givens g : seq) {
-            for(int i = 0; i < n; i++) {
+        for (Givens g : seq) {
+            for (int i = 0; i < n; i++) {
                 final double t = -matrix[i][g.j] * g.s + matrix[i][g.k] * g.c;
                 matrix[i][g.j] = matrix[i][g.j] * g.c + matrix[i][g.k] * g.s;
                 matrix[i][g.k] = t;
@@ -69,32 +70,32 @@ public class SequenceOfGivens {
         }
         return matrix;
     }
-    
-    
+
     public String toRString(int N) {
         final StringBuilder buf = new StringBuilder();
         final Iterator<Givens> iter = seq.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             final Givens g = iter.next();
-            buf.append("givens(").append(g.j+1).append(",").append(g.c).append(",").append(g.s).append(",").append(N).append(")");
-            if(iter.hasNext()) {
+            buf.append("givens(").append(g.j + 1).append(",").append(g.c).append(",").append(g.s).append(",").append(N).append(")");
+            if (iter.hasNext()) {
                 buf.append(" %*%\n");
             }
         }
         return buf.toString();
     }
-    
+
     public double c(int i) {
         return seq.get(i).c;
     }
-    
+
     public double s(int i) {
         return seq.get(i).s;
     }
-    
+
     private static class Givens {
-        int j,k;
-        double c,s;
+
+        int j, k;
+        double c, s;
 
         public Givens(int j, int k, double c, double s) {
             this.j = j;
@@ -159,6 +160,4 @@ public class SequenceOfGivens {
         }
         return true;
     }
-    
-    
 }

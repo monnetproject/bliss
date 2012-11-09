@@ -60,9 +60,9 @@ public class DoubleArrayMatrix implements Matrix<Double> {
 
     @Override
     public <M extends Number> Vector<Double> mult(Vector<M> x) {
-        return mult(x,Vectors.AS_REALS);
+        return mult(x, Vectors.AS_REALS);
     }
-    
+
     @Override
     public <M extends Number, O extends Number> Vector<O> mult(Vector<M> x, Vectors.Factory<O> using) {
         assert (x.length() == n);
@@ -93,8 +93,8 @@ public class DoubleArrayMatrix implements Matrix<Double> {
 
     @Override
     public <M extends Number> Vector<Double> multTransposed(Vector<M> x) {
-        assert (x.length() == n);
-        double[] product = new double[m];
+        assert (x.length() == m);
+        double[] product = new double[n];
         if (x instanceof RealVector) {
             final double[] x2 = ((RealVector) x).data();
             for (int i = 0; i < m; i++) {
@@ -118,13 +118,14 @@ public class DoubleArrayMatrix implements Matrix<Double> {
         }
         return new RealVector(product);
     }
-    
+
     @Override
     public boolean isSymmetric() {
-        for(int i = 0; i < m; i++) {
-            for(int j = i+1; j < n; j++) {
-                if(data[i][j] != data[j][i])
+        for (int i = 0; i < m; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (data[i][j] != data[j][i]) {
                     return false;
+                }
             }
         }
         return true;
@@ -133,8 +134,8 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     @Override
     public Matrix<Double> transpose() {
         double[][] data2 = new double[n][m];
-        for(int i = 0; i < m; i++) {
-            for(int j = 0; j < n; j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 data2[j][i] = data[i][j];
             }
         }
@@ -145,8 +146,6 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     public Vector<Double> row(int i) {
         return new RealVector(data[i]);
     }
-    
-    
 
     /**
      * Get the underlying data
@@ -184,7 +183,7 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     public void set(int i, int j, Double v) {
         data[i][j] = v;
     }
-    
+
     @Override
     public void add(int i, int j, int v) {
         data[i][j] += v;
@@ -202,8 +201,8 @@ public class DoubleArrayMatrix implements Matrix<Double> {
 
     @Override
     public <M extends Number> void add(Matrix<M> matrix) {
-        for(int i = 0; i < m; i++) {
-            for(int j = 0; j < n ;j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 data[i][j] += matrix.doubleValue(i, j);
             }
         }
@@ -211,13 +210,13 @@ public class DoubleArrayMatrix implements Matrix<Double> {
 
     @Override
     public <M extends Number> void sub(Matrix<M> matrix) {
-        for(int i = 0; i < m; i++) {
-            for(int j = 0; j < n ;j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 data[i][j] -= matrix.doubleValue(i, j);
             }
         }
     }
-    
+
     @Override
     public int rows() {
         return m;
@@ -229,9 +228,8 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     }
 
     @Override
-    public VectorFunction<Double,Double> asVectorFunction() {
-        return new VectorFunction<Double,Double>() {
-
+    public VectorFunction<Double, Double> asVectorFunction() {
+        return new VectorFunction<Double, Double>() {
             @Override
             public Vector<Double> apply(Vector<Double> v) {
                 return mult(v);
@@ -246,13 +244,13 @@ public class DoubleArrayMatrix implements Matrix<Double> {
 
     @Override
     public <M extends Number> Matrix<Double> product(Matrix<M> B) {
-        if(this.cols() != B.rows()) {
+        if (this.cols() != B.rows()) {
             throw new IllegalArgumentException("Matrix dimensions not suitable for product");
         }
         double[][] res = new double[this.rows()][B.cols()];
-        for(int i = 0; i < this.rows(); i++) {
-            for(int j = 0; j < this.cols(); j++) {
-                for(int k = 0; k < B.cols(); k++) {
+        for (int i = 0; i < this.rows(); i++) {
+            for (int j = 0; j < this.cols(); j++) {
+                for (int k = 0; k < B.cols(); k++) {
                     res[i][k] += data[i][j] * B.doubleValue(j, k);
                 }
             }
@@ -264,6 +262,4 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     public double[][] toDoubleArray() {
         return data;
     }
-    
-    
 }

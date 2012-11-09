@@ -490,17 +490,17 @@ public class HessenbergQR {
         }
 
 
-        for(int i = 0; i < nn; i++) {
-            norm =0.0;
-            for(int j = 0; j < nn; j++) {
+        for (int i = 0; i < nn; i++) {
+            norm = 0.0;
+            for (int j = 0; j < nn; j++) {
                 norm += V[j][i] * V[j][i];
             }
             norm = Math.sqrt(norm);
-            for(int j = 0; j < nn; j++) {
+            for (int j = 0; j < nn; j++) {
                 V[j][i] /= norm;
             }
         }
-        
+
         return new Solution(V, d);
     }
 

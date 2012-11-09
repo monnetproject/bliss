@@ -43,25 +43,23 @@ public class HessenbergQRTest {
     @Test
     public void testSolve() {
         System.out.println("hessenbergQRSolve");
-        final double[][] A = new double[][] {
-                                        {1,2,3},
-                                        {1,1,2},
-                                        {0,1,1}
-                                    };
+        final double[][] A = new double[][]{
+            {1, 2, 3},
+            {1, 1, 2},
+            {0, 1, 1}
+        };
         final Solution solution = HessenbergQR.solve(3, A);
         Arrays.sort(solution.d);
-        assertArrayEquals(new double[] { -0.302775, 0, 3.302776, }, solution.d, 0.0001);
-        final double[][] A2 = new double[][] {
-                                        {1,2,3},
-                                        {1,1,2},
-                                        {0,1,1}
-                                    };
+        assertArrayEquals(new double[]{-0.302775, 0, 3.302776,}, solution.d, 0.0001);
+        final double[][] A2 = new double[][]{
+            {1, 2, 3},
+            {1, 1, 2},
+            {0, 1, 1}
+        };
         final EigenvalueDecomposition evd = new EigenvalueDecomposition(new DenseDoubleMatrix2D(A2));
         final DoubleMatrix1D re = evd.getRealEigenvalues();
         final double[] colt = re.toArray();
         Arrays.sort(colt);
-        assertArrayEquals(colt, solution.d,0.01);
+        assertArrayEquals(colt, solution.d, 0.01);
     }
-
-
 }

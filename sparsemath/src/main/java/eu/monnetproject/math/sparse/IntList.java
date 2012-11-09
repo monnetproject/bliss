@@ -32,7 +32,7 @@ import java.util.NoSuchElementException;
 
 /**
  * A list of Integers, that avoids boxing and unboxing
- * 
+ *
  * @author John McCrae
  */
 public class IntList {
@@ -71,7 +71,6 @@ public class IntList {
 
     public Iterator<Integer> iterator() {
         return new Iterator<Integer>() {
-
             int n = 0;
 
             @Override
@@ -138,16 +137,17 @@ public class IntList {
         int[] retained = new int[vals.length];
         int retIdx = 0;
         boolean changed = false;
-        L: for(int i = 0; i < size; i++) {
-            for(int j = 0; j < c.size; j++) {
-                if(vals[i] == c.vals[j]) {
+        L:
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < c.size; j++) {
+                if (vals[i] == c.vals[j]) {
                     retained[retIdx++] = vals[i];
                     continue L;
                 }
             }
             changed = true;
         }
-        if(changed) {
+        if (changed) {
             vals = retained;
             size = retIdx;
             return changed;
@@ -161,7 +161,7 @@ public class IntList {
     }
 
     public int get(int index) {
-        if(index >= size) {
+        if (index >= size) {
             throw new IndexOutOfBoundsException();
         } else {
             return vals[index];
@@ -169,7 +169,7 @@ public class IntList {
     }
 
     public int set(int index, int element) {
-        if(index >= size) {
+        if (index >= size) {
             throw new IndexOutOfBoundsException();
         } else {
             final int old = vals[index];
@@ -179,58 +179,60 @@ public class IntList {
     }
 
     public void add(int index, Integer element) {
-        if(index > size) {
+        if (index > size) {
             throw new IndexOutOfBoundsException();
-        } else if(index == size) {
+        } else if (index == size) {
             add(element);
         } else {
-            System.arraycopy(vals, index, vals, index+1, size-index);
+            System.arraycopy(vals, index, vals, index + 1, size - index);
             vals[index] = element;
             size++;
         }
     }
 
     public int remove(int index) {
-        if(index >= size) {
+        if (index >= size) {
             throw new IndexOutOfBoundsException();
-        } else if(index == size-1) {
+        } else if (index == size - 1) {
             int old = vals[index];
             size--;
             return old;
         } else {
             int old = vals[index];
-            System.arraycopy(vals,index+1,vals,index,size-index-1);
+            System.arraycopy(vals, index + 1, vals, index, size - index - 1);
             size--;
             return old;
         }
     }
 
     public int indexOf(int n) {
-        for(int i = 0; i < size; i++) {
-            if(vals[i] == n)
+        for (int i = 0; i < size; i++) {
+            if (vals[i] == n) {
                 return i;
+            }
         }
         return -1;
     }
 
     public int lastIndexOf(int n) {
-        for(int i = size-1; i >= 0; i--) {
-            if(vals[i] == n)
+        for (int i = size - 1; i >= 0; i--) {
+            if (vals[i] == n) {
                 return i;
+            }
         }
         return -1;
     }
 
     public IntList subList(int fromIndex, int toIndex) {
-        if(toIndex < fromIndex || fromIndex < 0 || toIndex > size) {
+        if (toIndex < fromIndex || fromIndex < 0 || toIndex > size) {
             throw new IndexOutOfBoundsException();
         }
         final IntList subList = new IntList();
-        System.arraycopy(vals, fromIndex, subList.vals, 0, toIndex-fromIndex);
+        System.arraycopy(vals, fromIndex, subList.vals, 0, toIndex - fromIndex);
         subList.size = toIndex - fromIndex;
         return subList;
     }
-    
+
     public void sort() {
         Arrays.sort(vals, 0, size);
     }

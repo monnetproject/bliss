@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- ********************************************************************************
+ * *******************************************************************************
  */
 package eu.monnetproject.math.sparse;
 
@@ -54,7 +54,7 @@ public interface Vector<N extends Number> {
      * @return The value
      */
     int intValue(int idx);
-    
+
     /**
      * The value at the given index. Note the default value will be returned at
      * sparse indexes
@@ -63,7 +63,7 @@ public interface Vector<N extends Number> {
      * @return The value
      */
     N value(int idx);
-    
+
     /**
      * Set a value at a given index
      *
@@ -72,7 +72,7 @@ public interface Vector<N extends Number> {
      * @return The previous value
      */
     N put(Integer idx, N n);
-    
+
     /**
      * Set a value at a given index
      *
@@ -81,7 +81,7 @@ public interface Vector<N extends Number> {
      * @return The previous value
      */
     double put(int idx, double value);
-    
+
     /**
      * Set a value at a given index
      *
@@ -128,7 +128,7 @@ public interface Vector<N extends Number> {
      * @param val The value
      */
     void divide(int idx, int val);
-    
+
     /**
      * Add a value to the sparse array. This will automatically remove an
      * element if it results in the value at this index being the sparse value
@@ -166,10 +166,10 @@ public interface Vector<N extends Number> {
      * @param val The value
      */
     void divide(int idx, double val);
-    
+
     /**
-     * Add a vector to this vector. This will automatically remove an
-     * element if it results in the value at this index being the sparse value
+     * Add a vector to this vector. This will automatically remove an element if
+     * it results in the value at this index being the sparse value
      *
      * @param vector The vector
      */
@@ -183,9 +183,10 @@ public interface Vector<N extends Number> {
      * @param val The value
      */
     <M extends Number> void sub(Vector<M> vector);
-    
+
     /**
      * Multiply all values of this matrix by a value
+     *
      * @param n The value to multiply by
      */
     void multiply(double n);
@@ -200,18 +201,20 @@ public interface Vector<N extends Number> {
     <M extends Number> double innerProduct(Vector<M> y);
 
     /**
-     * Calculate the outer product of this array with another array i.e., this y^T
+     * Calculate the outer product of this array with another array i.e., this
+     * y^T
+     *
      * @param y The other array
      * @param using The factory for creating rows of the matrix
      * @return The outer product matrix
      */
     <M extends Number, O extends Number> Matrix<O> outerProduct(Vector<M> y, Vectors.Factory<O> using);
-    
+
     /**
      * Get all non-sparse values in the array
      */
     Set<Map.Entry<Integer, N>> entrySet();
-    
+
     /**
      * Convert to a dense array
      */
@@ -232,38 +235,43 @@ public interface Vector<N extends Number> {
      * array
      */
     int length();
-    
+
     /**
      * Return the 2-norm.
      */
     double norm();
+
     /**
      * Creates a copy of this vector
      */
     Vector<N> clone();
-    
+
     /**
      * The factory for making more of this type of vector
-     * @return 
+     *
+     * @return
      */
     Vectors.Factory<N> factory();
-    
+
     /**
      * Get the set of indices with non-default value
-     * @return 
+     *
+     * @return
      */
     IntSet keySet();
-    
+
     /**
      * Is the following index in range and with non-default value
+     *
      * @param idx
-     * @return 
+     * @return
      */
     boolean containsKey(int idx);
-    
+
     /**
      * Get the sum of all the values in this vector
-     * @return 
+     *
+     * @return
      */
     N sum();
 }

@@ -12,7 +12,7 @@
  * of its contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE MONNET PROJECT BE LIABLE FOR ANY
@@ -93,7 +93,7 @@ public class HouseholderTridiagonalization {
             }
 
             for (int i = 1; i < n - k; i++) {
-                beta[k] -= A2.doubleValue(i+k, k) * ((i == 1 ? 1 : 0) - 2 * v.doubleValue(i-1)*v.doubleValue(0) / vtv);
+                beta[k] -= A2.doubleValue(i + k, k) * ((i == 1 ? 1 : 0) - 2 * v.doubleValue(i - 1) * v.doubleValue(0) / vtv);
             }
             for (int i = 0; i < n - k - 1; i++) {
                 for (int j = 0; j < n - k - 1; j++) {
@@ -102,10 +102,10 @@ public class HouseholderTridiagonalization {
             }
             alpha[k] = A2.doubleValue(k, k);
         }
-        beta[n-2] = A2.doubleValue(n-1, n-2);
-        alpha[n-2] = A2.doubleValue(n-2, n-2);
-        alpha[n-1] = A2.doubleValue(n-1, n-1);
-             
+        beta[n - 2] = A2.doubleValue(n - 1, n - 2);
+        alpha[n - 2] = A2.doubleValue(n - 2, n - 2);
+        alpha[n - 1] = A2.doubleValue(n - 1, n - 1);
+
         return new TridiagonalMatrix(alpha, beta);
     }
 }

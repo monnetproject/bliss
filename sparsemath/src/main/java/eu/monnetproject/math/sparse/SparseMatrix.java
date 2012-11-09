@@ -147,13 +147,13 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
             return y;
         }
     }
-    
+
     @Override
     public <M extends Number> Vector<N> multTransposed(Vector<M> x) {
         assert (m == cols());
         double[] result = new double[m];
-        Arrays.fill(result, m*defaultValue);
-        for(int i = 0; i < arr.length; i++) {
+        Arrays.fill(result, m * defaultValue);
+        for (int i = 0; i < arr.length; i++) {
             for (Map.Entry<Integer, N> e : arr[i].entrySet()) {
                 result[e.getKey().intValue()] += e.getValue().doubleValue() - defaultValue;
             }
@@ -304,12 +304,12 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
         assert (innerProduct.cols() == n);
         assert (innerProduct.rows() == n);
         for (int k = 0; k < n; k++) {
-            for(Map.Entry<Integer,N> e : arr[k].entrySet()) {
+            for (Map.Entry<Integer, N> e : arr[k].entrySet()) {
                 final int j = e.getKey();
-                for(int i = 0; i < n; i++) {
+                for (int i = 0; i < n; i++) {
                     final double v = arr[k].doubleValue(i) * e.getValue().doubleValue();
-                    if(v != 0) {
-                        innerProduct.add(i,j,v);
+                    if (v != 0) {
+                        innerProduct.add(i, j, v);
                     }
                 }
             }
@@ -587,9 +587,8 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
     }
 
     @Override
-    public VectorFunction<N,N> asVectorFunction() {
-        return new VectorFunction<N,N>() {
-
+    public VectorFunction<N, N> asVectorFunction() {
+        return new VectorFunction<N, N>() {
             @Override
             public Vector<N> apply(Vector<N> v) {
                 return mult(v);
@@ -644,23 +643,22 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
             using = (Factory<N>) AS_SPARSE_INTS;
         }
     }
-    
-    
+
     @Override
     public <M extends Number> Matrix<N> product(Matrix<M> B) {
-        if(this.cols() != B.rows()) {
+        if (this.cols() != B.rows()) {
             throw new IllegalArgumentException("Matrix dimensions not suitable for product");
         }
-        if(defaultValue != 0.0 || (B instanceof SparseMatrix && ((SparseMatrix)B).defaultValue != 0.0)) {
+        if (defaultValue != 0.0 || (B instanceof SparseMatrix && ((SparseMatrix) B).defaultValue != 0.0)) {
             throw new UnsupportedOperationException();
         }
         Vector<N>[] res = new Vector[this.rows()];
-        for(int i = 0; i < this.rows(); i++) {
-            res[i] = using.make(B.cols(),0.0);
-            for(int j : this.arr[i].keySet()) {
+        for (int i = 0; i < this.rows(); i++) {
+            res[i] = using.make(B.cols(), 0.0);
+            for (int j : this.arr[i].keySet()) {
                 final Vector<M> r = B.row(j);
-                for(int k : r.keySet()) {
-                    res[i].add(k,this.arr[i].doubleValue(j) * B.doubleValue(j, k));
+                for (int k : r.keySet()) {
+                    res[i].add(k, this.arr[i].doubleValue(j) * B.doubleValue(j, k));
                 }
             }
         }
@@ -706,13 +704,12 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
     public String toString() {
         return "SparseMatrix{" + "arr=" + Arrays.toString(arr) + '}';
     }
-    
-    
+
     @Override
     public double[][] toDoubleArray() {
         double[][] d = new double[rows()][cols()];
-        for(int i = 0; i < rows(); i++) {
-            for(int j = 0; j < rows(); j++) {
+        for (int i = 0; i < rows(); i++) {
+            for (int j = 0; j < rows(); j++) {
                 d[i][j] = doubleValue(i, j);
             }
         }

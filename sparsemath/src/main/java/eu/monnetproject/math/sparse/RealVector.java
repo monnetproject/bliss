@@ -89,14 +89,14 @@ public class RealVector implements Vector<Double> {
 
     @Override
     public int put(int idx, int value) {
-        int r = (int)data[idx];
+        int r = (int) data[idx];
         data[idx] = value;
         return r;
     }
 
     @Override
     public int add(int idx, int val) {
-        int r = (int)data[idx];
+        int r = (int) data[idx];
         data[idx] += val;
         return r;
     }
@@ -115,8 +115,7 @@ public class RealVector implements Vector<Double> {
     public void divide(int idx, int val) {
         data[idx] /= val;
     }
-    
-    
+
     @Override
     public double add(int idx, double val) {
         double r = data[idx];
@@ -141,14 +140,14 @@ public class RealVector implements Vector<Double> {
 
     @Override
     public <M extends Number> void add(Vector<M> vector) {
-        assert(vector.length() == data.length);
-        if(vector instanceof RealVector) {
-            final double[] data2 = ((RealVector)vector).data;
-            for(int i = 0; i < data.length; i++) {
+        assert (vector.length() == data.length);
+        if (vector instanceof RealVector) {
+            final double[] data2 = ((RealVector) vector).data;
+            for (int i = 0; i < data.length; i++) {
                 data[i] += data2[i];
             }
         } else {
-            for(Map.Entry<Integer,M> e : vector.entrySet()) {
+            for (Map.Entry<Integer, M> e : vector.entrySet()) {
                 data[e.getKey()] += e.getValue().doubleValue();
             }
         }
@@ -156,27 +155,26 @@ public class RealVector implements Vector<Double> {
 
     @Override
     public <M extends Number> void sub(Vector<M> vector) {
-        assert(vector.length() == data.length);
-        if(vector instanceof RealVector) {
-            final double[] data2 = ((RealVector)vector).data;
-            for(int i = 0; i < data.length; i++) {
+        assert (vector.length() == data.length);
+        if (vector instanceof RealVector) {
+            final double[] data2 = ((RealVector) vector).data;
+            for (int i = 0; i < data.length; i++) {
                 data[i] -= data2[i];
             }
         } else {
-            for(Map.Entry<Integer,M> e : vector.entrySet()) {
+            for (Map.Entry<Integer, M> e : vector.entrySet()) {
                 data[e.getKey()] -= e.getValue().doubleValue();
             }
         }
     }
-    
-    
+
     @Override
     public void multiply(double n) {
-        for(int i = 0; i < data.length; i++) {
+        for (int i = 0; i < data.length; i++) {
             data[i] *= n;
         }
     }
-    
+
     @Override
     public <M extends Number> double innerProduct(Vector<M> y) {
         assert (y.length() == data.length);
@@ -201,35 +199,35 @@ public class RealVector implements Vector<Double> {
             return innerProduct;
         }
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public <M extends Number, O extends Number> Matrix<O> outerProduct(Vector<M> y, Factory<O> using) {
-        if(using == Vectors.AS_INTS) {
+        if (using == Vectors.AS_INTS) {
             int[][] data2 = new int[data.length][y.length()];
-            for(int i = 0; i < data.length; i++) {
-                for(int j = 0; j < y.length(); j++) {
-                    data2[i][j] = (int)(data[i] * y.intValue(j));
+            for (int i = 0; i < data.length; i++) {
+                for (int j = 0; j < y.length(); j++) {
+                    data2[i][j] = (int) (data[i] * y.intValue(j));
                 }
             }
-            return (Matrix<O>)new IntArrayMatrix(data2);
-        } else if(using == Vectors.AS_REALS) {
+            return (Matrix<O>) new IntArrayMatrix(data2);
+        } else if (using == Vectors.AS_REALS) {
             double[][] data2 = new double[data.length][y.length()];
-            for(int i = 0; i < data.length; i++) {
-                for(int j = 0; j < y.length(); j++) {
+            for (int i = 0; i < data.length; i++) {
+                for (int j = 0; j < y.length(); j++) {
                     data2[i][j] = y.doubleValue(j) * data[i];
                 }
             }
-            return (Matrix<O>)new DoubleArrayMatrix(data2);
-        } else  {
+            return (Matrix<O>) new DoubleArrayMatrix(data2);
+        } else {
             final SparseMatrix<O> matrix = new SparseMatrix<O>(data.length, y.length(), using);
-            for(int i = 0; i < data.length; i++) {
-                for(Map.Entry<Integer,M> e : y.entrySet()) {
+            for (int i = 0; i < data.length; i++) {
+                for (Map.Entry<Integer, M> e : y.entrySet()) {
                     matrix.set(i, e.getKey(), e.getValue().doubleValue() * data[i]);
                 }
             }
             return matrix;
-        } 
+        }
     }
 
     @Override
@@ -252,11 +250,11 @@ public class RealVector implements Vector<Double> {
         }
         return size;
     }
-    
+
     @Override
     public double norm() {
         double norm = 0.0;
-        for(int i = 0; i < data.length; i++) {
+        for (int i = 0; i < data.length; i++) {
             norm += data[i] * data[i];
         }
         return Math.sqrt(norm);
@@ -364,7 +362,6 @@ public class RealVector implements Vector<Double> {
         @Override
         public Iterator<Map.Entry<Integer, Double>> iterator() {
             return new Iterator<Entry<Integer, Double>>() {
-
                 int n = 0;
 
                 @Override
@@ -377,7 +374,6 @@ public class RealVector implements Vector<Double> {
                     if (n < data.length) {
                         final int m = n++;
                         return new Map.Entry<Integer, Double>() {
-
                             @Override
                             public Integer getKey() {
                                 return m;
@@ -412,25 +408,25 @@ public class RealVector implements Vector<Double> {
             return data.length;
         }
     }
-    
+
     @Override
     public IntSet keySet() {
         return new IntStreamSet(size());
     }
-    
-    
-    
+
     private static class IntStreamSet extends AbstractIntSet {
+
         private final int N;
-        
+
         public IntStreamSet(int N) {
             this.N = N;
         }
-            
+
         @Override
         public IntIterator iterator() {
             return new IntIterator() {
                 private int n;
+
                 @Override
                 public boolean hasNext() {
                     return n < N;
@@ -453,12 +449,10 @@ public class RealVector implements Vector<Double> {
 
                 @Override
                 public int skip(int m) {
-                    int rval = Math.min(N-n, m);
+                    int rval = Math.min(N - n, m);
                     n += m;
                     return rval;
                 }
-                
-                
             };
         }
 
@@ -466,10 +460,8 @@ public class RealVector implements Vector<Double> {
         public int size() {
             return N;
         }
-        
     }
-    
-    
+
     @Override
     public boolean containsKey(int idx) {
         return idx >= 0 && idx < length();
@@ -478,8 +470,8 @@ public class RealVector implements Vector<Double> {
     @Override
     public Double sum() {
         double i = 0;
-        for(double j : data) {
-            i+=j;
+        for (double j : data) {
+            i += j;
         }
         return i;
     }

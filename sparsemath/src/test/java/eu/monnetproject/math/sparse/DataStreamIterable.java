@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,11 +43,13 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
  * @author John McCrae
  */
 public class DataStreamIterable implements IntIterable {
+
     private final File file;
 
     public DataStreamIterable(File file) throws IOException {
         this.file = file;
     }
+
     public static InputStream openInputAsMaybeZipped(File file) throws IOException {
         if (file.getName().endsWith(".gz")) {
             return new GZIPInputStream(new FileInputStream(file));
@@ -56,15 +59,16 @@ public class DataStreamIterable implements IntIterable {
             return new FileInputStream(file);
         }
     }
+
     @Override
     public IntIterator iterator() {
         try {
             return new DataInputStreamAsIntIterator(openInputAsMaybeZipped(file));
-        } catch(IOException x) {
+        } catch (IOException x) {
             throw new RuntimeException(x);
-        } 
+        }
     }
-    
+
     private static class DataInputStreamAsIntIterator implements IntIterator {
 
         private final DataInputStream data;
@@ -125,5 +129,4 @@ public class DataStreamIterable implements IntIterable {
             throw new UnsupportedOperationException("Not mutable.");
         }
     }
-    
 }

@@ -97,7 +97,7 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
 
     @Override
     public int put(int idx, int value) {
-        return (int)super.put(idx, value);
+        return (int) super.put(idx, value);
     }
 
     /**
@@ -284,7 +284,7 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
 
     @Override
     public int add(int idx, int val) {
-        return (int)add(idx, (double) val);
+        return (int) add(idx, (double) val);
     }
 
     @Override
@@ -334,10 +334,11 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
             sub(e.getKey(), e.getValue().doubleValue());
         }
     }
+
     @Override
     public void multiply(double n) {
-        for(Map.Entry<Integer,Double> e : entrySet()) {
-            e.setValue(e.getValue()*n);
+        for (Map.Entry<Integer, Double> e : entrySet()) {
+            e.setValue(e.getValue() * n);
         }
         defaultValue *= n;
     }
@@ -452,6 +453,4 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
     public Factory<Double> factory() {
         return Vectors.AS_SPARSE_REALS;
     }
-    
-    
 }

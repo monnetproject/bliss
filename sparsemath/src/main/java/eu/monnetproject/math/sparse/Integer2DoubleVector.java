@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,7 @@ import java.util.Set;
  * @author John McCrae
  */
 public class Integer2DoubleVector implements Vector<Double> {
+
     private final Vector<Integer> v;
 
     public Integer2DoubleVector(Vector<Integer> v) {
@@ -142,12 +144,10 @@ public class Integer2DoubleVector implements Vector<Double> {
     public Set<Entry<Integer, Double>> entrySet() {
         final Set<Entry<Integer, Integer>> es = v.entrySet();
         return new AbstractSet<Entry<Integer, Double>>() {
-
             @Override
             public Iterator<Entry<Integer, Double>> iterator() {
-                final Iterator<Entry<Integer,Integer>> it = es.iterator();
+                final Iterator<Entry<Integer, Integer>> it = es.iterator();
                 return new Iterator<Entry<Integer, Double>>() {
-
                     @Override
                     public boolean hasNext() {
                         return it.hasNext();
@@ -157,7 +157,6 @@ public class Integer2DoubleVector implements Vector<Double> {
                     public Entry<Integer, Double> next() {
                         final Entry<Integer, Integer> e = it.next();
                         return new Entry<Integer, Double>() {
-
                             @Override
                             public Integer getKey() {
                                 return e.getKey();
@@ -221,12 +220,12 @@ public class Integer2DoubleVector implements Vector<Double> {
 
     @Override
     public Factory<Double> factory() {
-        if(v.factory() == Vectors.AS_SPARSE_INTS) {
+        if (v.factory() == Vectors.AS_SPARSE_INTS) {
             return Vectors.AS_SPARSE_REALS;
         } else {
             return Vectors.AS_REALS;
         }
-        
+
     }
 
     @Override
@@ -243,7 +242,4 @@ public class Integer2DoubleVector implements Vector<Double> {
     public boolean containsKey(int idx) {
         return v.containsKey(idx);
     }
-    
-    
-    
 }

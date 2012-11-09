@@ -417,7 +417,7 @@ public class TridiagonalMatrix implements Matrix<Double> {
                 final double bga2 = beta[i] * gamma[i] + alpha[i + 1];
                 if (bga2 == 0.0) {
                     // Value is 'free'
-                    delta[i] = delta[i+1] = 1.0;
+                    delta[i] = delta[i + 1] = 1.0;
                 } else {
                     gamma[i + 1] = (v.doubleValue(i + 1) - beta[i] * delta[i]) / bga2;
                     delta[i + 1] = -1.0 * beta[i + 1] / bga2;
@@ -430,8 +430,8 @@ public class TridiagonalMatrix implements Matrix<Double> {
 
         double[] w = new double[n];
         final double bga3 = beta[n - 2] * gamma[n - 2] + alpha[n - 1];
-        if(bga3 == 0.0) {
-            w[n-1] = 1.0; // value is 'free'
+        if (bga3 == 0.0) {
+            w[n - 1] = 1.0; // value is 'free'
         } else {
             w[n - 1] = (v.doubleValue(n - 1) - beta[n - 2] * delta[n - 2]) / bga3;
         }
@@ -446,21 +446,19 @@ public class TridiagonalMatrix implements Matrix<Double> {
         return mult(x);
     }
 
-    
     @Override
     public <M extends Number> Matrix<Double> product(Matrix<M> B) {
-        if(this.cols() != B.rows()) {
+        if (this.cols() != B.rows()) {
             throw new IllegalArgumentException("Matrix dimensions not suitable for product");
         }
         double[][] res = new double[this.rows()][B.cols()];
-        for(int i = 0; i < this.rows(); i++) {
-                for(int k = 0; k < B.cols(); k++) {
-                    res[i][k] = (i > 0 ? beta[i-1] * B.doubleValue(i-1, k) : 0.0) +
-                            alpha[i] * B.doubleValue(i, k) +
-                            (i + 1 != this.rows() ? beta[i] * B.doubleValue(i+1, k) : 0.0);
+        for (int i = 0; i < this.rows(); i++) {
+            for (int k = 0; k < B.cols(); k++) {
+                res[i][k] = (i > 0 ? beta[i - 1] * B.doubleValue(i - 1, k) : 0.0)
+                        + alpha[i] * B.doubleValue(i, k)
+                        + (i + 1 != this.rows() ? beta[i] * B.doubleValue(i + 1, k) : 0.0);
             }
         }
         return new DoubleArrayMatrix(res);
     }
-    
 }

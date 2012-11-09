@@ -1,29 +1,29 @@
-/**********************************************************************************
- * Copyright (c) 2011, Monnet Project
- * All rights reserved.
- * 
+/**
+ * ********************************************************************************
+ * Copyright (c) 2011, Monnet Project All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the Monnet Project nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE MONNET PROJECT BE LIABLE FOR ANY
+ * modification, are permitted provided that the following conditions are met: *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. * Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution. * Neither the name of the Monnet Project nor the names
+ * of its contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE MONNET PROJECT BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *********************************************************************************/
+ * *******************************************************************************
+ */
 package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
@@ -65,9 +65,9 @@ public class IntArrayMatrix implements Matrix<Integer> {
 
     @Override
     public <M extends Number> Vector<Integer> mult(Vector<M> x) {
-        return mult(x,Vectors.AS_INTS);
+        return mult(x, Vectors.AS_INTS);
     }
-    
+
     @Override
     public <M extends Number, O extends Number> Vector<O> mult(Vector<M> x, Vectors.Factory<O> using) {
         assert (x.length() == n);
@@ -95,8 +95,8 @@ public class IntArrayMatrix implements Matrix<Integer> {
         }
         return using.make(product);
     }
-    
-     @Override
+
+    @Override
     public <M extends Number> Vector<Integer> multTransposed(Vector<M> x) {
         assert (x.length() == n);
         double[] product = new double[m];
@@ -126,10 +126,11 @@ public class IntArrayMatrix implements Matrix<Integer> {
 
     @Override
     public boolean isSymmetric() {
-        for(int i = 0; i < m; i++) {
-            for(int j = i+1; j < n; j++) {
-                if(data[i][j] != data[j][i])
+        for (int i = 0; i < m; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (data[i][j] != data[j][i]) {
                     return false;
+                }
             }
         }
         return true;
@@ -138,8 +139,8 @@ public class IntArrayMatrix implements Matrix<Integer> {
     @Override
     public Matrix<Integer> transpose() {
         int[][] data2 = new int[n][m];
-        for(int i = 0; i < m; i++) {
-            for(int j = 0; j < n; j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 data2[j][i] = data[i][j];
             }
         }
@@ -150,9 +151,6 @@ public class IntArrayMatrix implements Matrix<Integer> {
     public Vector<Integer> row(int i) {
         return new IntVector(data[i]);
     }
-    
-    
-    
 
     /**
      * Get the underlying data
@@ -183,15 +181,14 @@ public class IntArrayMatrix implements Matrix<Integer> {
 
     @Override
     public void set(int i, int j, double v) {
-        data[i][j] = (int)v;
+        data[i][j] = (int) v;
     }
 
     @Override
     public void set(int i, int j, Integer v) {
         data[i][j] = v;
     }
-    
-    
+
     @Override
     public void add(int i, int j, int v) {
         data[i][j] += v;
@@ -199,7 +196,7 @@ public class IntArrayMatrix implements Matrix<Integer> {
 
     @Override
     public void add(int i, int j, double v) {
-        data[i][j] += (int)v;
+        data[i][j] += (int) v;
     }
 
     @Override
@@ -216,11 +213,11 @@ public class IntArrayMatrix implements Matrix<Integer> {
     public int cols() {
         return n;
     }
-    
+
     @Override
     public <M extends Number> void add(Matrix<M> matrix) {
-        for(int i = 0; i < m; i++) {
-            for(int j = 0; j < n ;j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 data[i][j] += matrix.doubleValue(i, j);
             }
         }
@@ -228,17 +225,16 @@ public class IntArrayMatrix implements Matrix<Integer> {
 
     @Override
     public <M extends Number> void sub(Matrix<M> matrix) {
-        for(int i = 0; i < m; i++) {
-            for(int j = 0; j < n ;j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 data[i][j] -= matrix.doubleValue(i, j);
             }
         }
     }
 
     @Override
-    public VectorFunction<Integer,Integer> asVectorFunction() {
-        return new VectorFunction<Integer,Integer>() {
-
+    public VectorFunction<Integer, Integer> asVectorFunction() {
+        return new VectorFunction<Integer, Integer>() {
             @Override
             public Vector<Integer> apply(Vector<Integer> v) {
                 return mult(v);
@@ -250,7 +246,7 @@ public class IntArrayMatrix implements Matrix<Integer> {
     public Factory<Integer> factory() {
         return Vectors.AS_INTS;
     }
-    
+
     public static IntArrayMatrix fromFile(File file) throws IOException {
         final BufferedReader in = new BufferedReader(new FileReader(file));
         String s;
@@ -258,41 +254,40 @@ public class IntArrayMatrix implements Matrix<Integer> {
         final int n = Integer.parseInt(in.readLine());
         int[][] arrs = new int[m][];
         int idx = 0;
-        while((s = in.readLine()) != null) {
+        while ((s = in.readLine()) != null) {
             final String[] ss = s.split(",");
             final int[] arr = new int[ss.length];
-            for(int i = 0; i < ss.length; i++) {
+            for (int i = 0; i < ss.length; i++) {
                 arr[i] = Integer.parseInt(ss[i].replaceAll("\\[\\]\\s", ""));
             }
-            if(idx >= m) {
+            if (idx >= m) {
                 throw new IOException("Too many lines");
             }
             arrs[idx++] = arr;
         }
         return new IntArrayMatrix(arrs);
     }
-    
+
     public void toFile(File file) throws IOException {
         final PrintWriter out = new PrintWriter(file);
         out.println(m);
         out.println(n);
-        for(int i = 0; i < m; i++) {
+        for (int i = 0; i < m; i++) {
             out.println(Arrays.toString(data[m]));
         }
         out.flush();
         out.close();
     }
-    
-    
+
     @Override
     public <M extends Number> Matrix<Integer> product(Matrix<M> B) {
-        if(this.cols() != B.rows()) {
+        if (this.cols() != B.rows()) {
             throw new IllegalArgumentException("Matrix dimensions not suitable for product");
         }
         int[][] res = new int[this.rows()][B.cols()];
-        for(int i = 0; i < this.rows(); i++) {
-            for(int j = 0; j < this.cols(); j++) {
-                for(int k = 0; k < B.cols(); k++) {
+        for (int i = 0; i < this.rows(); i++) {
+            for (int j = 0; j < this.cols(); j++) {
+                for (int k = 0; k < B.cols(); k++) {
                     res[i][k] += data[i][j] * B.doubleValue(j, k);
                 }
             }
@@ -303,14 +298,11 @@ public class IntArrayMatrix implements Matrix<Integer> {
     @Override
     public double[][] toDoubleArray() {
         double[][] d = new double[rows()][cols()];
-        for(int i = 0; i < rows(); i++) {
-            for(int j = 0; j < rows(); j++) {
+        for (int i = 0; i < rows(); i++) {
+            for (int j = 0; j < rows(); j++) {
                 d[i][j] = doubleValue(i, j);
             }
         }
         return d;
     }
-    
-    
 }
-

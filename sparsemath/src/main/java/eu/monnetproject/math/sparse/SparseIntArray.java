@@ -270,7 +270,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
     public Integer sum() {
         int sum = defaultValue * n;
         for (int v : values()) {
-            sum += v-defaultValue;
+            sum += v - defaultValue;
         }
         return sum;
     }
@@ -324,9 +324,9 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
     }
 
     public static SparseIntArray fromBinary(File file, int W) throws IOException {
-        return fromBinary(new FileInputStream(file),W);
+        return fromBinary(new FileInputStream(file), W);
     }
-    
+
     public static SparseIntArray fromBinary(InputStream stream, int W) throws IOException {
         final DataInputStream dis = new DataInputStream(stream);
         final SparseIntArray arr = new SparseIntArray(W);
@@ -339,7 +339,7 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
         }
         return arr;
     }
-    
+
     @Override
     public void sub(int idx, double i) {
         add(idx, -i);

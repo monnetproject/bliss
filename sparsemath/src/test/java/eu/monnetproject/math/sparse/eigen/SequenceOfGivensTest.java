@@ -44,9 +44,9 @@ public class SequenceOfGivensTest {
         instance.add(0, 1, 0.7682, -0.6402);
         instance.applyTo(matrix);
         double[][] expResult = new double[][]{
-            {7.8102,4.4812,2.5608},
-            {-.0002,-2.4328,3.0728},
-            {0,4,3}
+            {7.8102, 4.4812, 2.5608},
+            {-.0002, -2.4328, 3.0728},
+            {0, 4, 3}
         };
         assertArrayEquals(expResult[0], matrix[0], 0.01);
         assertArrayEquals(expResult[1], matrix[1], 0.01);
@@ -64,9 +64,9 @@ public class SequenceOfGivensTest {
         instance.add(0, 1, 0.7682, -0.6402);
         instance.applyTransposed(matrix);
         double[][] expResult = new double[][]{
-            {1.4082,7.6822,0},
-            {3.2008,3.9692,4},
-            {-2.5608,3.0728,3}
+            {1.4082, 7.6822, 0},
+            {3.2008, 3.9692, 4},
+            {-2.5608, 3.0728, 3}
         };
         assertArrayEquals(expResult[0], matrix[0], 0.01);
         assertArrayEquals(expResult[1], matrix[1], 0.01);
