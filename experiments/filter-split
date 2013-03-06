@@ -3,8 +3,8 @@
 if [ "$1" == "-v" ]
 then
   shift
-  mvn exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterAndSplitCorpus" -Dexec.args="$*"
+  mvn exec:java -Dexec.mainClass="eu.monnetproject.bliss.experiments.FilterAndSplitCorpus" -Dexec.args="$*"
 else
-  mvn -q exec:java -Dexec.mainClass="eu.monnetproject.translation.topics.experiments.FilterAndSplitCorpus" -Dexec.args="$*"
+  mvn -q exec:java -Dexec.mainClass="eu.monnetproject.bliss.experiments.FilterAndSplitCorpus" -Dexec.args="$*"
 fi
 
