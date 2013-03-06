@@ -2,8 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
+import eu.monnetproject.bliss.PTBTokenizer;
 import eu.monnetproject.lang.Script;
 import java.util.Arrays;
 import java.util.Iterator;

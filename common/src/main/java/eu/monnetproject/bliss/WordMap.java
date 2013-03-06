@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -184,5 +184,20 @@ public class WordMap extends Object2IntOpenHashMap<String> {
     @Override
     public Integer put(String ok, Integer ov) {
         return super.put(ok, ov);
+    }
+    
+    public static int calcW(File wordMapFile) throws IOException {
+        int W = 0;
+        int n = 0;
+        final DataInputStream data = new DataInputStream(new FileInputStream(wordMapFile));
+        while(data.available() > 0) {
+            data.readUTF();
+            int w = data.readInt();
+            if(w > W) {
+                W = w;
+            }
+        }
+        data.close();
+        return W+1;
     }
 }

@@ -24,12 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import eu.monnetproject.lang.Language;
 import eu.monnetproject.lang.LanguageCodeFormatException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,6 +38,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
@@ -83,7 +83,9 @@ public class CLIOpts {
                 if (argObjs.get(i).flag != null) {
                     System.err.print("-" + argObjs.get(i).flag + " ");
                 }
-                System.err.print(argObjs.get(i).name);
+                if (argObjs.get(i).name != null) {
+                    System.err.print(argObjs.get(i).name);
+                }
                 if (argObjs.get(i).optional) {
                     System.err.print("]");
                 }
@@ -93,7 +95,7 @@ public class CLIOpts {
             }
             System.err.println("\"");
             for (Argument argObj : argObjs) {
-                System.err.println("\t  * " + argObj.name + ": " + argObj.description);
+                System.err.println("\t  * " + (argObj.name == null ? argObj.flag : argObj.name) + ": " + argObj.description);
             }
             return false;
         } else {
@@ -165,10 +167,35 @@ public class CLIOpts {
         }
     }
 
+    public File woFile(String name, String description, File defaultValue) {
+        final Argument arg = new Argument(name, name, description, true);
+        argObjs.add(arg);
+        if (args.isEmpty()) {
+            return defaultValue;
+        } else {
+            for (int i = 0; i < args.size() - 1; i++) {
+                if (args.get(i).equals("-" + name)) {
+                    final File file = new File(args.get(i + 1));
+                    if (file.exists() && !file.canWrite()) {
+                        arg.message = "Cannot access [" + file.getPath() + "] for " + name;
+                        succeeded = false;
+                        args.remove(i);
+                        args.remove(i);
+                        return null;
+                    }
+                    args.remove(i);
+                    args.remove(i);
+                    return file;
+                }
+            }
+            return defaultValue;
+        }
+    }
+
     public PrintStream outFileOrStdout() {
         final Argument arg = new Argument("out", null, "The out file or nothing to use STDOUT", true);
         argObjs.add(arg);
-        if (args.isEmpty()) {;
+        if (args.isEmpty()) {
             return System.out;
         } else {
             final File file = new File(args.get(0));
@@ -207,6 +234,33 @@ public class CLIOpts {
             args.remove(0);
             return i;
         }
+    }
+
+    public int intValue(String name, String description, int defaultValue) {
+        final Argument arg = new Argument(name, name, description, true);
+        argObjs.add(arg);
+        if (args.isEmpty()) {
+            return defaultValue;
+        } else {
+            for (int i = 0; i < args.size(); i++) {
+                try {
+                    if (args.get(i).equals("-" + name)) {
+                        int j = Integer.parseInt(args.get(i + 1));
+                        args.remove(i);
+                        args.remove(i);
+                        return j;
+                    }
+                } catch (NumberFormatException x) {
+                    arg.message = "Not an integer " + args.get(0) + " for " + name;
+                    succeeded = false;
+                    args.remove(i);
+                    args.remove(i);
+                    return 0;
+                }
+            }
+            return defaultValue;
+        }
+
     }
 
     public int nonNegIntValue(String name, String description) {
@@ -309,14 +363,14 @@ public class CLIOpts {
             return defaultValue;
         }
     }
-    
+
     public boolean flag(String name, String description) {
-        final Argument arg = new Argument(name, name, description, true);
+        final Argument arg = new Argument(null, name, description, true);
         argObjs.add(arg);
-        if(args.isEmpty()) {
+        if (args.isEmpty()) {
             return false;
         } else {
-            for(int i = 0; i < args.size(); i++) {
+            for (int i = 0; i < args.size(); i++) {
                 if (args.get(i).equals("-" + name)) {
                     args.remove(i);
                     return true;
@@ -354,9 +408,46 @@ public class CLIOpts {
             return (Class<C>) clazz;
         }
     }
-    
+
+    @SuppressWarnings("unchecked")
+    public <C> Class<C> clazz(String name, Class<C> interfase, String description, final Map<String, String> shortNames) {
+        final StringBuilder sb = new StringBuilder(" (");
+        for (String s : shortNames.keySet()) {
+            sb.append(s);
+            sb.append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append(")");
+        final Argument arg = new Argument(name, null, description + sb.toString(), false);
+        argObjs.add(arg);
+        if (args.isEmpty()) {
+            arg.message = "Too few arguments: expected " + name;
+            succeeded = false;
+            return null;
+        } else {
+            final Class<?> clazz;
+            final String className = shortNames.containsKey(args.get(0)) ? shortNames.get(args.get(0)) : args.get(0);
+            try {
+                clazz = Class.forName(className);
+            } catch (ClassNotFoundException x) {
+                arg.message = "Class not found: " + args.get(0);
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            if (!interfase.isAssignableFrom(clazz)) {
+                arg.message = clazz.getName() + " must implement " + interfase.getName();
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            args.remove(0);
+            return (Class<C>) clazz;
+        }
+    }
+
     public Language language(String name, String description) {
-        
+
         final Argument arg = new Argument(name, null, description, false);
         argObjs.add(arg);
         if (args.isEmpty()) {
@@ -367,7 +458,7 @@ public class CLIOpts {
             final Language language;
             try {
                 language = Language.get(args.get(0));
-            } catch(LanguageCodeFormatException x) {
+            } catch (LanguageCodeFormatException x) {
                 arg.message = "Bad language code: " + args.get(0);
                 succeeded = false;
                 args.remove(0);
@@ -376,6 +467,21 @@ public class CLIOpts {
             args.remove(0);
             return language;
         }
+    }
+
+    public void restAsSystemProperties() {
+        final Argument arg = new Argument("...", null, "Other parameters as x=y", false);
+        for (String argi : args) {
+            final String[] s = argi.split("=");
+            if (s.length != 2) {
+                arg.message = "Not a valid argument: " + argi;
+                succeeded = false;
+                return;
+            } else {
+                System.setProperty(s[0], s[1]);
+            }
+        }
+        args.clear();
     }
 
     /**

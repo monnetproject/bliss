@@ -24,34 +24,35 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************************/
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import eu.monnetproject.math.sparse.Vector;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 /**
- * A cross-lingual similarity metric
+ * A similarity metric that uses n-grams
  * 
  * @author John McCrae
  */
-public interface SimilarityMetric {
-
+public interface NGramSimilarityMetric {
     /**
-     * The vector representation of the document in the source language
-     * @param termVec The document as a term-frequency array
-     * @return The vector representation of this document
+     * Calculate the vector for the source language
+     * @param ngramFreqs A map of ngrams to their frequencies (it can be assumed missing n-grams have frequency 0)
+     * @return A vector representation of the document in some semantic space
      */
-    Vector<Double> simVecSource(Vector<Integer> termVec);
-    
+    Vector<Double> simVecSource(Object2IntMap<NGram> ngramFreqs);
     /**
-     * The vector representation of the document in the target language
-     * @param termVec The document as a term-frequency array
-     * @return The vector representation of this document
+     * Calculate the vector for the target language
+     * @param ngramFreqs A map of ngrams to their frequencies (it can be assumed missing n-grams have frequency 0)
+     * @return A vector representation of the document in some semantic space
      */
-    Vector<Double> simVecTarget(Vector<Integer> termVec);
-    
+    Vector<Double> simVecTarget(Object2IntMap<NGram> ngramFreqs);
     /**
-     * The largest word index in the document
-     * @return The largest word index in the document
+     * The maximum token index supported by this metric
      */
     int W();
+    /**
+     * The dimensionality of the semantic space of this metric
+     */
+    int K();
 }

@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import java.io.File;
 import java.io.FileInputStream;

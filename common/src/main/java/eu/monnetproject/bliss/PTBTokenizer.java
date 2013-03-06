@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import eu.monnetproject.lang.Script;
 import java.util.ArrayList;

@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import java.io.IOException;
 
@@ -34,6 +34,8 @@ import java.io.IOException;
 public interface SimilarityMetricFactory<Data> {
 
     SimilarityMetric makeMetric(Data data, int W) throws IOException;
+    
+    NGramSimilarityMetric makeNGramMetric(Data dat, int W) throws IOException;
     
     Class<Data> datatype();
 }

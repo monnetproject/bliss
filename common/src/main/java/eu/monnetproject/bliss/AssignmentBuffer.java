@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -56,14 +56,11 @@ public class AssignmentBuffer {
     }
 
     public int getNext() throws IOException {
-        if (buf == null) {
+        if (buf == null || (pos != 0 && pos % bufSize == 0)) {
             loadBuf();
         }
         final int i = buf.getInt();
         pos += 4;
-        if (pos % bufSize == 0) {
-            loadBuf();
-        }
         return i;
     }
 
@@ -73,7 +70,7 @@ public class AssignmentBuffer {
 
     public void update(int i) {
         if (buf == null || buf.position() == 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("buf.position()=" +buf.position() + " pos=" + pos + "/" + fileSize);
         }
         buf.position(buf.position() - 4);
         buf.putInt(i);

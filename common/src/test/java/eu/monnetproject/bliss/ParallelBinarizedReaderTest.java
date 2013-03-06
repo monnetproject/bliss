@@ -1,5 +1,6 @@
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
+import eu.monnetproject.bliss.ParallelBinarizedReader;
 import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.ByteArrayInputStream;
 import org.junit.After;

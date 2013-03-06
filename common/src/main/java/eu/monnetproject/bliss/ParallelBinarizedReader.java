@@ -24,9 +24,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
 import eu.monnetproject.math.sparse.SparseIntArray;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntRBTreeMap;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -78,7 +80,9 @@ public final class ParallelBinarizedReader {
             }
         }
         if (l1 == null) {
-            System.err.println("Corpus did not balance... odd number of documents?");
+            if (loc != 0) {
+                System.err.println("Corpus did not balance... odd number of documents?");
+            }
             return null;
         } else {
             return new int[][]{
@@ -100,12 +104,48 @@ public final class ParallelBinarizedReader {
         }
     }
 
+    public Object2IntMap<NGram>[] nextNGramPair(int N) throws IOException {
+        final int[][] pair = nextPair();
+        if (pair == null) {
+            return null;
+        } else {
+            final NGramCarousel carousel = new NGramCarousel(N);
+            final Object2IntRBTreeMap<NGram>[] ngramPair = new Object2IntRBTreeMap[]{
+                new Object2IntRBTreeMap(),
+                new Object2IntRBTreeMap()
+            };
+            for (int l = 0; l < 2; l++) {
+                for (int i = 0; i < pair[l].length; i++) {
+                    carousel.offer(pair[l][i]);
+                    for (int n = 1; n <= carousel.maxNGram(); n++) {
+                        final NGram ng = carousel.ngram(n);
+                        if (ngramPair[l].containsKey(ng)) {
+                            ngramPair[l].put(ng, ngramPair[l].getInt(ng) + 1);
+                        } else {
+                            ngramPair[l].put(ng, 1);
+                        }
+                    }
+                }
+            }
+            return ngramPair;
+        }
+    }
+
     public SparseIntArray[][] readAll(int W) throws IOException {
         final ArrayList<SparseIntArray[]> sparseArrays = new ArrayList<SparseIntArray[]>();
         SparseIntArray[] sa;
-        while((sa = nextFreqPair(W)) != null) {
+        while ((sa = nextFreqPair(W)) != null) {
             sparseArrays.add(sa);
         }
         return sparseArrays.toArray(new SparseIntArray[sparseArrays.size()][]);
+    }
+
+    public Object2IntMap<NGram>[][] readAllNGrams(int N) throws IOException {
+        final ArrayList<Object2IntMap<NGram>[]> sparseArrays = new ArrayList<Object2IntMap<NGram>[]>();
+        Object2IntMap<NGram>[] sa;
+        while ((sa = nextNGramPair(N)) != null) {
+            sparseArrays.add(sa);
+        }
+        return sparseArrays.toArray(new Object2IntMap[sparseArrays.size()][]);
     }
 }

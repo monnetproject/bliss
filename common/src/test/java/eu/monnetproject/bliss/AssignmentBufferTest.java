@@ -1,5 +1,6 @@
-package eu.monnetproject.translation.topics;
+package eu.monnetproject.bliss;
 
+import eu.monnetproject.bliss.AssignmentBuffer;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
