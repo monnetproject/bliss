@@ -3,7 +3,7 @@
 if [ "$1" == "-v" ]
 then
   shift
-  mvn exec:java -Dexec.mainClass=eu.monnetproject.translation.langmodels.impl.CompileLanguageModel -Dexec.args="$*"
+  mvn exec:java -Dexec.mainClass=eu.monnetproject.bliss.betalm.CompileModel -Dexec.args="$*"
 else
-  mvn -q exec:java -Dexec.mainClass=eu.monnetproject.translation.langmodels.impl.CompileLanguageModel -Dexec.args="$*"
+  mvn -q exec:java -Dexec.mainClass=eu.monnetproject.bliss.betalm.CompileModel -Dexec.args="$*"
 fi

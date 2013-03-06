@@ -1,2 +1,2 @@
-eu.monnetproject.translation.topics.ontology.LDARankerFactory
-eu.monnetproject.translation.topics.ontology.ParaSimRankerFactory
+eu.monnetproject.bliss.ontology.LDARankerFactory
+eu.monnetproject.bliss.ontology.ParaSimRankerFactory
