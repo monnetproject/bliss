@@ -1,4 +1,5 @@
-/*********************************************************************************
+/**
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,26 +24,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-package eu.monnetproject.translation.topics.clesa;
 
-import eu.monnetproject.translation.topics.ParallelBinarizedReader;
-import eu.monnetproject.translation.topics.SimilarityMetric;
-import eu.monnetproject.translation.topics.SimilarityMetricFactory;
-import java.io.IOException;
+package eu.monnetproject.bliss.clesa;
+
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 
 /**
  *
- * @author John McCrae
+ * @author jmccrae
  */
-public class CLESAFactory implements SimilarityMetricFactory<ParallelBinarizedReader> {
+public class NormalizedSimilarity implements CLESASimilarity {
+    private final int[] tf;
 
-    @Override
-    public SimilarityMetric makeMetric(ParallelBinarizedReader reader, int W) throws IOException {
-        return new CLESA(reader.readAll(W), W, null);
+    public NormalizedSimilarity(SparseIntArray[][] x, int l, int W) {
+        this.tf = new int[W];
+        final int J = x.length;
+        for(int j = 0; j < J; j++) {
+            for(int t : x[j][l].keySet()) {
+                tf[t] += x[j][l].intValue(t);
+            }
+        }
     }
 
     @Override
-    public Class<ParallelBinarizedReader> datatype() {
-        return ParallelBinarizedReader.class;
+    public double score(Vector<Integer> q, SparseIntArray d) {
+        double score = 0.0;
+        for(int t : q.keySet()) {
+            if(tf[t] != 0.0) {
+                score += q.doubleValue(t) * d.doubleValue(t) / tf[t];
+            }
+        }
+        return score;
     }
 }

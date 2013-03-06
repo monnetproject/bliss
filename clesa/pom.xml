@@ -4,19 +4,24 @@
 
     <parent>
         <groupId>eu.monnetproject</groupId>
-        <artifactId>translation.topics</artifactId>
-        <version>1.12.10-SNAPSHOT</version>
+        <artifactId>bliss</artifactId>
+        <version>1.13.3</version>
         <relativePath>..</relativePath>
     </parent>
-    <artifactId>translation.topics.clesa</artifactId>
+    <artifactId>bliss.clesa</artifactId>
     <packaging>bundle</packaging>
     
-    <name>eu.monnetproject.translation.topics.clesa</name>
+    <name>eu.monnetproject.bliss.clesa</name>
+    
+      <properties>
+        <netbeans.hint.license>monnet</netbeans.hint.license>
+    </properties>
+  
     
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>translation.topics.betalm</artifactId>
+            <artifactId>bliss.betalm</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
