@@ -27,6 +27,7 @@
 package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -56,6 +57,17 @@ public class DoubleArrayMatrix implements Matrix<Double> {
                 assert (data[i].length == n);
             }
         }
+    }
+
+    public static DoubleArrayMatrix make(int cols, double... data) {
+        if (data.length % cols != 0) {
+            throw new IllegalArgumentException("Number of data points does not divide number of cols");
+        }
+        double[][] d2 = new double[data.length / cols][cols];
+        for (int i = 0; i < data.length; i++) {
+            d2[i / cols][i % cols] = data[i];
+        }
+        return new DoubleArrayMatrix(d2);
     }
 
     @Override
@@ -97,20 +109,20 @@ public class DoubleArrayMatrix implements Matrix<Double> {
         double[] product = new double[n];
         if (x instanceof RealVector) {
             final double[] x2 = ((RealVector) x).data();
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
                     product[i] += data[j][i] * x2[j];
                 }
             }
         } else if (x instanceof IntVector) {
             final int[] x2 = ((IntVector) x).data();
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
                     product[i] += data[j][i] * x2[j];
                 }
             }
         } else {
-            for (int i = 0; i < m; i++) {
+            for (int i = 0; i < n; i++) {
                 for (Map.Entry<Integer, M> e : x.entrySet()) {
                     product[i] += data[e.getKey()][i] * e.getValue().doubleValue();
                 }
@@ -261,5 +273,32 @@ public class DoubleArrayMatrix implements Matrix<Double> {
     @Override
     public double[][] toDoubleArray() {
         return data;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 37 * hash + Arrays.deepHashCode(this.data);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DoubleArrayMatrix other = (DoubleArrayMatrix) obj;
+        if(other.rows() != this.rows()) {
+            return false;
+        }
+        for (int i = 0; i < this.data.length; i++) {
+            if (!Arrays.equals(this.data[i], other.data[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 }

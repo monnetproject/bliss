@@ -53,6 +53,10 @@ public class RealVector implements Vector<Double> {
     public RealVector(double[] data) {
         this.data = data;
     }
+    
+    public static RealVector make(double... data) {
+        return new RealVector(data);
+    }
 
     public double[] data() {
         return data;

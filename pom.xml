@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.monnetproject</groupId>
-    <artifactId>translation.topics</artifactId>
-    <version>1.12.10-SNAPSHOT</version>
+    <artifactId>bliss</artifactId>
+    <version>1.13.3</version>
     <packaging>pom</packaging>
 
     <distributionManagement>
@@ -34,7 +34,7 @@
         </repository>
     </repositories>
     
-    <name>eu.monnetproject.translation.topics</name>
+    <name>Bilingual Similarity Suite</name>
 
     <dependencies>
         <dependency>
@@ -48,13 +48,13 @@
        <module>betalm</module>
        <module>clesa</module>
        <module>common</module>
-       <module>cplsa</module>
        <module>experiments</module>
        <module>kcca</module>
        <module>lda</module>
        <module>lsa</module>
        <module>monnet</module>
        <module>sparsemath</module>
+<!--<module>eu.monnetproject.bliss.dbn</module>-->
   </modules>
 
     <build>

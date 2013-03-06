@@ -2,16 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>translation.topics</artifactId>
+        <artifactId>bliss</artifactId>
         <groupId>eu.monnetproject</groupId>
-        <version>1.12.10-SNAPSHOT</version>
+        <version>1.13.3</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>translation.topics.sparsemath</artifactId>
+    <artifactId>bliss.sparsemath</artifactId>
     <packaging>bundle</packaging>
 
-    <name>eu.monnetproject.translation.topics.sparsemath</name>
+    <name>eu.monnetproject.bliss.sparsemath</name>
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>

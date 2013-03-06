@@ -3,7 +3,7 @@
 if [ "$1" == "-v" ]
 then
   shift
-  mvn exec:java -Dexec.mainClass=eu.monnetproject.translation.topics.kcca.KCCATrain -Dexec.args="$*"
+  mvn exec:java -Dexec.mainClass=eu.monnetproject.bliss.kcca.KCCATrain -Dexec.args="$*"
 else
-  mvn -q exec:java -Dexec.mainClass=eu.monnetproject.translation.topics.kcca.KCCATrain -Dexec.args="$*"
+  mvn -q exec:java -Dexec.mainClass=eu.monnetproject.bliss.kcca.KCCATrain -Dexec.args="$*"
 fi

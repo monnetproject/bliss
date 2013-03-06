@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$1" == "-v" ]
+then
+  shift
+  mvn exec:java -Dexec.mainClass=eu.monnetproject.bliss.lda.CPLSATrain -Dexec.args="$*"
+else
+  mvn -q exec:java -Dexec.mainClass=eu.monnetproject.bliss.lda.CPLSATrain -Dexec.args="$*"
+fi

@@ -57,6 +57,10 @@ public class IntVector implements Vector<Integer> {
     public int[] data() {
         return data;
     }
+    
+    public static IntVector make(int... data) {
+        return new IntVector(data);
+    }
 
     @Override
     public double doubleValue(int idx) {

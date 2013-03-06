@@ -35,7 +35,7 @@ import java.util.NoSuchElementException;
  *
  * @author John McCrae
  */
-public class IntList {
+public class IntList implements Iterable<Integer> {
 
     private int[] vals;
     private int size;

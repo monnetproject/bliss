@@ -133,6 +133,14 @@ public class SingularValueDecomposition {
         return new Solution(V, null, S);
     }
 
+    /**
+     * Calculate the eigenvalues of a non-symmetric matrix
+     * @param A The matrix as a function y = Ax
+     * @param W The number of columns in A
+     * @param K The number of eigenvectors to calculate
+     * @param epsilon The error threshold (recommended: {@code 1e-50})
+     * @return The top K eigenvectors and eigenvalues
+     */
     public static Solution nonsymmEigen(VectorFunction<Double, Double> A, int W, int K, double epsilon) {
         final ArnoldiAlgorithm.Solution arnoldi = ArnoldiAlgorithm.solve(A, randomUnitNormVector(W), K);
         final HessenbergQR.Solution soln = HessenbergQR.solve(arnoldi.K, arnoldi.h);

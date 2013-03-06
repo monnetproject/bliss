@@ -1,5 +1,5 @@
-Translation Topic Modelling Suite
-=================================
+Bilingual Similarity Suite (BLISS)
+==================================
 
 This package provides a set of tools for working with topic modelling and in 
 particular in the cross-lingual case, and for application to machine translation.
@@ -36,12 +36,12 @@ Mate-finding trials
 Mate-finding trials can be run with the following command, from the `experiments`
 sub-folder:
 
-    mvn exec:java -Dexec.mainClass=eu.monnetproject.translation.topics.experiments.MateFindingTrial 
+    mvn exec:java -Dexec.mainClass=eu.monnetproject.bliss.experiments.MateFindingTrial 
            -Dexec.args="trainFile metricFactory W testFile"
 
 Where `W` is the number of distinct tokens in the corpus and `metricFactory` is:
 
-* `eu.monnetproject.translation.topics.clesa.CLESA`: For CL-ESA
+* `eu.monnetproject.bliss.clesa.CLESA`: For CL-ESA
 * (More to come)
 
 Language model adaptation

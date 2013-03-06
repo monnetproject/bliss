@@ -81,7 +81,7 @@ public class LanczosAlgorithm {
         final double[] alpha = new double[n + 1];
         final double[] beta = new double[n + 1];
         beta[0] = 1;
-        final double[][] q = new double[K][];
+        final double[][] q = new double[K][n];
         final double[] r = new double[n];
         System.arraycopy(w.toDoubleArray(), 0, r, 0, n);
 
@@ -101,7 +101,8 @@ public class LanczosAlgorithm {
                 v[i] = r[i] / beta[j];
                 //q[j][i] = v[i];
             }
-            q[j] = Arrays.copyOf(v, v.length);
+            //q[j] = Arrays.copyOf(v, v.length);
+            System.arraycopy(v, 0, q[j], 0, v.length);
 
             // r = Av_j - v_{j-1}\beta_{j-1}
             final Vector<Double> av = A.apply(new RealVector(v));
