@@ -35,7 +35,7 @@ public interface SimilarityMetricFactory<Data> {
 
     SimilarityMetric makeMetric(Data data, int W) throws IOException;
     
-    NGramSimilarityMetric makeNGramMetric(Data dat, int W) throws IOException;
+    NGramSimilarityMetric makeNGramMetric(Data dat, int W, int n) throws IOException;
     
     Class<Data> datatype();
 }

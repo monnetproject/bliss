@@ -55,7 +55,7 @@ public class BetaLMSimilarityFactory implements SimilarityMetricFactory<Parallel
     }
 
     @Override
-    public NGramSimilarityMetric makeNGramMetric(ParallelBinarizedReader dat, int W) throws IOException {
+    public NGramSimilarityMetric makeNGramMetric(ParallelBinarizedReader dat, int W, int n) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

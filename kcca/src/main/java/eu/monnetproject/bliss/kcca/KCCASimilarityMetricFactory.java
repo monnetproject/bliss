@@ -63,7 +63,7 @@ public class KCCASimilarityMetricFactory implements SimilarityMetricFactory<Inpu
     }
 
     @Override
-    public NGramSimilarityMetric makeNGramMetric(InputStream dat, int W) throws IOException {
+    public NGramSimilarityMetric makeNGramMetric(InputStream dat, int W, int n) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

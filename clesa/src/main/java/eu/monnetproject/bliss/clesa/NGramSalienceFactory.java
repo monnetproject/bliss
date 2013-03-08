@@ -45,9 +45,7 @@ import java.util.ArrayList;
  */
 public class NGramSalienceFactory implements SimilarityMetricFactory<InputStream> {
 
-    private static final int N = 1;
-
-    private Object2IntMap<NGram>[][] readData(final InputStream data) throws IOException {
+    private Object2IntMap<NGram>[][] readData(final InputStream data, int N) throws IOException {
         final DataInputStream in = new DataInputStream(data);
         final ArrayList<Object2IntMap<NGram>[]> list = new ArrayList<Object2IntMap<NGram>[]>();
         int docNo = 0;
@@ -93,8 +91,8 @@ public class NGramSalienceFactory implements SimilarityMetricFactory<InputStream
     }
 
     @Override
-    public NGramSimilarityMetric makeNGramMetric(InputStream dat, int W) throws IOException {
-        return new NGramSalience(readData(dat), W);
+    public NGramSimilarityMetric makeNGramMetric(InputStream dat, int W, int N) throws IOException {
+        return new NGramSalience(readData(dat,N), W);
     }
 
     @Override

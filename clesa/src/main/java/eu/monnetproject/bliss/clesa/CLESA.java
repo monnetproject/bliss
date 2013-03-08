@@ -102,7 +102,7 @@ public class CLESA implements SimilarityMetric {
     }
     
     private CLESASimilarity getSim(SparseIntArray[][] x, int l, int W) {
-        return new TFIDFSimilarity(x, l, W);
+        return new NormalizedSimilarity(x, l, W);
     }
 
     /**

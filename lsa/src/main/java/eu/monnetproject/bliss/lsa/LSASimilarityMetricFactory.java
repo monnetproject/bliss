@@ -28,8 +28,6 @@ package eu.monnetproject.bliss.lsa;
 import eu.monnetproject.bliss.NGramSimilarityMetric;
 import eu.monnetproject.bliss.SimilarityMetric;
 import eu.monnetproject.bliss.SimilarityMetricFactory;
-import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -51,7 +49,7 @@ public class LSASimilarityMetricFactory implements SimilarityMetricFactory<Input
     }
 
     @Override
-    public NGramSimilarityMetric makeNGramMetric(InputStream dat, int W) throws IOException {
+    public NGramSimilarityMetric makeNGramMetric(InputStream dat, int W, int n) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

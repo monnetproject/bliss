@@ -89,7 +89,7 @@ public class NGramSalience implements NGramSimilarityMetric {
         for (int j = 0; j < J; j++) {
             final double xDocLength = sum(x[j][l]);
             for (Object2IntMap.Entry<NGram> ng : x[j][l].object2IntEntrySet()) {
-                if (!ctTotal[l].containsKey(ng.getKey()) && query.containsKey(ng.getKey())) {
+                if (ctTotal[l].containsKey(ng.getKey()) && query.containsKey(ng.getKey())) {
                     salience[j] += (double) query.getInt(ng.getKey()) * ng.getIntValue() / ctTotal[l].getInt(ng.getKey());
                 }
             }

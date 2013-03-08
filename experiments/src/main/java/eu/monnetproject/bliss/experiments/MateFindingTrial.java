@@ -66,34 +66,34 @@ public class MateFindingTrial {
     public static final int STREAM_CHUNK = Integer.parseInt(System.getProperty("streamChunk", "510"));
 
     @SuppressWarnings("unchecked")
-    public static void compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, boolean ngram) throws Exception {
+    public static void compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, int ngram) throws Exception {
         final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         final SimilarityMetricFactory smf = factoryClazz.newInstance();
         SimilarityMetric metric = null;
         NGramSimilarityMetric ngMetric = null;
         if (smf.datatype().equals(ParallelBinarizedReader.class)) {
             final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile));
-            if (ngram) {
-                ngMetric = ((SimilarityMetricFactory<ParallelBinarizedReader>) smf).makeNGramMetric(trainPBR, W);
+            if (ngram > 0) {
+                ngMetric = ((SimilarityMetricFactory<ParallelBinarizedReader>) smf).makeNGramMetric(trainPBR, W, ngram);
             } else {
                 metric = ((SimilarityMetricFactory<ParallelBinarizedReader>) smf).makeMetric(trainPBR, W);
             }
         } else if (InputStream.class.isAssignableFrom(smf.datatype())) {
             final InputStream train = CLIOpts.openInputAsMaybeZipped(trainFile);
-            if (ngram) {
-                ngMetric = ((SimilarityMetricFactory<InputStream>) smf).makeNGramMetric(train, W);
+            if (ngram > 0) {
+                ngMetric = ((SimilarityMetricFactory<InputStream>) smf).makeNGramMetric(train, W, ngram);
             } else {
                 metric = ((SimilarityMetricFactory<InputStream>) smf).makeMetric(train, W);
             }
         } else if (File.class.isAssignableFrom(smf.datatype())) {
-            if (ngram) {
-                ngMetric = ((SimilarityMetricFactory<File>) smf).makeNGramMetric(trainFile, W);
+            if (ngram > 0) {
+                ngMetric = ((SimilarityMetricFactory<File>) smf).makeNGramMetric(trainFile, W, ngram);
             } else {
                 metric = ((SimilarityMetricFactory<File>) smf).makeMetric(trainFile, W);
             }
         } else if (Object.class.equals(smf.datatype())) {
-            if (ngram) {
-                ngMetric = ((SimilarityMetricFactory<Object>) smf).makeNGramMetric(null, W);
+            if (ngram > 0) {
+                ngMetric = ((SimilarityMetricFactory<Object>) smf).makeNGramMetric(null, W, ngram);
             } else {
                 metric = ((SimilarityMetricFactory<Object>) smf).makeMetric(null, W);
             }
@@ -101,11 +101,11 @@ public class MateFindingTrial {
             throw new IllegalArgumentException();
         }
 
-        if (ngram) {
+        if (ngram > 0) {
             if (oneStep) {
                 throw new IllegalArgumentException("One step and n-gram not supported");
             }
-            compare(ngMetric, W, testFile);
+            compare(ngMetric, W, testFile, ngram);
         } else {
             compare(metric, W, testPBR, oneStep);
         }
@@ -156,7 +156,7 @@ public class MateFindingTrial {
             if (allZero(pred)) {
                 incorrect++;
                 mrr += 2.0 / docs.size();
-                System.out.print("\u24ea");
+                System.out.print("\u00d8");
                 continue;
             }
             double rightScore;
@@ -223,8 +223,7 @@ public class MateFindingTrial {
         System.out.println("MRR: " + (mrr / docs.size()));
     }
 
-    public static void compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile) throws Exception {
-        int N = 1;
+    public static void compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N) throws Exception {
         System.err.println("Reading test data");
         ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         //final List<Object2IntMap<NGram>[]> docs = new ArrayList<Object2IntMap<NGram>[]>();
@@ -272,7 +271,7 @@ public class MateFindingTrial {
             if (allZero(pred)) {
                 incorrect++;
                 mrr += 2.0 / docsSize;
-                System.out.print("\u24ea");
+                System.out.print("\u00d8");
                 continue;
             }
             double rightScore;
@@ -365,7 +364,7 @@ public class MateFindingTrial {
 
         final boolean oneStep = opts.flag("oneStep", "Calculate the mate-finding in one-step mode (this involves J^2 calls to the similarity function)");
 
-        final boolean ngram = opts.flag("ngram", "Calculate using n-grams");
+        final int ngram = opts.intValue("ngram", "The number of n-grams to use in n-gram based similarity", 0);
 
         final File trainFile = opts.roFile("trainFile", "The training file");
 

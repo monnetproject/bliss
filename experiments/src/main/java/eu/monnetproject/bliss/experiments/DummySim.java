@@ -65,7 +65,7 @@ public class DummySim implements SimilarityMetricFactory<Object> {
     }
 
     @Override
-    public NGramSimilarityMetric makeNGramMetric(Object dat, int W) throws IOException {
+    public NGramSimilarityMetric makeNGramMetric(Object dat, int W, int n) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
