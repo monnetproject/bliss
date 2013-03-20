@@ -37,6 +37,7 @@ import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.bliss.CLIOpts;
 import eu.monnetproject.bliss.WordMap;
+import eu.monnetproject.bliss.betalm.impl.BetaLMImpl.Method;
 import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -47,6 +48,7 @@ import java.io.EOFException;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -81,56 +83,38 @@ public class CompileModel {
         return querySet;
     }
 
-    public enum Smoothing {
-
-        NONE,
-        ADD_ALPHA,
-        GOOD_TURING,
-        KNESER_NEY
-    };
-
-    public static void main(String[] args) throws Exception {
-        final CLIOpts opts = new CLIOpts(args);
-
-        StringBuilder betalmString = new StringBuilder("The BetaLM method: ");
-        for (BetaLMImpl.Method method : BetaLMImpl.Method.values()) {
-            betalmString.append(method.name()).append(" ");
-        }
-
-        final BetaLMImpl.Method betaMethod = opts.enumOptional("b", BetaLMImpl.Method.class, null, betalmString.toString());
-
-        final SourceType sourceType = opts.enumOptional("t", SourceType.class, SourceType.FIRST, "The type of source: SIMPLE, FIRST or SECOND");
-
-        final Smoothing smoothing = opts.enumOptional("smooth", Smoothing.class, Smoothing.NONE, "The type of smoothing: NONE, ADD_ALPHA, GOOD_TURING, KNESER_NEY");
-
-        final File queryFile = opts.roFile("f", "The query file (ontology)", null);
-
-        final double smoothness = opts.doubleValue("s", 1.0, "The selective smoothing parameter");
-
-        final double alpha = opts.doubleValue("a", 0.0, "The minimal smoothing parameter");
-
-        final int salience = opts.intValue("salience", "The salience (filtering on query document)", -1);
-
-        final int stopWordCount = opts.intValue("stop", "The number of stop words to ignore", 150);
-        
-        final boolean writeDocs = opts.flag("writeDocs", "Write documents in corpus with ranking");
-
-        final File inFile = opts.roFile("corpus[.gz|.bz2]", "The corpus file");
-
-        final int N = opts.nonNegIntValue("N", "The largest n-gram to calculate");
-
-        final File wordMapFile = opts.roFile("wordMap", "The word map file");
-
-        final File freqFile = opts.roFile("freqs", "The frequency file for the corpus");
-
-        final PrintStream out = opts.outFileOrStdout();
-
-        if (!opts.verify(CompileModel.class)) {
-            return;
-        }
-
-
-
+    public static void compile(final File wordMapFile, final File freqFile, 
+            final File inFile, final SourceType sourceType, 
+            final File queryFile, final double smoothness, 
+            final int salience, final double alpha, final int N, final boolean writeDocs, 
+            final PrintStream out) throws IOException, NumberFormatException, RuntimeException, Exception, FileNotFoundException {
+        compile(wordMapFile, freqFile, 150, null, inFile, SourceType.FIRST, null, 1.0, -1, 0.0, 3, false, out);
+    }
+    
+    /**
+     * Compile a language model
+     * @param wordMapFile The word map file (non-null and exists)
+     * @param freqFile The frequency file (non-null and exists)
+     * @param stopWordCount The size of the stop word list (>= 0)
+     * @param betaMethod The BetaLM method (null for no adaptation)
+     * @param inFile The integerized corpus file (non-null and exists)
+     * @param sourceType The source type (non-null)
+     * @param queryFile The query file (null or exists)
+     * @param smoothness The sigma smoothing factor (real, >= 0)
+     * @param salience The salience factor (real and >=0 or -1)
+     * @param alpha The alpha smoothing factor (real and >= 0)
+     * @param N The largest n-gram to consider (> 0)
+     * @param writeDocs {@code true} to print extra information
+     * @param out The output file (non-null, not closed)
+     * @throws IOException If a file couldn't be read
+     * @throws NumberFormatException A formatting error in the input
+     * @throws Exception Something went wrong
+     */
+    public static void compile(final File wordMapFile, final File freqFile, 
+            final int stopWordCount, final Method betaMethod, final File inFile, 
+            final SourceType sourceType, final File queryFile, final double smoothness, 
+            final int salience, final double alpha, final int N, final boolean writeDocs, 
+            final PrintStream out) throws IOException, NumberFormatException, RuntimeException, Exception {
         System.err.println("Loading wordmap");
         final int W = WordMap.calcW(wordMapFile);
 
@@ -182,7 +166,7 @@ public class CompileModel {
         final File[] uniqFiles = new File[N];
         for (int i = 0; i < N; i++) {
             final File uniqFile = new File(countFiles[i].getPath() + "uniq");
-            uniqFile.deleteOnExit();
+            DeleteFileOnExit.add(uniqFile);
             Uniq.uniq(sortedFiles[i], new PrintStream(uniqFile));
             uniqFiles[i] = uniqFile;
         }
@@ -191,14 +175,14 @@ public class CompileModel {
         final File[] divHistFiles = new File[N - 1];
         for (int i = 1; i < N; i++) {
             final File divHistFile = new File(countFiles[i - 1].getPath() + "divHist");
-            divHistFile.deleteOnExit();
+            DeleteFileOnExit.add(divHistFile);
             Hist.hist(uniqFiles[i], false, new PrintStream(divHistFile));
             divHistFiles[i - 1] = divHistFile;
         }
         final File[] divFutFiles = new File[N - 1];
         for (int i = 1; i < N; i++) {
             final File divFutFile = new File(countFiles[i - 1].getPath() + "divFut");
-            divFutFile.deleteOnExit();
+            DeleteFileOnExit.add(divFutFile);
             Hist.hist(uniqFiles[i], true, new PrintStream(divFutFile));
             divFutFiles[i - 1] = divFutFile;
         }
@@ -234,7 +218,7 @@ public class CompileModel {
         {
             final Scanner unigramIn = new Scanner(uniqFiles[0]);
             ngrams[0] = new File(uniqFiles[0].getPath() + "ngrams");
-            ngrams[0].deleteOnExit();
+            DeleteFileOnExit.add(ngrams[0]);
             final PrintWriter unigramOut = new PrintWriter(ngrams[0]);
             while (unigramIn.hasNextLine()) {
                 final String line = unigramIn.nextLine();
@@ -263,7 +247,7 @@ public class CompileModel {
             final Scanner uniqIn = new Scanner(uniqFiles[i]);
             final Scanner divHistIn = new Scanner(divHistFiles[i - 1]);
             ngrams[i] = new File(uniqFiles[i].getPath() + "ngrams");
-            ngrams[i].deleteOnExit();
+            DeleteFileOnExit.add(ngrams[i]);
             final PrintWriter ngramOut = new PrintWriter(ngrams[i]);
             double sum = 0;
             String currentHist = null;
@@ -335,15 +319,65 @@ public class CompileModel {
         out.close();
     }
 
+    public enum Smoothing {
+
+        NONE,
+        ADD_ALPHA,
+        GOOD_TURING,
+        KNESER_NEY
+    };
+
+    public static void main(String[] args) throws Exception {
+        final CLIOpts opts = new CLIOpts(args);
+
+        StringBuilder betalmString = new StringBuilder("The BetaLM method: ");
+        for (BetaLMImpl.Method method : BetaLMImpl.Method.values()) {
+            betalmString.append(method.name()).append(" ");
+        }
+
+        final BetaLMImpl.Method betaMethod = opts.enumOptional("b", BetaLMImpl.Method.class, null, betalmString.toString());
+
+        final SourceType sourceType = opts.enumOptional("t", SourceType.class, SourceType.FIRST, "The type of source: SIMPLE, FIRST or SECOND");
+
+        final Smoothing smoothing = opts.enumOptional("smooth", Smoothing.class, Smoothing.NONE, "The type of smoothing: NONE, ADD_ALPHA, GOOD_TURING, KNESER_NEY");
+
+        final File queryFile = opts.roFile("f", "The query file (ontology)", null);
+
+        final double smoothness = opts.doubleValue("s", 1.0, "The selective smoothing parameter");
+
+        final double alpha = opts.doubleValue("a", 0.0, "The minimal smoothing parameter");
+
+        final int salience = opts.intValue("salience", "The salience (filtering on query document)", -1);
+
+        final int stopWordCount = opts.intValue("stop", "The number of stop words to ignore", 150);
+        
+        final boolean writeDocs = opts.flag("writeDocs", "Write documents in corpus with ranking");
+
+        final File inFile = opts.roFile("corpus[.gz|.bz2]", "The corpus file");
+
+        final int N = opts.nonNegIntValue("N", "The largest n-gram to calculate");
+
+        final File wordMapFile = opts.roFile("wordMap", "The word map file");
+
+        final File freqFile = opts.roFile("freqs", "The frequency file for the corpus");
+
+        final PrintStream out = opts.outFileOrStdout();
+
+        if (!opts.verify(CompileModel.class)) {
+            return;
+        }
+        compile(wordMapFile, freqFile, stopWordCount, betaMethod, inFile, sourceType, queryFile, smoothness, salience, alpha, N, writeDocs, out);
+    }
+
     private static File[] initCountFiles(final int N) throws IOException {
         final File[] countFiles = new File[N * 2];
         for (int n = 0; n < N; n++) {
             final File countFile = File.createTempFile("counts", "." + n);
-            countFile.deleteOnExit();
+            DeleteFileOnExit.add(countFile);
             countFiles[n] = countFile;
             if (n > 0) {
                 final File histFile = File.createTempFile("counts", ".h" + n);
-                histFile.deleteOnExit();
+                DeleteFileOnExit.add(histFile);
                 countFiles[n + N] = histFile;
             }
         }
@@ -400,7 +434,7 @@ public class CompileModel {
 
     private static File sort(final File file) throws Exception {
         final File outFile = new File(file.getPath() + "sorted");
-        outFile.deleteOnExit();
+        DeleteFileOnExit.add(outFile);
         try {
             Runtime.getRuntime().exec(new String[]{"sort", file.getPath(), "-o", outFile.getPath()}, new String[]{"LC_ALL=C"}).waitFor();
         } catch (IOException x) {
