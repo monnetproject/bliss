@@ -32,34 +32,50 @@ import eu.monnetproject.math.sparse.Vector;
 
 /**
  *
- * @author jmccrae
+ * @author John McCrae
  */
-public class NormalizedSimilarity implements CLESASimilarity {
-    private final int[] tf;
+public class OkapiBM25 implements CLESASimilarity {
+    private final SparseIntArray[][] x;
+    private final int l;
+    private final double k1 = 1.6;
+    private final double b = 0.75;
+    private final double avgdl;
+    private final double[] idf;
 
-    public NormalizedSimilarity(SparseIntArray[][] x, int l, int W) {
-        this.tf = new int[W];
-        final int J = x.length;
-        for(int j = 0; j < J; j++) {
-            for(int t : x[j][l].keySet()) {
-                tf[t] += x[j][l].intValue(t);
-            }
-        }
+    public OkapiBM25(SparseIntArray[][] x, int l, int W) {
+        this.x = x;
+        this.l = l;
+        this.idf = new double[W];
+        this.avgdl = init(W);
     }
-
+    
     @Override
     public double score(Vector<Integer> q, SparseIntArray d) {
         double score = 0.0;
-        double norm = 0.0;
-        for(int t : d.keySet()) {
-            norm += d.doubleValue(t) * d.doubleValue(t) / tf[t] / tf[t];
-        }
-        norm = Math.sqrt(norm);
         for(int t : q.keySet()) {
-            if(tf[t] != 0.0) {
-                score += q.doubleValue(t) * d.doubleValue(t) / tf[t];
+            final double f_q_d = d.doubleValue(t);
+            final double x = f_q_d + k1 * (1 - b + b * d.sum() / avgdl);
+            if(x != 0.0) {
+                score += idf[t] * f_q_d * (k1 + 1) / x;
             }
         }
-        return score / norm;
+        return score;
     }
+
+    private double init(int W) {
+        int sumdl = 0;
+        int[] df = new int[W];
+        final int J = x.length;
+        for(int j = 0; j < J; j++) {
+            sumdl += x[j][l].sum();
+            for(int t : x[j][l].keySet()) {
+                df[t]++;
+            }
+        }
+        for(int t = 0; t < W; t++) {
+            idf[t] = Math.log((0.5 + J - df[t]) / (0.5 + df[t]));
+        }
+        return (double)sumdl / J;
+    }
+
 }

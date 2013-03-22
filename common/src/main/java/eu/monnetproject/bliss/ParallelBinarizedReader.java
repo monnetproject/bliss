@@ -148,4 +148,8 @@ public final class ParallelBinarizedReader {
         }
         return sparseArrays.toArray(new Object2IntMap[sparseArrays.size()][]);
     }
+    
+    public void close() throws IOException {
+        in.close();
+    }
 }

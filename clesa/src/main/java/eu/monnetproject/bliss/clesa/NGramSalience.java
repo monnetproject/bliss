@@ -88,10 +88,24 @@ public class NGramSalience implements NGramSimilarityMetric {
         double[] salience = new double[J];
         for (int j = 0; j < J; j++) {
             final double xDocLength = sum(x[j][l]);
+            NGRAM:
             for (Object2IntMap.Entry<NGram> ng : x[j][l].object2IntEntrySet()) {
-                if (ctTotal[l].containsKey(ng.getKey()) && query.containsKey(ng.getKey())) {
+                /*if (ctTotal[l].containsKey(ng.getKey()) && query.containsKey(ng.getKey())) {
                     salience[j] += (double) query.getInt(ng.getKey()) * ng.getIntValue() / ctTotal[l].getInt(ng.getKey());
+                }*/
+                double sal = 0.0;
+                final int[] ngg = ng.getKey().ngram;
+                final int ngLength = ngg.length;
+                for(int i = 0; i < ngLength; i++) {
+                    final NGram unigram = new NGram(new int[] { ngg[i] });
+                    if(x[j][l].containsKey(unigram)) {
+                        sal += (double)ctTotal[l].getInt(unigram) / x[j][l].getInt(unigram);
+                    } else {
+                        continue NGRAM;
+                    }
                 }
+                sal = (double)ngLength / sal;
+                salience[j] += (double)query.getInt(ng.getKey()) * sal;
             }
             if (xDocLength != 0.0) {
                 salience[j] /= xDocLength;
