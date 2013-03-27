@@ -27,52 +27,14 @@
 
 package eu.monnetproject.bliss.clesa;
 
-import eu.monnetproject.math.sparse.SparseIntArray;
-import eu.monnetproject.math.sparse.Vector;
-
 /**
  *
  * @author jmccrae
  */
-public class NormalizedSimilarity implements CLESASimilarity {
-    private final int[] tf;
-    private final double clesaPower;
-
-    public NormalizedSimilarity(SparseIntArray[][] x, int l, int W) {
-        this.tf = new int[W];
-        final int J = x.length;
-        for(int j = 0; j < J; j++) {
-            for(int t : x[j][l].keySet()) {
-                tf[t] += x[j][l].intValue(t);
-            }
-        }
-        this.clesaPower = Double.parseDouble(System.getProperty("clesaPower", "1.0"));
-    }
-    
-    public NormalizedSimilarity(SparseIntArray[][] x, int l, int W, double clesaPower) {
-        this.tf = new int[W];
-        final int J = x.length;
-        for(int j = 0; j < J; j++) {
-            for(int t : x[j][l].keySet()) {
-                tf[t] += x[j][l].intValue(t);
-            }
-        }
-        this.clesaPower = clesaPower;
-    }
-
-    @Override
-    public double score(Vector<Integer> q, SparseIntArray d) {
-        double score = 0.0;
-        double norm = 0.0;
-        for(int t : d.keySet()) {
-            norm += d.doubleValue(t) * d.doubleValue(t) / Math.pow(tf[t],clesaPower * 2);
-        }
-        norm = Math.sqrt(norm);
-        for(int t : q.keySet()) {
-            if(tf[t] != 0.0) {
-                score += q.doubleValue(t) * d.doubleValue(t) / Math.pow(tf[t],clesaPower);
-            }
-        }
-        return score / norm;
-    }
+public enum CLESAMethod {
+    TFIDF,
+    NORMALIZED,
+    LUCENE,
+    OKAPI_BM25,
+    SORG
 }

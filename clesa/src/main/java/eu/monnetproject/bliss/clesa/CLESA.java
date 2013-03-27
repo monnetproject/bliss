@@ -46,20 +46,9 @@ import java.util.Map;
 public class CLESA implements SimilarityMetric {
 
     public final SparseIntArray[][] x;
-    //public final SparseIntArray[][] xt;
-    /*
-     public final int[] n;
-     public final int[] n_f;*/
     public final int J;
     public final int W;
     public final CLESASimilarity[] similarity;
-    /*public final double[] df;
-     public final double[] df_f;
-     public final double[] mu;
-     public final double[] mu_f;
-     public final double[] di;
-     public final double[] di_f;
-     public final Map<String, Integer> words;*/
 
     public CLESA(File data) throws IOException {
         final ParallelReader pr = ParallelReader.fromFile(data);
@@ -70,12 +59,9 @@ public class CLESA implements SimilarityMetric {
             getSim(x, 0, W),
             getSim(x, 1, W)
         };
-        //this.xt = transpose(pr.x);
-        //initDF();
-        //System.err.println("Finished loading CLESA data");
     }
 
-    public CLESA(SparseIntArray[][] x, int W/*, String[] words*/) {
+    public CLESA(SparseIntArray[][] x, int W) {
         this.J = x.length;
         this.W = W;
         this.x = x;
@@ -83,27 +69,24 @@ public class CLESA implements SimilarityMetric {
             getSim(x, 0, W),
             getSim(x, 1, W)
         };
-//        this.n = new int[J];
-//        this.n_f = new int[J];
-//        this.xt = transpose(x);
-//        this.words = new HashMap<String, Integer>();
-//        if (words != null) {
-//            for (int i = 0; i < words.length; i++) {
-//                this.words.put(words[i], i);
-//            }
-//        }
-//        this.df = new double[W];
-//        this.df_f = new double[W];
-//        this.mu = new double[W];
-//        this.mu_f = new double[W];
-//        this.di = new double[W];
-//        this.di_f = new double[W];
-//        initDF();
     }
     
     private CLESASimilarity getSim(SparseIntArray[][] x, int l, int W) {
-        //return new NormalizedSimilarity(x, l, W);
-        return new OkapiBM25(x, l, W);
+        final CLESAMethod method = CLESAMethod.valueOf(System.getProperty("clesaMethod","NORMALIZED"));
+        switch(method) {
+            case TFIDF:
+                return new TFIDFSimilarity(x, l, W);
+            case NORMALIZED:
+                return new NormalizedSimilarity(x, l, W);
+            case LUCENE:
+                return new  LucenePracticalSimilarity(x, l, W);
+            case OKAPI_BM25:
+                return new OkapiBM25(x, l, W);
+            case SORG:
+                return new SorgAssociation(x, l, W);
+            default:
+                throw new IllegalArgumentException("Invalid CLESA Method");
+        }
     }
 
     /**
