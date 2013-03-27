@@ -27,68 +27,50 @@
 package eu.monnetproject.bliss.experiments;
 
 import eu.monnetproject.bliss.CLIOpts;
-import eu.monnetproject.bliss.PTBTokenizer;
-import eu.monnetproject.bliss.Tokenizer;
+import eu.monnetproject.bliss.ParallelBinarizedReader;
 import eu.monnetproject.bliss.WordMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import java.io.DataOutputStream;
+import eu.monnetproject.math.sparse.SparseIntArray;
 import java.io.File;
-import java.util.List;
-import java.util.Scanner;
+import java.io.PrintStream;
 
 /**
  *
  * @author John McCrae
  */
-public class IntegerizeAcquis {
+public class TFDFCorrelation {
 
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
-        final File corpus = opts.roFile("corpus[.gz|.bz2]", "The corpus in Acquis format");
-        final File wordMapFile = opts.woFile("wordMap", "The file to write the word map to");
-        final File outFile = opts.woFile("corpusOut[.gz|.bz2]", "The file to write the integerized corpus to");
-        if(!opts.verify(IntegerizeAcquis.class)) {
+        final File corpus = opts.roFile("corpus", "The corpus file");
+        final File wordMap = opts.roFile("wordMap", "The word map");
+        final PrintStream out = opts.outFileOrStdout();
+        if (!opts.verify(TFDFCorrelation.class)) {
             return;
         }
-        final WordMap wordMap = new WordMap();
-        final Tokenizer tokenizer = new PTBTokenizer();
-        final Scanner in = new Scanner(CLIOpts.openInputAsMaybeZipped(corpus));
-        final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(outFile));
-        final IntArrayList[] buf = new IntArrayList[] {
-            new IntArrayList(),
-            new IntArrayList()
-        };
-        
-        int read = 0;
-        while(in.hasNextLine()) {
-            if(++read % 100000 == 0) {
+
+        final int W = WordMap.calcW(wordMap);
+        final ParallelBinarizedReader pbr = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(corpus));
+        final int[][] tf = new int[W][2];
+        final int[][] df = new int[W][2];
+        int i = 0;
+        SparseIntArray[] doc;
+        while ((doc = pbr.nextFreqPair(W)) != null) {
+            if(++i % 1000 == 0) {
                 System.err.print(".");
             }
-            final String line = in.nextLine();
-            if(line.contains("<s1>") || line.contains("<s2>")) {
-                int l = line.contains("<s1>") ? 0 : 1;
-                final String lineWithoutXml = line.replaceAll("<[^>]+>", "");
-                final List<String> tokens = tokenizer.tokenize(lineWithoutXml);
-                for(String token : tokens) {
-                    final int w = wordMap.offer(token);
-                    buf[l].add(w);
+            for (int l = 0; l < 2; l++) {
+                for (int w : doc[l].keySet()) {
+                    tf[w][l] += doc[l].intValue(w);
+                    df[w][l]++;
                 }
-            } else if(line.contains("</linkGrp>")) {
-                for(int w : buf[0]) {
-                    out.writeInt(w);
-                }
-                out.writeInt(0);
-                buf[0].clear();
-                for(int w : buf[1]) {
-                    out.writeInt(w);
-                }
-                buf[1].clear();
-                out.writeInt(0);
             }
         }
         System.err.println();
+        out.println("TF1,DF1,TF2,DF2");
+        for(int w = 0; w < W; w++) {
+            out.println(tf[w][0] + "," + df[w][0] + "," + tf[w][1] + "," + df[w][1]);
+        }
         out.flush();
         out.close();
-        wordMap.write(wordMapFile);
     }
 }

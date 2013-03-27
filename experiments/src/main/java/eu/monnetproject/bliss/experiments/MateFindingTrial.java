@@ -51,7 +51,7 @@ import java.util.Random;
  */
 public class MateFindingTrial {
 
-    private static final HashMap<String, String> metricNames = new HashMap<String, String>() {
+    static final HashMap<String, String> metricNames = new HashMap<String, String>() {
         {
             put("CLESA", "eu.monnetproject.bliss.clesa.CLESAFactory");
             put("NG-SAL", "eu.monnetproject.bliss.clesa.NGramSalienceFactory");
@@ -66,7 +66,7 @@ public class MateFindingTrial {
     public static final int STREAM_CHUNK = Integer.parseInt(System.getProperty("streamChunk", "510"));
 
     @SuppressWarnings("unchecked")
-    public static void compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, int ngram) throws Exception {
+    public static double[] compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, int ngram) throws Exception {
         final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         final SimilarityMetricFactory smf = factoryClazz.newInstance();
         SimilarityMetric metric = null;
@@ -105,13 +105,13 @@ public class MateFindingTrial {
             if (oneStep) {
                 throw new IllegalArgumentException("One step and n-gram not supported");
             }
-            compare(ngMetric, W, testFile, ngram);
+            return compare(ngMetric, W, testFile, ngram);
         } else {
-            compare(metric, W, testPBR, oneStep);
+            return compare(metric, W, testPBR, oneStep);
         }
     }
 
-    public static void compare(SimilarityMetric parallelSimilarity, int W, ParallelBinarizedReader testFile, boolean oneStep) throws Exception {
+    public static double[] compare(SimilarityMetric parallelSimilarity, int W, ParallelBinarizedReader testFile, boolean oneStep) throws Exception {
         System.err.println("Reading test data");
         final List<SparseIntArray[]> docs = new ArrayList<SparseIntArray[]>();
         SparseIntArray[] s;
@@ -221,9 +221,14 @@ public class MateFindingTrial {
         System.out.println("Precision@5: " + correct5 + " (" + percentFormat.format((double) correct5 / (double) docs.size()) + ")");
         System.out.println("Precision@10: " + correct10 + " (" + percentFormat.format((double) correct10 / (double) docs.size()) + ")");
         System.out.println("MRR: " + (mrr / docs.size()));
+        return new double[] { (double)correct / docs.size(),
+            (double)correct5 / docs.size(),
+            (double)correct10 / docs.size(),
+            mrr / docs.size()
+        };
     }
 
-    public static void compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N) throws Exception {
+    public static double[] compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N) throws Exception {
         System.err.println("Reading test data");
         ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         //final List<Object2IntMap<NGram>[]> docs = new ArrayList<Object2IntMap<NGram>[]>();
@@ -328,6 +333,11 @@ public class MateFindingTrial {
         System.out.println("Precision@5: " + correct5 + " (" + percentFormat.format((double) correct5 / (double) docsSize) + ")");
         System.out.println("Precision@10: " + correct10 + " (" + percentFormat.format((double) correct10 / (double) docsSize) + ")");
         System.out.println("MRR: " + (mrr / docsSize));
+        return new double[] { (double)correct / docsSize,
+            (double)correct5 / docsSize,
+            (double)correct10 / docsSize,
+            mrr / docsSize
+        };
     }
 
     public static <M extends Number, N extends Number> double cosSim(Vector<M> vec1, Vector<N> vec2) {

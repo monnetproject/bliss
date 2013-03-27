@@ -27,68 +27,52 @@
 package eu.monnetproject.bliss.experiments;
 
 import eu.monnetproject.bliss.CLIOpts;
-import eu.monnetproject.bliss.PTBTokenizer;
-import eu.monnetproject.bliss.Tokenizer;
+import eu.monnetproject.bliss.SimilarityMetricFactory;
 import eu.monnetproject.bliss.WordMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.util.List;
-import java.util.Scanner;
+import java.io.PrintWriter;
+import java.util.Arrays;
 
 /**
  *
  * @author John McCrae
  */
-public class IntegerizeAcquis {
+public class MateFindingTrialSequence {
 
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
-        final File corpus = opts.roFile("corpus[.gz|.bz2]", "The corpus in Acquis format");
-        final File wordMapFile = opts.woFile("wordMap", "The file to write the word map to");
-        final File outFile = opts.woFile("corpusOut[.gz|.bz2]", "The file to write the integerized corpus to");
-        if(!opts.verify(IntegerizeAcquis.class)) {
+
+        final boolean oneStep = opts.flag("oneStep", "Calculate the mate-finding in one-step mode (this involves J^2 calls to the similarity function)");
+
+        final int ngram = opts.intValue("ngram", "The number of n-grams to use in n-gram based similarity", 0);
+
+        final File trainFile = opts.roFile("trainFile", "The training file");
+
+        final Class<SimilarityMetricFactory> factoryClazz = opts.clazz("metricFactory", SimilarityMetricFactory.class, "The factory for the cross-lingual similarity measure", MateFindingTrial.metricNames);
+
+        final File wordMapFile = opts.roFile("wordMap", "The final containing the word map");
+
+        final File testFile = opts.roFile("testFile", "The test file");
+
+        opts.restAsSystemProperties();
+
+        if (!opts.verify(MateFindingTrialSequence.class)) {
             return;
         }
-        final WordMap wordMap = new WordMap();
-        final Tokenizer tokenizer = new PTBTokenizer();
-        final Scanner in = new Scanner(CLIOpts.openInputAsMaybeZipped(corpus));
-        final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(outFile));
-        final IntArrayList[] buf = new IntArrayList[] {
-            new IntArrayList(),
-            new IntArrayList()
-        };
+
+        final int W = WordMap.calcW(wordMapFile);
+        final PrintWriter out = new PrintWriter("mate-finding-sequence.csv");
         
-        int read = 0;
-        while(in.hasNextLine()) {
-            if(++read % 100000 == 0) {
-                System.err.print(".");
-            }
-            final String line = in.nextLine();
-            if(line.contains("<s1>") || line.contains("<s2>")) {
-                int l = line.contains("<s1>") ? 0 : 1;
-                final String lineWithoutXml = line.replaceAll("<[^>]+>", "");
-                final List<String> tokens = tokenizer.tokenize(lineWithoutXml);
-                for(String token : tokens) {
-                    final int w = wordMap.offer(token);
-                    buf[l].add(w);
-                }
-            } else if(line.contains("</linkGrp>")) {
-                for(int w : buf[0]) {
-                    out.writeInt(w);
-                }
-                out.writeInt(0);
-                buf[0].clear();
-                for(int w : buf[1]) {
-                    out.writeInt(w);
-                }
-                buf[1].clear();
-                out.writeInt(0);
-            }
+        out.println("D,P1,P5,P10,MRR");
+        
+        for(double d = 1.6; d < 3; d += 0.2) {
+            System.setProperty("clesaPower", d+"");
+            final double[] scores = MateFindingTrial.compare(trainFile, factoryClazz, W, testFile, oneStep, ngram);
+            out.println(d+","+scores[0]+","+scores[1]+","+scores[2]+","+scores[3]);
+            System.out.println("d="+d);
+            System.out.println("scores="+Arrays.toString(scores));
         }
-        System.err.println();
         out.flush();
         out.close();
-        wordMap.write(wordMapFile);
     }
 }
