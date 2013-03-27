@@ -28,6 +28,7 @@ package eu.monnetproject.bliss.experiments;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import eu.monnetproject.bliss.CLIOpts;
 import eu.monnetproject.bliss.ParallelBinarizedReader;
@@ -51,6 +52,11 @@ public class PerceptronNormalization {
 		}
 		final int W = WordMap.calcW(wordMapFile);
 		final double[][] wts = new double[W][2];
+		for(int l = 0; l < 2; l++) {
+			for(int w = 0; w < W; w++) {
+				wts[w][l] = 1.0 / Math.sqrt(W);
+			}
+		}
 
 		final ParallelBinarizedReader slowIn = new ParallelBinarizedReader(
 				CLIOpts.openInputAsMaybeZipped(corpus));
@@ -61,9 +67,9 @@ public class PerceptronNormalization {
 			double[] mean1 = new double[2];
 			for (int l = 0; l < 2; l++) {
 				for (int w : doc1[l].keySet()) {
-					mean1[l] += doc1[l].doubleValue(w) * doc1[l].doubleValue(w);
+					mean1[l] += doc1[l].doubleValue(w) * doc1[l].doubleValue(w) * wts[w][l];
 				}
-				mean1[l] = 1.0 / Math.sqrt(mean1[l]);
+				mean1[l] = Math.sqrt(mean1[l]);
 			}
 
 			for (int j2 = 0; j < J; j++) {
@@ -73,26 +79,33 @@ public class PerceptronNormalization {
 					for (int l = 0; l < 2; l++) {
 						for (int w : doc2[l].keySet()) {
 							mean2[l] += doc2[l].doubleValue(w)
-									* doc2[l].doubleValue(w);
+									* doc2[l].doubleValue(w) * wts[w][l];
 						}
-						mean2[l] = 1.0 / Math.sqrt(mean2[l]);
+						mean2[l] = Math.sqrt(mean2[l]);
 					}
 					for (int l = 0; l < 2; l++) {
 						double objective = 0.0;
 						final SparseIntArray v = new SparseIntArray(W);
-						for (int w : doc1[l].size() < doc2[l].size() ? doc1[l]
-								.keySet() : doc2[l].keySet()) {
-							double d = doc1[l].doubleValue(w)
-									* doc1[l].doubleValue(w) / mean1[l]
+						for (int w : doc2[l].keySet()) {
+							double d = doc2[l].doubleValue(w)
+									* doc2[l].doubleValue(w) / mean1[l]
 									- doc1[l].doubleValue(w)
 									* doc2[l].doubleValue(w) / mean2[l];
+							d *= wts[w][l];
 							v.add(w, d);
 							objective += d;
 						}
 						objective /= mean1[l];
+						mean1[l] *= mean1[l];
+						mean2[l] *= mean2[l];
 						for (int w : v.keySet()) {
-							wts[w][l] += v.doubleValue(w) * (1.0 - objective);
+							double delta = v.doubleValue(w) * (1.0 - objective);
+							mean1[l] += doc1[l].doubleValue(w) * delta;
+							mean2[l] += doc2[l].doubleValue(w) * delta;
+							wts[w][l] += delta;
 						}
+						mean1[l] = Math.sqrt(mean1[l]);
+						mean2[l] = Math.sqrt(mean2[l]);
 					}
 				}
 			}
