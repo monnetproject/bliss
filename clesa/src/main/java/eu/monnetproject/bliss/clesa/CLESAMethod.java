@@ -34,6 +34,7 @@ package eu.monnetproject.bliss.clesa;
 public enum CLESAMethod {
     TFIDF,
     NORMALIZED,
+    LOG_NORMALIZED,
     LUCENE,
     OKAPI_BM25,
     SORG

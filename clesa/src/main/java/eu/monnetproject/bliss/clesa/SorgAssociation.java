@@ -94,7 +94,7 @@ public class SorgAssociation implements CLESASimilarity {
             if(d.containsKey(w)) {
                 // tf = sqrt(number of occurrences of w in d)
                 // tfidf = sum_{t \in q}(tf(t) * idf(t))
-                tfidf += q.doubleValue(w) * Math.sqrt(d.doubleValue(w)) * idf[w];
+                tfidf += Math.sqrt(d.doubleValue(w)) * idf[w];
             }
         }
         if(Ct != 0.0) {

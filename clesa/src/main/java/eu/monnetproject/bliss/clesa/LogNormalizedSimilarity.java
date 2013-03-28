@@ -1,5 +1,5 @@
 /**
- * ********************************************************************************
+ * *******************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
+
 package eu.monnetproject.bliss.clesa;
 
 import eu.monnetproject.math.sparse.SparseIntArray;
@@ -33,23 +34,17 @@ import eu.monnetproject.math.sparse.Vector;
  *
  * @author jmccrae
  */
-public class TFIDFSimilarity implements CLESASimilarity {
-    private final double[] idf;
+public class LogNormalizedSimilarity implements CLESASimilarity {
+    private final int[] tf;
+    private final boolean useTf;
 
-    public TFIDFSimilarity(SparseIntArray[][] x, int l, int W) {
-        final int[] _idf = new int[W];
+    public LogNormalizedSimilarity(SparseIntArray[][] x, int l, int W) {
+        this.tf = new int[W];
+        this.useTf = Boolean.parseBoolean(System.getProperty("tfNorm","true"));
         final int J = x.length;
         for(int j = 0; j < J; j++) {
             for(int t : x[j][l].keySet()) {
-                _idf[t]++;
-            }
-        }
-        this.idf = new double[W];
-        for(int w = 0; w < W; w++) {
-            if(_idf[w] != 0) {
-                idf[w] = -Math.log((double)_idf[w] / J);
-            } else {
-                idf[w] = -100.0;
+                tf[t] += useTf ? x[j][l].intValue(t) : 1.0;
             }
         }
     }
@@ -57,18 +52,17 @@ public class TFIDFSimilarity implements CLESASimilarity {
     @Override
     public double score(Vector<Integer> q, SparseIntArray d) {
         double score = 0.0;
-        for(int t : q.keySet()) {
-            score += d.doubleValue(t) * q.doubleValue(t) * idf[t];
-        }
-        double maxFreq = 0.0;
+        double norm = 0.0;
         for(int t : d.keySet()) {
-            maxFreq = Math.max(maxFreq,d.doubleValue(t));
+            norm += d.doubleValue(t) * d.doubleValue(t) * -Math.log(1.0 / (1.0 + tf[t]));
         }
-        if(maxFreq == 0.0) {
-            return 0.0;
-        } else {
-            return score / maxFreq;
+        norm = Math.sqrt(norm);
+        for(int t : q.keySet()) {
+            if(tf[t] != 0.0) {
+                score += q.doubleValue(t) * d.doubleValue(t) * -Math.log(1.0 / (1.0 + tf[t]));
             }
+        }
+        return score / norm;
     }
-
 }
+

@@ -78,6 +78,8 @@ public class CLESA implements SimilarityMetric {
                 return new TFIDFSimilarity(x, l, W);
             case NORMALIZED:
                 return new NormalizedSimilarity(x, l, W);
+            case LOG_NORMALIZED:
+                return new LogNormalizedSimilarity(x, l, W);
             case LUCENE:
                 return new  LucenePracticalSimilarity(x, l, W);
             case OKAPI_BM25:

@@ -66,13 +66,13 @@ public class MateFindingTrial {
     public static final int STREAM_CHUNK = Integer.parseInt(System.getProperty("streamChunk", "510"));
 
     @SuppressWarnings("unchecked")
-    public static double[] compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, int ngram) throws Exception {
+    public static double[] compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, int ngram, boolean inverseDirection) throws Exception {
         final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         final SimilarityMetricFactory smf = factoryClazz.newInstance();
         SimilarityMetric metric = null;
         NGramSimilarityMetric ngMetric = null;
         if (smf.datatype().equals(ParallelBinarizedReader.class)) {
-            final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile));
+            final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile),inverseDirection);
             if (ngram > 0) {
                 ngMetric = ((SimilarityMetricFactory<ParallelBinarizedReader>) smf).makeNGramMetric(trainPBR, W, ngram);
             } else {
@@ -105,13 +105,13 @@ public class MateFindingTrial {
             if (oneStep) {
                 throw new IllegalArgumentException("One step and n-gram not supported");
             }
-            return compare(ngMetric, W, testFile, ngram);
+            return compare(ngMetric, W, testFile, ngram, inverseDirection);
         } else {
-            return compare(metric, W, testPBR, oneStep);
+            return compare(metric, W, testPBR, oneStep, inverseDirection);
         }
     }
 
-    public static double[] compare(SimilarityMetric parallelSimilarity, int W, ParallelBinarizedReader testFile, boolean oneStep) throws Exception {
+    public static double[] compare(SimilarityMetric parallelSimilarity, int W, ParallelBinarizedReader testFile, boolean oneStep, boolean inverse) throws Exception {
         System.err.println("Reading test data");
         final List<SparseIntArray[]> docs = new ArrayList<SparseIntArray[]>();
         SparseIntArray[] s;
@@ -130,9 +130,9 @@ public class MateFindingTrial {
         if (!oneStep) {
             for (SparseIntArray[] doc : docs) {
                 //predicted[idx] = parallelSimilarity.simVecSource(doc[0]).toDoubleArray();
-                predictedBuilder.add(parallelSimilarity.simVecSource(doc[0]).toDoubleArray());
+                predictedBuilder.add(parallelSimilarity.simVecSource(doc[inverse ?  1 : 0]).toDoubleArray());
                 //foreign[idx++] = parallelSimilarity.simVecTarget(doc[1]).toDoubleArray();
-                foreignBuilder.add(parallelSimilarity.simVecTarget(doc[1]).toDoubleArray());
+                foreignBuilder.add(parallelSimilarity.simVecTarget(doc[inverse ?  0 : 1]).toDoubleArray());
                 idx++;
                 //   System.out.println(Arrays.toString(predicted[idx-1]));
                 //   System.out.println(Arrays.toString(foreign[idx-1]));
@@ -162,7 +162,7 @@ public class MateFindingTrial {
             double rightScore;
             double[] foreign_i = foreign.get(i);
             if (oneStep) {
-                rightScore = cosSim(parallelSimilarity.simVecSource(docs.get(i)[0]), parallelSimilarity.simVecTarget(docs.get(i)[1]));
+                rightScore = cosSim(parallelSimilarity.simVecSource(docs.get(i)[inverse ? 1: 0]), parallelSimilarity.simVecTarget(docs.get(i)[inverse ? 0 : 1]));
             } else {
                 rightScore = cosSim(pred, foreign_i);
             }
@@ -173,7 +173,7 @@ public class MateFindingTrial {
             for (double[] forin : foreign) {
                 final double cosSim;
                 if (oneStep) {
-                    cosSim = cosSim(parallelSimilarity.simVecSource(docs.get(i)[0]), parallelSimilarity.simVecTarget(docs.get(j)[1]));
+                    cosSim = cosSim(parallelSimilarity.simVecSource(docs.get(i)[inverse ? 1: 0]), parallelSimilarity.simVecTarget(docs.get(j)[inverse ? 0 : 1]));
                 } else {
                     cosSim = cosSim(pred, forin);
                 }
@@ -228,7 +228,7 @@ public class MateFindingTrial {
         };
     }
 
-    public static double[] compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N) throws Exception {
+    public static double[] compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N, boolean inverse) throws Exception {
         System.err.println("Reading test data");
         ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
         //final List<Object2IntMap<NGram>[]> docs = new ArrayList<Object2IntMap<NGram>[]>();
@@ -249,9 +249,9 @@ public class MateFindingTrial {
         while ((s = testPBR.nextNGramPair(N)) != null) {
             Object2IntMap<NGram>[] doc = s;
             //predicted[idx] = parallelSimilarity.simVecSource(doc[0]).toDoubleArray();
-            predictedBuilder.add(parallelSimilarity.simVecSource(doc[0]).toDoubleArray());
+            predictedBuilder.add(parallelSimilarity.simVecSource(doc[inverse ? 1 : 0]).toDoubleArray());
             //foreign[idx++] = parallelSimilarity.simVecTarget(doc[1]).toDoubleArray();
-            foreignBuilder.add(parallelSimilarity.simVecTarget(doc[1]).toDoubleArray());
+            foreignBuilder.add(parallelSimilarity.simVecTarget(doc[inverse ? 0 : 1]).toDoubleArray());
             idx++;
             //   System.out.println(Arrays.toString(predicted[idx-1]));
             //   System.out.println(Arrays.toString(foreign[idx-1]));
@@ -373,6 +373,8 @@ public class MateFindingTrial {
         final CLIOpts opts = new CLIOpts(args);
 
         final boolean oneStep = opts.flag("oneStep", "Calculate the mate-finding in one-step mode (this involves J^2 calls to the similarity function)");
+        
+        final boolean inverseDirection = opts.flag("inv", "Do mate finding from second language to first");
 
         final int ngram = opts.intValue("ngram", "The number of n-grams to use in n-gram based similarity", 0);
 
@@ -392,7 +394,7 @@ public class MateFindingTrial {
 
         final int W = WordMap.calcW(wordMapFile);
 
-        compare(trainFile, factoryClazz, W, testFile, oneStep, ngram);
+        compare(trainFile, factoryClazz, W, testFile, oneStep, ngram,inverseDirection);
     }
 
     private static boolean allZero(double[] pred) {

@@ -45,9 +45,16 @@ import java.util.Arrays;
 public final class ParallelBinarizedReader {
 
     private final DataInputStream in;
+    private final boolean inverted;
 
     public ParallelBinarizedReader(InputStream in) {
         this.in = new DataInputStream(in);
+        inverted = false;
+    }
+    
+    public ParallelBinarizedReader(InputStream in, boolean inverted) {
+        this.in = new DataInputStream(in);
+        this.inverted = inverted;
     }
     private int[] buf = new int[1048576];
 
@@ -67,7 +74,12 @@ public final class ParallelBinarizedReader {
                         l1 = Arrays.copyOfRange(buf, 0, loc);
                         loc = 0;
                     } else {
-                        return new int[][]{
+                        return inverted ?
+                                new int[][]{
+                                    Arrays.copyOfRange(buf, 0, loc),
+                                    l1
+                                } :
+                                new int[][]{
                                     l1,
                                     Arrays.copyOfRange(buf, 0, loc)
                                 };
@@ -85,7 +97,12 @@ public final class ParallelBinarizedReader {
             }
             return null;
         } else {
-            return new int[][]{
+            return inverted ?
+                    new int[][]{
+                        Arrays.copyOfRange(buf, 0, loc),
+                        l1
+                    }:
+                    new int[][]{
                         l1,
                         Arrays.copyOfRange(buf, 0, loc)
                     };

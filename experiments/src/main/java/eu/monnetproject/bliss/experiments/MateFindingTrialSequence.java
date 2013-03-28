@@ -67,7 +67,7 @@ public class MateFindingTrialSequence {
         
         for(double d = 1.6; d < 3; d += 0.2) {
             System.setProperty("clesaPower", d+"");
-            final double[] scores = MateFindingTrial.compare(trainFile, factoryClazz, W, testFile, oneStep, ngram);
+            final double[] scores = MateFindingTrial.compare(trainFile, factoryClazz, W, testFile, oneStep, ngram,false);
             out.println(d+","+scores[0]+","+scores[1]+","+scores[2]+","+scores[3]);
             System.out.println("d="+d);
             System.out.println("scores="+Arrays.toString(scores));

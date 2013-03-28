@@ -1,9 +1,10 @@
 #!/bin/bash
 
-FOLDER=../acquis/de-en
-CORPUS=corpus.gz
-DOWN=1
-FREQMIN=40
+LANGPAIR=$1-$2
+FOLDER=../wiki/$LANGPAIR
+CORPUS=en-es.wiki.gz
+DOWN=100
+FREQMIN=100
 
 ./downsample -v $FOLDER/$CORPUS $DOWN $FOLDER/sampleModel.gz
 ./count-corpus -v $FOLDER/sampleModel.gz $FOLDER/wordMap 100 $FOLDER/sampleModel.freqs

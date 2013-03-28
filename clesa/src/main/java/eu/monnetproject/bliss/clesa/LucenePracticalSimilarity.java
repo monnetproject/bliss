@@ -51,7 +51,7 @@ public class LucenePracticalSimilarity implements CLESASimilarity {
         }
         this.idf = new double[W];
         for(int w = 0; w < W; w++) {
-            idf[w] = -Math.log((double)_idf[w] / J);
+            idf[w] = 1.0 + Math.log((double)_idf[w] / (J+1));
             if(Double.isInfinite(idf[w])) {
                 idf[w] = -100.0;
             }

@@ -52,11 +52,12 @@ public class OkapiBM25 implements CLESASimilarity {
     @Override
     public double score(Vector<Integer> q, SparseIntArray d) {
         double score = 0.0;
+        double dl = d.sum();
         for(int t : q.keySet()) {
             final double f_q_d = d.doubleValue(t);
-            final double x = f_q_d + k1 * (1 - b + b * d.sum() / avgdl);
+            final double x = f_q_d + k1 * (1 - b + b * dl / avgdl);
             if(x != 0.0) {
-                score += idf[t] * f_q_d * (k1 + 1) / x;
+                score += q.doubleValue(t) * idf[t] * f_q_d * (k1 + 1) / x;
             }
         }
         return score;
