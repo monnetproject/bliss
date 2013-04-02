@@ -32,6 +32,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -76,16 +79,21 @@ public class LDATrain {
         this.P = new double[K];
     }
 
+    private static DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+    
     public void train(int iterations) {
         try {
             System.err.println("Initializing");
             initialize();
-            System.err.print("Iterating");
             for (int i = 0; i < iterations; i++) {
-                System.err.print(i % 10 == 9 ? "O" : ".");
+                //System.err.print(i % 10 == 9 ? "O" : ".");
+                final long begin = System.currentTimeMillis();
                 iterate();
+                final long time = System.currentTimeMillis() - begin;
+                final long eta = time * (iterations - i - 1) / 1000;
+                System.err.println("Iteration " + (i+1) + " ETA " + String.format("%dh%02dm%02ds", eta/3600, (eta%3600)/60, (eta%60)));
             }
-            System.err.println();
+            //System.err.println();
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
