@@ -60,19 +60,22 @@ public class MateFindingTrial {
             put("BetaLM", "eu.monnetproject.bliss.sim.BetaLMSimilarityFactory");
             put("LSA", "eu.monnetproject.bliss.lsa.LSASimilarityMetricFactory");
             put("SAL", "eu.monnetproject.bliss.betalm.impl.SalienceSimilarityFactory");
+            put("W2W", "eu.monnetproject.bliss.experiments.Word2WordTranslation");
         }
     };
     private static final Random random = new Random();
     public static final int STREAM_CHUNK = Integer.parseInt(System.getProperty("streamChunk", "510"));
 
     @SuppressWarnings("unchecked")
-    public static double[] compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, boolean oneStep, int ngram, boolean inverseDirection) throws Exception {
-        final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
+    public static double[] compare(File trainFile, Class<SimilarityMetricFactory> factoryClazz, int W, File testFile, int ngram, boolean inverseDirection) throws Exception {
+        
         final SimilarityMetricFactory smf = factoryClazz.newInstance();
         SimilarityMetric metric = null;
         NGramSimilarityMetric ngMetric = null;
+        boolean metricInverted;
         if (smf.datatype().equals(ParallelBinarizedReader.class)) {
             final ParallelBinarizedReader trainPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(trainFile),inverseDirection);
+            metricInverted = inverseDirection;
             if (ngram > 0) {
                 ngMetric = ((SimilarityMetricFactory<ParallelBinarizedReader>) smf).makeNGramMetric(trainPBR, W, ngram);
             } else {
@@ -85,62 +88,61 @@ public class MateFindingTrial {
             } else {
                 metric = ((SimilarityMetricFactory<InputStream>) smf).makeMetric(train, W);
             }
+            metricInverted = false;
         } else if (File.class.isAssignableFrom(smf.datatype())) {
             if (ngram > 0) {
                 ngMetric = ((SimilarityMetricFactory<File>) smf).makeNGramMetric(trainFile, W, ngram);
             } else {
                 metric = ((SimilarityMetricFactory<File>) smf).makeMetric(trainFile, W);
             }
+            metricInverted = false;
         } else if (Object.class.equals(smf.datatype())) {
             if (ngram > 0) {
                 ngMetric = ((SimilarityMetricFactory<Object>) smf).makeNGramMetric(null, W, ngram);
             } else {
                 metric = ((SimilarityMetricFactory<Object>) smf).makeMetric(null, W);
             }
+            metricInverted = false;
         } else {
             throw new IllegalArgumentException();
         }
 
         if (ngram > 0) {
-            if (oneStep) {
-                throw new IllegalArgumentException("One step and n-gram not supported");
-            }
-            return compare(ngMetric, W, testFile, ngram, inverseDirection);
+            return compareNG(ngMetric, W, testFile, ngram, inverseDirection,metricInverted);
         } else {
-            return compare(metric, W, testPBR, oneStep, inverseDirection);
+            return compare(metric, W, testFile, inverseDirection,metricInverted);
         }
     }
 
-    public static double[] compare(SimilarityMetric parallelSimilarity, int W, ParallelBinarizedReader testFile, boolean oneStep, boolean inverse) throws Exception {
+    public static double[] compare(SimilarityMetric parallelSimilarity, int W, File testFile, boolean inverse, boolean metricInverted) throws Exception {
+        final ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile),inverse && !metricInverted);
         System.err.println("Reading test data");
-        final List<SparseIntArray[]> docs = new ArrayList<SparseIntArray[]>();
-        SparseIntArray[] s;
-        while ((s = testFile.nextFreqPair(W)) != null) {
-            docs.add(s);
-        }
-        System.err.println("Preparing data (" + docs.size() + ")");
+        //final List<SparseIntArray[]> docs = new ArrayList<SparseIntArray[]>();
+        int docSize = 0;
+        System.err.println("Preparing data ");
         int idx = 0;
         //double[][] predicted = new double[docs.size()][];
         //double[][] foreign = new double[docs.size()][];
-
-        final DiskBackedStream predicted = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K());
+        SparseIntArray[] s;
+        
+        final DiskBackedStream predicted = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K(),parallelSimilarity.K() >= parallelSimilarity.W());
         final Builder predictedBuilder = predicted.builder();
-        final DiskBackedStream foreign = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K());
+        final DiskBackedStream foreign = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K(),parallelSimilarity.K() >= parallelSimilarity.W());
         final Builder foreignBuilder = foreign.builder();
-        if (!oneStep) {
-            for (SparseIntArray[] doc : docs) {
+            while ((s = testPBR.nextFreqPair(W)) != null) {
+                SparseIntArray[] doc = s;
                 //predicted[idx] = parallelSimilarity.simVecSource(doc[0]).toDoubleArray();
-                predictedBuilder.add(parallelSimilarity.simVecSource(doc[inverse ?  1 : 0]).toDoubleArray());
+                predictedBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ?  1 : 0]).toDoubleArray());
                 //foreign[idx++] = parallelSimilarity.simVecTarget(doc[1]).toDoubleArray();
-                foreignBuilder.add(parallelSimilarity.simVecTarget(doc[inverse ?  0 : 1]).toDoubleArray());
+                foreignBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ?  0 : 1]).toDoubleArray());
                 idx++;
                 //   System.out.println(Arrays.toString(predicted[idx-1]));
                 //   System.out.println(Arrays.toString(foreign[idx-1]));
                 if (idx % 10 == 0) {
                     System.err.print(".");
                 }
+                docSize++;
             }
-        }
         predictedBuilder.finish();
         foreignBuilder.finish();
         System.err.println();
@@ -155,28 +157,19 @@ public class MateFindingTrial {
         for (double[] pred : predicted) {
             if (allZero(pred)) {
                 incorrect++;
-                mrr += 2.0 / docs.size();
+                mrr += 2.0 / docSize;
                 System.out.print("\u00d8");
                 continue;
             }
             double rightScore;
             double[] foreign_i = foreign.get(i);
-            if (oneStep) {
-                rightScore = cosSim(parallelSimilarity.simVecSource(docs.get(i)[inverse ? 1: 0]), parallelSimilarity.simVecTarget(docs.get(i)[inverse ? 0 : 1]));
-            } else {
-                rightScore = cosSim(pred, foreign_i);
-            }
+            rightScore = cosSim(pred, foreign_i);
             int bestJ = -1;
             int rank = 1;
             double bestMatch = -Double.MAX_VALUE;
             int j = 0;
             for (double[] forin : foreign) {
-                final double cosSim;
-                if (oneStep) {
-                    cosSim = cosSim(parallelSimilarity.simVecSource(docs.get(i)[inverse ? 1: 0]), parallelSimilarity.simVecTarget(docs.get(j)[inverse ? 0 : 1]));
-                } else {
-                    cosSim = cosSim(pred, forin);
-                }
+                final double cosSim = cosSim(pred, forin);
                 if (Double.isNaN(cosSim) || Double.isInfinite(cosSim)) {
                     System.err.print("N");
                     continue;
@@ -217,20 +210,20 @@ public class MateFindingTrial {
         }
         final DecimalFormat percentFormat = new DecimalFormat("##.##%");
         System.out.println();
-        System.out.println("Precision@1: " + correct + " (" + percentFormat.format((double) correct / (double) docs.size()) + ")");
-        System.out.println("Precision@5: " + correct5 + " (" + percentFormat.format((double) correct5 / (double) docs.size()) + ")");
-        System.out.println("Precision@10: " + correct10 + " (" + percentFormat.format((double) correct10 / (double) docs.size()) + ")");
-        System.out.println("MRR: " + (mrr / docs.size()));
-        return new double[] { (double)correct / docs.size(),
-            (double)correct5 / docs.size(),
-            (double)correct10 / docs.size(),
-            mrr / docs.size()
+        System.out.println("Precision@1: " + correct + " (" + percentFormat.format((double) correct / (double) docSize) + ")");
+        System.out.println("Precision@5: " + correct5 + " (" + percentFormat.format((double) correct5 / (double) docSize) + ")");
+        System.out.println("Precision@10: " + correct10 + " (" + percentFormat.format((double) correct10 / (double) docSize) + ")");
+        System.out.println("MRR: " + (mrr / docSize));
+        return new double[] { (double)correct / docSize,
+            (double)correct5 / docSize,
+            (double)correct10 / docSize,
+            mrr / docSize
         };
     }
 
-    public static double[] compare(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N, boolean inverse) throws Exception {
+    public static double[] compareNG(NGramSimilarityMetric parallelSimilarity, int W, File testFile, int N, boolean inverse, boolean metricInverted) throws Exception {
         System.err.println("Reading test data");
-        ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile));
+        ParallelBinarizedReader testPBR = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(testFile), inverse && !metricInverted);
         //final List<Object2IntMap<NGram>[]> docs = new ArrayList<Object2IntMap<NGram>[]>();
         Object2IntMap<NGram>[] s;
         //while ((s = testFile.nextNGramPair(W)) != null) {
@@ -241,17 +234,17 @@ public class MateFindingTrial {
         //double[][] predicted = new double[docs.size()][];
         //double[][] foreign = new double[docs.size()][];
 
-        final DiskBackedStream predicted = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K());
+        final DiskBackedStream predicted = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K(),parallelSimilarity.K() >= parallelSimilarity.W());
         final Builder predictedBuilder = predicted.builder();
-        final DiskBackedStream foreign = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K());
+        final DiskBackedStream foreign = new DiskBackedStream(STREAM_CHUNK, parallelSimilarity.K(),parallelSimilarity.K() >= parallelSimilarity.W());
         final Builder foreignBuilder = foreign.builder();
         int docsSize = 0;
         while ((s = testPBR.nextNGramPair(N)) != null) {
             Object2IntMap<NGram>[] doc = s;
             //predicted[idx] = parallelSimilarity.simVecSource(doc[0]).toDoubleArray();
-            predictedBuilder.add(parallelSimilarity.simVecSource(doc[inverse ? 1 : 0]).toDoubleArray());
+            predictedBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ? 1 : 0]).toDoubleArray());
             //foreign[idx++] = parallelSimilarity.simVecTarget(doc[1]).toDoubleArray();
-            foreignBuilder.add(parallelSimilarity.simVecTarget(doc[inverse ? 0 : 1]).toDoubleArray());
+            foreignBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ? 0 : 1]).toDoubleArray());
             idx++;
             //   System.out.println(Arrays.toString(predicted[idx-1]));
             //   System.out.println(Arrays.toString(foreign[idx-1]));
@@ -372,8 +365,6 @@ public class MateFindingTrial {
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
 
-        final boolean oneStep = opts.flag("oneStep", "Calculate the mate-finding in one-step mode (this involves J^2 calls to the similarity function)");
-        
         final boolean inverseDirection = opts.flag("inv", "Do mate finding from second language to first");
 
         final int ngram = opts.intValue("ngram", "The number of n-grams to use in n-gram based similarity", 0);
@@ -394,7 +385,7 @@ public class MateFindingTrial {
 
         final int W = WordMap.calcW(wordMapFile);
 
-        compare(trainFile, factoryClazz, W, testFile, oneStep, ngram,inverseDirection);
+        compare(trainFile, factoryClazz, W, testFile, ngram,inverseDirection);
     }
 
     private static boolean allZero(double[] pred) {

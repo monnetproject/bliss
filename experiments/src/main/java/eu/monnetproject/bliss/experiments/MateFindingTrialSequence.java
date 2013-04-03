@@ -42,8 +42,6 @@ public class MateFindingTrialSequence {
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
 
-        final boolean oneStep = opts.flag("oneStep", "Calculate the mate-finding in one-step mode (this involves J^2 calls to the similarity function)");
-
         final int ngram = opts.intValue("ngram", "The number of n-grams to use in n-gram based similarity", 0);
 
         final File trainFile = opts.roFile("trainFile", "The training file");
@@ -67,7 +65,7 @@ public class MateFindingTrialSequence {
         
         for(double d = 1.6; d < 3; d += 0.2) {
             System.setProperty("clesaPower", d+"");
-            final double[] scores = MateFindingTrial.compare(trainFile, factoryClazz, W, testFile, oneStep, ngram,false);
+            final double[] scores = MateFindingTrial.compare(trainFile, factoryClazz, W, testFile, ngram,false);
             out.println(d+","+scores[0]+","+scores[1]+","+scores[2]+","+scores[3]);
             System.out.println("d="+d);
             System.out.println("scores="+Arrays.toString(scores));

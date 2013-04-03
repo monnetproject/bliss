@@ -47,7 +47,7 @@ public class DiskBackedStreamTest {
     @Test
     public void testIterator() {
         System.out.println("iterator");
-        DiskBackedStream instance = new DiskBackedStream(5, 3);
+        DiskBackedStream instance = new DiskBackedStream(5, 3,false);
         final ArrayList<double[]> ref = new ArrayList<double[]>();
         
         Builder result = instance.builder();
@@ -84,11 +84,48 @@ public class DiskBackedStreamTest {
     @Test
     public void testBuilder() {
         System.out.println("builder");
-        DiskBackedStream instance = new DiskBackedStream(5, 3);
+        DiskBackedStream instance = new DiskBackedStream(5, 3,false);
         
         Builder result = instance.builder();
         for(int i = 0; i < 15; i++) {
             result.add(randomVec(3));
         }
+    }
+    
+    private static double[] randomSparseVec(int N) {
+        final double[] v = new double[N];
+        for(int i = 0; i < N; i++) {
+            if(random.nextBoolean()) {
+                v[i] = random.nextDouble();
+            }
+        }
+        return v;
+    }
+    
+    @Test
+    public void testSparseMode() {
+        System.out.println("iterator");
+        DiskBackedStream instance = new DiskBackedStream(5, 3,true);
+        final ArrayList<double[]> ref = new ArrayList<double[]>();
+        
+        Builder result = instance.builder();
+        for(int i = 0; i < 15; i++) {
+            final double[] v = randomSparseVec(3);
+            result.add(v);
+            ref.add(v);
+        }
+        result.finish();
+        int i = 0;
+        final Iterator<double[]> iter = instance.iterator();
+        final Iterator<double[]> refIterator = ref.iterator();
+        while(refIterator.hasNext()) {
+            System.err.println(i++);
+            assert(iter.hasNext());
+            final double[] dbsNext = iter.next();
+            final double[] refNext = refIterator.next();
+            Assert.assertArrayEquals(dbsNext, refNext,0.0);
+        }
+        assert(!iter.hasNext());
+        
     }
 }
