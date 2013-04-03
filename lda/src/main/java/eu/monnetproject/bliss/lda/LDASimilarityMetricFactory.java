@@ -42,9 +42,12 @@ public class LDASimilarityMetricFactory implements SimilarityMetricFactory<Input
     public SimilarityMetric makeMetric(InputStream data, int W) throws IOException {
         final DataInputStream in = new DataInputStream(data);
         final int L = in.readInt();
+        System.err.println("L="+L);
         assert(L==2);
         final int J = in.readInt();
+        System.err.println("J="+J);
         final int W2 = in.readInt();
+        System.err.println("W="+W2);
         assert(W==W2);
         final int K = in.readInt();
         final double alpha = in.readDouble();
