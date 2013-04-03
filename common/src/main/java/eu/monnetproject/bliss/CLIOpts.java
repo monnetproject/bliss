@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -469,6 +471,29 @@ public class CLIOpts {
         }
     }
 
+    public URL url(String name, String description) {
+        final Argument arg = new Argument(name, null, description, false);
+        argObjs.add(arg);
+        if(args.isEmpty()) {
+            arg.message = "Too few arguments: expected " + name;
+            succeeded = false;
+            return null;
+        } else {
+            final URL url;
+            try {
+                url = new URL(args.get(0));
+            } catch (MalformedURLException x) {
+                arg.message = "Bad URL: " + args.get(0);
+                succeeded = false;
+                args.remove(0);
+                return null;
+            }
+            args.remove(0);
+            return url;
+        }
+    }
+
+    
     public void restAsSystemProperties() {
         final Argument arg = new Argument("...", null, "Other parameters as x=y", false);
         for (String argi : args) {
