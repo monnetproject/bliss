@@ -2,8 +2,8 @@
 
 LANGPAIR=$1-$2
 FOLDER=../wiki/$LANGPAIR
-CORPUS=en-es.wiki.gz
-DOWN=100
+CORPUS=$LANGPAIR.wiki.gz
+DOWN=20
 FREQMIN=20
 
 ./downsample -v $FOLDER/$CORPUS $DOWN $FOLDER/sampleModel.gz

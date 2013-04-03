@@ -39,16 +39,17 @@ import java.io.InputStream;
 public class LDASimilarityMetricFactory implements SimilarityMetricFactory<InputStream> {
 
     @Override
-    public SimilarityMetric makeMetric(InputStream data, int W) throws IOException {
+    public SimilarityMetric makeMetric(InputStream data, int W2) throws IOException {
         final DataInputStream in = new DataInputStream(data);
         final int L = in.readInt();
-        System.err.println("L="+L);
+        //System.err.println("L="+L);
         assert(L==2);
         final int J = in.readInt();
-        System.err.println("J="+J);
-        final int W2 = in.readInt();
-        System.err.println("W="+W2);
-        assert(W==W2);
+        //System.err.println("J="+J);
+        final int W = in.readInt();
+	if(W != W2) {
+	    System.err.println("Vocabulary size in LDA model was " + W + " but test data has a vocabulary of " + W2);
+	}
         final int K = in.readInt();
         final double alpha = in.readDouble();
         assert(alpha >= 0);
@@ -58,14 +59,24 @@ public class LDASimilarityMetricFactory implements SimilarityMetricFactory<Input
         for (int l = 0; l < 2; l++) {
             for (int k = 0; k < K; k++) {
                 for (int w = 0; w < W; w++) {
-                    N_lkw[l][k][w] = in.readInt();
+		    try {
+			N_lkw[l][k][w] = in.readInt();
+		    } catch(IOException ex) {
+			System.err.println("["+l+","+k+","+w+"]");
+			throw ex;
+		    }
                 }
             }
         }
         final int[][] N_lk = new int[L][K];
         for (int l = 0; l < 2; l++) {
             for (int k = 0; k < K; k++) {
-                N_lk[l][k] = in.readInt();
+		try {
+		    N_lk[l][k] = in.readInt();
+		} catch(IOException ex) {
+		    System.err.println("["+l+","+k+"]");
+		    throw ex;
+		}
             }
         }
         in.close();
