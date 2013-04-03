@@ -132,9 +132,17 @@ public class MateFindingTrial {
             while ((s = testPBR.nextFreqPair(W)) != null) {
                 SparseIntArray[] doc = s;
                 //predicted[idx] = parallelSimilarity.simVecSource(doc[0]).toDoubleArray();
-                predictedBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ?  1 : 0]).toDoubleArray());
+                if(inverse && !metricInverted) {
+                    foreignBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ?  1 : 0]).toDoubleArray());
+                } else {
+                    predictedBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ?  1 : 0]).toDoubleArray());
+                }
                 //foreign[idx++] = parallelSimilarity.simVecTarget(doc[1]).toDoubleArray();
-                foreignBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ?  0 : 1]).toDoubleArray());
+                if(inverse && !metricInverted) {
+                    predictedBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ?  0 : 1]).toDoubleArray());
+                } else {
+                    foreignBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ?  0 : 1]).toDoubleArray());
+                }
                 idx++;
                 //   System.out.println(Arrays.toString(predicted[idx-1]));
                 //   System.out.println(Arrays.toString(foreign[idx-1]));
