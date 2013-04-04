@@ -133,13 +133,13 @@ public class MateFindingTrial {
                 SparseIntArray[] doc = s;
                 //predicted[idx] = parallelSimilarity.simVecSource(doc[0]).toDoubleArray();
                 if(inverse && !metricInverted) {
-                    foreignBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ?  1 : 0]).toDoubleArray());
+                    predictedBuilder.add(parallelSimilarity.simVecSource(doc[1]).toDoubleArray());
                 } else {
                     predictedBuilder.add(parallelSimilarity.simVecSource(doc[metricInverted ?  1 : 0]).toDoubleArray());
                 }
                 //foreign[idx++] = parallelSimilarity.simVecTarget(doc[1]).toDoubleArray();
                 if(inverse && !metricInverted) {
-                    predictedBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ?  0 : 1]).toDoubleArray());
+                    predictedBuilder.add(parallelSimilarity.simVecTarget(doc[0]).toDoubleArray());
                 } else {
                     foreignBuilder.add(parallelSimilarity.simVecTarget(doc[metricInverted ?  0 : 1]).toDoubleArray());
                 }
