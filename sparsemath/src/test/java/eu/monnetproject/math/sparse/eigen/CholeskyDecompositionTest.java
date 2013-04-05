@@ -129,7 +129,7 @@ public class CholeskyDecompositionTest {
             A = CholeskyDecomposition.decomp(A, true);
             final SparseRealArray y = SparseRealArray.fromArray(randomVector(N));
             final Vector<Double> b = A.mult(y);
-            Assert.assertArrayEquals(y.toDoubleArray(), CholeskyDecomposition.solve(A, b.toDoubleArray()), 0.0001);
+            Assert.assertArrayEquals(y.toDoubleArray(), CholeskyDecomposition.solve(A, b).toDoubleArray(), 0.0001);
         }
     }
 
@@ -154,7 +154,7 @@ public class CholeskyDecompositionTest {
             A = CholeskyDecomposition.decomp(A, true);
             final SparseRealArray y = SparseRealArray.fromArray(randomVector(N));
             final Vector<Double> b = A.multTransposed(y);
-            Assert.assertArrayEquals(y.toDoubleArray(), CholeskyDecomposition.solveT(A, b.toDoubleArray()), 0.0001);
+            Assert.assertArrayEquals(y.toDoubleArray(), CholeskyDecomposition.solveT(A, b).toDoubleArray(), 0.0001);
         }
     }
 }

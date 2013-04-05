@@ -266,7 +266,7 @@ public class RealVector implements Vector<Double> {
 
     @Override
     public Vector<Double> subvector(int offset, int length) {
-        double[] sd = Arrays.copyOfRange(data, offset, length);
+        double[] sd = Arrays.copyOfRange(data, offset, offset+length);
         return new RealVector(sd);
     }
 

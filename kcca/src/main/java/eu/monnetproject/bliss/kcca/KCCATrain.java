@@ -26,22 +26,23 @@
  */
 package eu.monnetproject.bliss.kcca;
 
-import eu.monnetproject.math.sparse.DoubleArrayMatrix;
-import eu.monnetproject.math.sparse.Matrix;
 import eu.monnetproject.math.sparse.RealVector;
 import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.VectorFunction;
-import eu.monnetproject.math.sparse.eigen.LanczosAlgorithm;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition;
 import eu.monnetproject.math.sparse.eigen.SingularValueDecomposition.Solution;
 import eu.monnetproject.bliss.CLIOpts;
+import eu.monnetproject.bliss.ParallelBinarizedReader;
+import eu.monnetproject.math.sparse.SparseMatrix;
+import eu.monnetproject.math.sparse.SparseRealArray;
+import eu.monnetproject.math.sparse.eigen.CholeskyDecomposition;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.util.Arrays;
 
 /**
  * Train a model using Kernel Canonical Correlation Analysis as described in
@@ -70,85 +71,75 @@ public class KCCATrain {
     //    Q T^-1 Q^T B a = p a
     // We do not calculate T^-1 but calculate the inverse vector as required
     public static double[][][] train(File corpus, int W, int J, int K, double kappa) throws IOException {
-        System.err.print("Lanczos step");
-        final LanczosAlgorithm.Solution lancozSoln = LanczosAlgorithm.lanczos(new D(corpus, J, W, kappa), LanczosAlgorithm.randomUnit(2 * J), Math.min(2 * J, 2 * K), 1.0);
+        System.err.print("Calculating D");
+        final DSoln D = calculateD(corpus, W, J, kappa);
+        System.err.print("\nCholesky step (Source language)");
+        final double[][] Dxi = CholeskyDecomposition.denseDecomp(D.Dx);
+        System.err.print("\nCholesky step (Target language)");
+        final double[][] Dyi = CholeskyDecomposition.denseDecomp(D.Dy);
         System.err.print("\nArnoldi step");
-        final Solution eigen1 = SingularValueDecomposition.nonsymmEigen(new B(corpus, J, W, lancozSoln), 2 * J, K, 1e-50);
+        final Solution eigen1 = SingularValueDecomposition.nonsymmEigen(new B(corpus, J, W, Dxi, Dyi), 2 * J, 2 * K, 1e-50);
+
         System.err.println("\nSign step");
-        final double[] sign = sign(corpus, W, J, K, eigen1.U);
+        //final double[] sign = sign(corpus, W, J, K, eigen1.U);
+        final int[] sign = signPairs(eigen1.S, J);
+        final int[] K2 = recalcK(sign);
         System.err.println("Calculating final vectors");
-        return apply(corpus, W, J, K, eigen1.U, sign);
+        return apply(corpus, W, J, K, eigen1.U, sign, K2);
     }
 
-    public static double[] sign(File corpus, int W, int J, int K, double[][] Z_kj) throws IOException {
-        final double[][][] m_lkw = new double[2][K][W];
-        {
-            final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpus));
-            int N = 0;
-            while (data.available() > 0) {
-                try {
-                    int w = data.readInt() - 1;
-                    final int j = (N % 2) * J + N / 2;
-                    final int l = (N % 2);
-                    if (w == -1) {
-                        N++;
-                    } else {
-                        for (int k = 0; k < K; k++) {
-                            m_lkw[l][k][w] += Z_kj[k][j];
-                        }
-                    }
-                } catch (EOFException x) {
+    public static int[] signPairs(double[] v, int J) {
+        assert (J * 2 == v.length);
+        int[] s = new int[J];
+        Arrays.fill(s, -1);
+        for (int i = 0; i < J; i++) {
+            for (int j = J; j < 2 * J; j++) {
+                double r = v[i] / v[j];
+                if (-0.99 > r && r > -1.01) {
+                    s[i] = j;
                     break;
                 }
             }
         }
-        {
-            double[][][] v_lkj = new double[2][K][J];
-            final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpus));
-            int N = 0;
-            while (data.available() > 0) {
-                try {
-                    int w = data.readInt() - 1;
-                    final int j = N / 2;
-                    final int l = N % 2;
-                    if (w == -1) {
-                        N++;
-                    } else {
-                        for (int k = 0; k < K; k++) {
-                            v_lkj[l][k][j] += m_lkw[l][k][w];
-                        }
-                    }
-                } catch (EOFException x) {
-                    break;
-                }
+        return s;
+    }
+    
+    public static int[] recalcK(int[] K) {
+        final int[] K2 = new int[K.length];
+        int k2 = 0;
+        for(int k = 0; k < K.length; k++) {
+            if(K[k] >= 0) {
+                K2[k] = k2++;
+            } else {
+                K2[k] = -1;
             }
-            double[] sign = new double[K];
-            for(int k = 0; k < K; k++) {
-                double ip = 0.0;
-                for(int j = 0; j < J; j++) {
-                    ip += v_lkj[0][k][j] * v_lkj[1][k][j];
-                }
-                sign[k] = Math.signum(ip);
-            }
-            return sign;
         }
-
+        System.err.println("Final number of topics: " + k2);
+        return K2;
     }
 
-    private static double[][][] apply(File corpus, int W, int J, int K, double[][] Z, double[] sgn) throws IOException {
-        double[][][] Z2 = new double[2][W][K];
+    private static double[][][] apply(File corpus, int W, int J, int K, double[][] Z, int[] sgn, int[] K2) throws IOException {
+        double[][][] Z2 = new double[2][W][K2.length];
         final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpus));
         int N = 0;
         while (data.available() > 0) {
             try {
                 int i = data.readInt();
+                if(N / 2 >= J) {
+                    break;
+                }
                 final int j = (N % 2) * J + N / 2;
-                final int j2 = ((N + 1) % 2) * J + N / 2;
                 if (i == 0) {
                     N++;
                 } else {
                     for (int k = 0; k < K; k++) {
-                        Z2[N % 2][i - 1][k] += (N % 2 == 1 ? sgn[k] : 1.0) * Z[k][j];
+                        if (sgn[k] != -1) {
+                            if (N % 2 == 1) {
+                                Z2[1][i - 1][K2[k]] += Z[sgn[k]][j];
+                            } else {
+                                Z2[0][i - 1][K2[k]] += Z[k][j];
+                            }
+                        }
                     }
                 }
             } catch (EOFException x) {
@@ -158,20 +149,66 @@ public class KCCATrain {
         return Z2;
     }
 
+    private static class DSoln {
+
+        double[][] Dx;
+        double[][] Dy;
+
+        public DSoln(double[][] Dx, double[][] Dy) {
+            this.Dx = Dx;
+            this.Dy = Dy;
+        }
+    }
+
+    private static DSoln calculateD(File corpus, int W, int J, double kappa) throws IOException {
+        final ParallelBinarizedReader slowIn = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(corpus));
+        SparseIntArray[] slow;
+        int j1 = 0;
+        final double[][] Dx = new double[J][J];
+        final double[][] Dy = new double[J][J];
+        final double[][] Kx = new double[J][J];
+        final double[][] Ky = new double[J][J];
+        while ((slow = slowIn.nextFreqPair(W)) != null && j1 < J) {
+            final ParallelBinarizedReader fastIn = new ParallelBinarizedReader(CLIOpts.openInputAsMaybeZipped(corpus));
+            SparseIntArray[] fast;
+            int j2 = 0;
+            while ((fast = fastIn.nextFreqPair(W)) != null && j2 < J) {
+                Kx[j1][j2] = slow[0].innerProduct(fast[0]);
+                Ky[j1][j2] = slow[1].innerProduct(fast[1]);
+                j2++;
+            }
+            j1++;
+            System.err.print(".");
+        }
+        System.err.println();
+        for (j1 = 0; j1 < J; j1++) {
+            for (int j2 = 0; j2 < J; j2++) {
+                for (int j = 0; j < J; j++) {
+                    Dx[j1][j2] += (1.0 - kappa) * Kx[j1][j] * Kx[j][j2];
+                    Dy[j1][j2] += (1.0 - kappa) * Ky[j1][j] * Ky[j][j2];
+                }
+                Dx[j1][j2] += kappa * Kx[j1][j2];
+                Dy[j1][j2] += kappa * Ky[j1][j2];
+            }
+            System.err.print(".");
+        }
+
+        return new DSoln(Dx, Dy);
+    }
+
     public static class B implements VectorFunction<Double, Double> {
 
         private final File corpus;
         private final int J;
         private final int W;
-        private final LanczosAlgorithm.Solution lanczosSoln;
-        private final Matrix<Double> Q;
+        private final SparseMatrix<Double> Dxl, Dyl;
 
-        public B(File corpus, int J, int W, LanczosAlgorithm.Solution lanczosSoln) {
+        public B(File corpus, int J, int W, double[][] Dxl, double[][] Dyl) {
             this.corpus = corpus;
             this.J = J;
             this.W = W;
-            this.lanczosSoln = lanczosSoln;
-            this.Q = new DoubleArrayMatrix(lanczosSoln.q());
+            this.Dxl = SparseMatrix.fromArray(Dxl);
+            this.Dyl = SparseMatrix.fromArray(Dyl);
         }
 
         @Override
@@ -188,48 +225,29 @@ public class KCCATrain {
                     v1.put(j + J, t);
                 }
                 final Vector<Double> v2 = calcKxKyv(v1, J, W, corpus);
-                final Vector<Double> v3 = Q.mult(v2);
-                final Vector<Double> v4 = lanczosSoln.tridiagonal().invMult(v3);
-                return Q.multTransposed(v4);
+                final Vector<Double> v7 = new SparseRealArray(2 * J);
+                {
+                    final Vector<Double> v3 = new ShiftedVector<Double>(0, J, v2);
+                    final Vector<Double> v4 = CholeskyDecomposition.solve(Dxl, v3);
+                    final Vector<Double> v5 = CholeskyDecomposition.solveT(Dxl, v4);
+                    for (int j = 0; j < J; j++) {
+                        v7.add(j, v5.doubleValue(j));
+                    }
+                }
+                {
+                    final Vector<Double> v3 = new ShiftedVector<Double>(J, J, v2);
+                    final Vector<Double> v4 = CholeskyDecomposition.solve(Dyl, v3);
+                    final Vector<Double> v6 = CholeskyDecomposition.solveT(Dyl, v4);
+                    for (int j = 0; j < J; j++) {
+                        v7.add(J + j, v6.doubleValue(j));
+                    }
+                }
+                return v7;
             } catch (IOException x) {
                 throw new RuntimeException(x);
             }
         }
     }
-
-    public static class D implements VectorFunction<Double, Double> {
-
-        private final File corpus;
-        private final int J;
-        private final int W;
-        private final double kappa;
-
-        public D(File corpus, int J, int W, double kappa) {
-            this.corpus = corpus;
-            this.J = J;
-            this.W = W;
-            this.kappa = kappa;
-        }
-
-        @Override
-        public Vector<Double> apply(Vector<Double> v) {
-            try {
-                System.err.print(".");
-                final Vector<Double> v1 = KxKyv(v);
-                final Vector<Double> v2 = KxKyv(v1);
-                v1.multiply(kappa);
-                v2.multiply(1.0 - kappa);
-                v1.add(v2);
-                return v1;
-            } catch (IOException x) {
-                throw new RuntimeException(x);
-            }
-        }
-
-        public Vector<Double> KxKyv(Vector<Double> v) throws IOException {
-            return calcKxKyv(v, J, W, corpus);
-        }
-    };
 
     /**
      * Calculate: ( K_x 0 ) ( v_x ) ( 0 K_y ) ( v_y )
@@ -250,6 +268,9 @@ public class KCCATrain {
             while (data.available() > 0) {
                 try {
                     int i = data.readInt();
+                    if(N / 2 >= J) {
+                        break;
+                    }
                     final int j = (N % 2) * J + N / 2;
                     if (i == 0) {
                         N++;
@@ -269,6 +290,9 @@ public class KCCATrain {
             while (data.available() > 0) {
                 try {
                     int i = data.readInt();
+                    if(N / 2 >= J) {
+                        break;
+                    }
                     final int j = (N % 2) * J + N / 2;
                     if (i == 0) {
                         v1[j] = doc.innerProduct(m);
@@ -287,7 +311,7 @@ public class KCCATrain {
 
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
-        final double kappa = opts.doubleValue("kappa", 1.5, "The kappa value");
+        final double kappa = opts.doubleValue("kappa", 0.67, "The kappa value");
         final File corpus = opts.roFile("corpus[.gz|.bz2]", "The training corpus");
         final int W = opts.intValue("W", "The number of distinct tokens in the corpus");
         final int J = opts.intValue("J", "The number of documents (per language)");
@@ -298,14 +322,15 @@ public class KCCATrain {
             return;
         }
         final double[][][] model = train(corpus, W, J, K, kappa);
+        final int K2 = model[0][0].length;
         System.err.println("Writing model");
         final DataOutputStream out = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(outFile));
         out.writeInt(2);
         out.writeInt(W);
-        out.writeInt(K);
+        out.writeInt(K2);
         for (int l = 0; l < 2; l++) {
             for (int w = 0; w < W; w++) {
-                for (int k = 0; k < K; k++) {
+                for (int k = 0; k < K2; k++) {
                     out.writeDouble(model[l][w][k]);
                 }
             }

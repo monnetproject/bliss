@@ -27,6 +27,7 @@
 package eu.monnetproject.math.sparse.eigen;
 
 import eu.monnetproject.math.sparse.SparseMatrix;
+import eu.monnetproject.math.sparse.SparseRealArray;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.Vectors;
 import java.util.Arrays;
@@ -101,30 +102,30 @@ public class CholeskyDecomposition {
         }
     }
 
-    public static double[] solve(SparseMatrix<Double> a, double[] b) {
-        assert (a.cols() == b.length);
-        final int N = b.length;
-        double[] y = new double[N];
+    public static Vector<Double> solve(SparseMatrix<Double> a, Vector<Double> b) {
+        assert (a.cols() == b.length());
+        final int N = b.length();
+        Vector<Double> y = new SparseRealArray(N);
         for (int i = 0; i < N; i++) {
-            double sum = b[i];
+            double sum = b.doubleValue(i);
             for (int j = 0; j < i; j++) {
-                sum -= a.doubleValue(i, j) * y[j];
+                sum -= a.doubleValue(i, j) * y.doubleValue(j);
             }
-            y[i] = sum / a.doubleValue(i, i);
+            y.put(i, sum / a.doubleValue(i, i));
         }
         return y;
     }
 
-    public static double[] solveT(SparseMatrix<Double> a, double[] b) {
-        assert (a.cols() == b.length);
-        final int N = b.length;
-        double[] y = new double[N];
+    public static Vector<Double> solveT(SparseMatrix<Double> a, Vector<Double> b) {
+        assert (a.cols() == b.length());
+        final int N = b.length();
+        Vector<Double> y = new SparseRealArray(N);
         for (int i = N - 1; i >= 0; i--) {
-            double sum = b[i];
+            double sum = b.doubleValue(i);
             for (int j = i + 1; j < N; j++) {
-                sum -= a.doubleValue(j, i) * y[j];
+                sum -= a.doubleValue(j, i) * y.doubleValue(j);
             }
-            y[i] = sum / a.doubleValue(i, i);
+            y.put(i,sum / a.doubleValue(i, i));
         }
         return y;
     }

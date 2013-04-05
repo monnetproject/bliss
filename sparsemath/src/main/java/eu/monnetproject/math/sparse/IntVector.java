@@ -486,7 +486,7 @@ public class IntVector implements Vector<Integer> {
 
     @Override
     public Vector<Integer> subvector(int offset, int length) {
-        int[] sd = Arrays.copyOfRange(data, offset, length);
+        int[] sd = Arrays.copyOfRange(data, offset, offset+length);
         return new IntVector(sd);
     }
     
