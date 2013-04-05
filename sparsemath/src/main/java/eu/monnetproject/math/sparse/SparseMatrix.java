@@ -155,7 +155,7 @@ public class SparseMatrix<N extends Number> implements Matrix<N>, Serializable {
         Arrays.fill(result, m * defaultValue);
         for (int i = 0; i < arr.length; i++) {
             for (Map.Entry<Integer, N> e : arr[i].entrySet()) {
-                result[e.getKey().intValue()] += e.getValue().doubleValue() - defaultValue;
+                result[e.getKey().intValue()] += x.doubleValue(i) * e.getValue().doubleValue() - defaultValue;
             }
         }
         return using.make(result);
