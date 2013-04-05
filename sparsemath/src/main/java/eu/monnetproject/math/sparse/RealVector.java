@@ -265,6 +265,14 @@ public class RealVector implements Vector<Double> {
     }
 
     @Override
+    public Vector<Double> subvector(int offset, int length) {
+        double[] sd = Arrays.copyOfRange(data, offset, length);
+        return new RealVector(sd);
+    }
+
+    
+    
+    @Override
     public Double defaultValue() {
         return 0.0;
     }

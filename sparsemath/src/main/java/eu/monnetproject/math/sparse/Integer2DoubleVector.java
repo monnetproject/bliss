@@ -242,4 +242,11 @@ public class Integer2DoubleVector implements Vector<Double> {
     public boolean containsKey(int idx) {
         return v.containsKey(idx);
     }
+
+    @Override
+    public Vector<Double> subvector(int offset, int length) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    
 }

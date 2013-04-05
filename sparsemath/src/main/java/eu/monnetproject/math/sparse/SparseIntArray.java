@@ -28,6 +28,7 @@ package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
@@ -516,4 +517,19 @@ public class SparseIntArray extends Int2IntOpenHashMap implements Vector<Integer
     public SparseIntArray clone() {
         return new SparseIntArray(n, defaultValue, this);
     }
+
+    @Override
+    public Vector<Integer> subvector(int offset, int length) {
+        final SparseIntArray sv = new SparseIntArray(n);
+        final ObjectIterator<Entry> iter = int2IntEntrySet().fastIterator();
+        while(iter.hasNext()) {
+            final Entry e = iter.next();
+            if(e.getIntKey() >= offset && e.getIntKey() < offset + length) {
+                sv.put(e.getIntKey(), e.getIntValue());
+            }
+        }
+        return sv;
+    }
+    
+    
 }

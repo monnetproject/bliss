@@ -274,4 +274,12 @@ public interface Vector<N extends Number> {
      * @return
      */
     N sum();
+    
+    /**
+     * Create a subvector 
+     * @param offset The first index to return
+     * @param length The length of the index to return
+     * @return 
+     */
+    Vector<N> subvector(int offset, int length);
 }

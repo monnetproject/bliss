@@ -27,8 +27,9 @@
 package eu.monnetproject.math.sparse;
 
 import eu.monnetproject.math.sparse.Vectors.Factory;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
-import java.util.HashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Map;
 
 /**
@@ -452,5 +453,18 @@ public class SparseRealArray extends Int2DoubleOpenHashMap implements Vector<Dou
     @Override
     public Factory<Double> factory() {
         return Vectors.AS_SPARSE_REALS;
+    }
+    
+    @Override
+    public Vector<Double> subvector(int offset, int length) {
+        final SparseRealArray sv = new SparseRealArray(n);
+        final ObjectIterator<Entry> iter = int2DoubleEntrySet().fastIterator();
+        while(iter.hasNext()) {
+            final Int2DoubleMap.Entry e = iter.next();
+            if(e.getIntKey() >= offset && e.getIntKey() < offset + length) {
+                sv.put(e.getIntKey(), e.getDoubleValue());
+            }
+        }
+        return sv;
     }
 }
