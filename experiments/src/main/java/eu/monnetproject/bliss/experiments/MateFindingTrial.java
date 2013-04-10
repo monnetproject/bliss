@@ -37,12 +37,11 @@ import eu.monnetproject.bliss.SimilarityMetricFactory;
 import eu.monnetproject.bliss.WordMap;
 import eu.monnetproject.bliss.experiments.DiskBackedStream.Builder;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 
 /**
@@ -61,6 +60,7 @@ public class MateFindingTrial {
             put("LSA", "eu.monnetproject.bliss.lsa.LSASimilarityMetricFactory");
             put("SAL", "eu.monnetproject.bliss.betalm.impl.SalienceSimilarityFactory");
             put("W2W", "eu.monnetproject.bliss.experiments.Word2WordTranslation");
+            put("ONETA", "eu.monnetproject.bliss.clesa.ONETASimilarityFactory");
         }
     };
     private static final Random random = new Random();
@@ -153,6 +153,9 @@ public class MateFindingTrial {
             }
         predictedBuilder.finish();
         foreignBuilder.finish();
+        if(scores != null) {
+            scores.writeInt(docSize);
+        }
         System.err.println();
         System.err.println("Starting classification");
         int correct = 0;
@@ -178,6 +181,9 @@ public class MateFindingTrial {
             int j = 0;
             for (double[] forin : foreign) {
                 final double cosSim = cosSim(pred, forin);
+                if(scores != null) {
+                    scores.writeDouble(innerProduct(pred,forin));
+                }
                 if (Double.isNaN(cosSim) || Double.isInfinite(cosSim)) {
                     System.err.print("N");
                     continue;
@@ -370,12 +376,16 @@ public class MateFindingTrial {
         return a2 > 0 && b2 > 0 ? ab / Math.sqrt(a2) / Math.sqrt(b2) : 0;
     }
 
+    private static DataOutputStream scores;
+    
     public static void main(String[] args) throws Exception {
         final CLIOpts opts = new CLIOpts(args);
 
         final boolean inverseDirection = opts.flag("inv", "Do mate finding from second language to first");
 
         final int ngram = opts.intValue("ngram", "The number of n-grams to use in n-gram based similarity", 0);
+        
+        final File scoresFile = opts.woFile("scores", "The scores file to output to", null);
 
         final File trainFile = opts.roFile("trainFile", "The training file");
 
@@ -391,9 +401,18 @@ public class MateFindingTrial {
             return;
         }
 
+        if(scoresFile != null) {
+            scores = new DataOutputStream(CLIOpts.openOutputAsMaybeZipped(scoresFile));
+        }
+        
         final int W = WordMap.calcW(wordMapFile);
 
         compare(trainFile, factoryClazz, W, testFile, ngram,inverseDirection);
+        
+        if(scoresFile != null) {
+            scores.flush();
+            scores.close();
+        }
     }
 
     private static boolean allZero(double[] pred) {
@@ -403,5 +422,13 @@ public class MateFindingTrial {
             }
         }
         return true;
+    }
+
+    private static double innerProduct(double[] pred, double[] forin) {
+        double ip = 0.0;
+        for(int i = 0; i < pred.length; i++) {
+            ip += pred[i] * forin[i];
+        }
+        return ip;
     }
 }

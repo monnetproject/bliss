@@ -1,5 +1,5 @@
 /**
- * *******************************************************************************
+ * ********************************************************************************
  * Copyright (c) 2011, Monnet Project All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-
 package eu.monnetproject.bliss.clesa;
+
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 
 /**
  *
  * @author jmccrae
  */
-public enum CLESAMethod {
-    SIMPLE,
-    TFIDF,
-    TFIDF_STAR,
-    TFTF,
-    NORMALIZED,
-    LOG_NORMALIZED,
-    LUCENE,
-    OKAPI_BM25,
-    SORG
+public class TFIDFStarSimilarity implements CLESASimilarity {
+
+    private final double[] idf;
+
+    public TFIDFStarSimilarity(SparseIntArray[][] x, int l, int W) {
+        final int[] _idf = new int[W];
+        final int J = x.length;
+        for (int j = 0; j < J; j++) {
+            for (int t : x[j][l].keySet()) {
+                _idf[t]++;
+            }
+        }
+        this.idf = new double[W];
+        for (int w = 0; w < W; w++) {
+            if (_idf[w] != 0) {
+                idf[w] = -Math.log((double) _idf[w] / J);
+            } else {
+                idf[w] = -100.0;
+            }
+        }
+    }
+
+    @Override
+    public double score(Vector<Integer> q, SparseIntArray d) {
+        double ai = d.sum();
+        double score = 0.0;
+        for (int t : q.keySet()) {
+            score += d.doubleValue(t) * idf[t] / ai;
+        }
+        return score;
+    }
 }

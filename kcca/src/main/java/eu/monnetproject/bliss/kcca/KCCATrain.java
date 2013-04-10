@@ -37,6 +37,7 @@ import eu.monnetproject.bliss.ParallelBinarizedReader;
 import eu.monnetproject.math.sparse.SparseMatrix;
 import eu.monnetproject.math.sparse.SparseRealArray;
 import eu.monnetproject.math.sparse.eigen.CholeskyDecomposition;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -79,66 +80,51 @@ public class KCCATrain {
         final double[][] Dyi = CholeskyDecomposition.denseDecomp(D.Dy);
         System.err.print("\nArnoldi step");
         final Solution eigen1 = SingularValueDecomposition.nonsymmEigen(new B(corpus, J, W, Dxi, Dyi), 2 * J, 2 * K, 1e-50);
-
-        System.err.println("\nSign step");
-        //final double[] sign = sign(corpus, W, J, K, eigen1.U);
-        final int[] sign = signPairs(eigen1.S, J);
-        final int[] K2 = recalcK(sign);
         System.err.println("Calculating final vectors");
-        return apply(corpus, W, J, K, eigen1.U, sign, K2);
+        final FPSoln pos = filterPostives(eigen1.S);
+        return apply(corpus, W, J, K, eigen1.U, pos.posKs, pos.K2,eigen1.S);
     }
 
-    public static int[] signPairs(double[] v, int J) {
-        assert (J * 2 == v.length);
-        int[] s = new int[J];
-        Arrays.fill(s, -1);
-        for (int i = 0; i < J; i++) {
-            for (int j = J; j < 2 * J; j++) {
-                double r = v[i] / v[j];
-                if (-0.99 > r && r > -1.01) {
-                    s[i] = j;
-                    break;
-                }
-            }
+    private static class FPSoln {
+
+        int K2;
+        int[] posKs;
+
+        public FPSoln(int K2, int[] posKs) {
+            this.K2 = K2;
+            this.posKs = posKs;
         }
-        return s;
-    }
-    
-    public static int[] recalcK(int[] K) {
-        final int[] K2 = new int[K.length];
-        int k2 = 0;
-        for(int k = 0; k < K.length; k++) {
-            if(K[k] >= 0) {
-                K2[k] = k2++;
-            } else {
-                K2[k] = -1;
-            }
-        }
-        System.err.println("Final number of topics: " + k2);
-        return K2;
     }
 
-    private static double[][][] apply(File corpus, int W, int J, int K, double[][] Z, int[] sgn, int[] K2) throws IOException {
-        double[][][] Z2 = new double[2][W][K2.length];
+    private static FPSoln filterPostives(double[] v) {
+        final IntArrayList pos = new IntArrayList(v.length);
+        for (int i = 0; i < v.length; i++) {
+            if (v[i] > 0) {
+                pos.add(i);
+            }
+        }
+        return new FPSoln(pos.size(), pos.toIntArray());
+    }
+
+    private static double[][][] apply(File corpus, int W, int J, int K, double[][] Z, int[] posK, int k2, double[] S) throws IOException {
+        double[][][] Z2 = new double[2][W][k2];
         final DataInputStream data = new DataInputStream(CLIOpts.openInputAsMaybeZipped(corpus));
         int N = 0;
         while (data.available() > 0) {
             try {
                 int i = data.readInt();
-                if(N / 2 >= J) {
+                if (N / 2 >= J) {
                     break;
                 }
-                final int j = (N % 2) * J + N / 2;
+                final int j = N / 2;
                 if (i == 0) {
                     N++;
                 } else {
-                    for (int k = 0; k < K; k++) {
-                        if (sgn[k] != -1) {
-                            if (N % 2 == 1) {
-                                Z2[1][i - 1][K2[k]] += Z[sgn[k]][j];
-                            } else {
-                                Z2[0][i - 1][K2[k]] += Z[k][j];
-                            }
+                    for (int k = 0; k < posK.length; k++) {
+                        if (N % 2 == 1) {
+                            Z2[1][i - 1][k] += Z[posK[k]][j + J] / S[posK[k]];
+                        } else {
+                            Z2[0][i - 1][k] += Z[posK[k]][j] / S[posK[k]];
                         }
                     }
                 }
@@ -268,7 +254,7 @@ public class KCCATrain {
             while (data.available() > 0) {
                 try {
                     int i = data.readInt();
-                    if(N / 2 >= J) {
+                    if (N / 2 >= J) {
                         break;
                     }
                     final int j = (N % 2) * J + N / 2;
@@ -290,7 +276,7 @@ public class KCCATrain {
             while (data.available() > 0) {
                 try {
                     int i = data.readInt();
-                    if(N / 2 >= J) {
+                    if (N / 2 >= J) {
                         break;
                     }
                     final int j = (N % 2) * J + N / 2;

@@ -24,21 +24,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-
 package eu.monnetproject.bliss.clesa;
+
+import eu.monnetproject.bliss.NGramSimilarityMetric;
+import eu.monnetproject.bliss.ParallelBinarizedReader;
+import eu.monnetproject.bliss.SimilarityMetric;
+import eu.monnetproject.bliss.SimilarityMetricFactory;
+import java.io.File;
+import java.io.IOException;
 
 /**
  *
  * @author jmccrae
  */
-public enum CLESAMethod {
-    SIMPLE,
-    TFIDF,
-    TFIDF_STAR,
-    TFTF,
-    NORMALIZED,
-    LOG_NORMALIZED,
-    LUCENE,
-    OKAPI_BM25,
-    SORG
+public class ONETASimilarityFactory implements SimilarityMetricFactory<ParallelBinarizedReader>{
+    
+    @Override
+    public SimilarityMetric makeMetric(ParallelBinarizedReader reader, int W) throws IOException {
+        final File lMatrix1 = new File(System.getProperty("onetaL1"));
+        if(!lMatrix1.exists()) {
+            throw new IllegalArgumentException("Please specify L matrix");
+        }
+        final File lMatrix2 = new File(System.getProperty("onetaL2"));
+        if(!lMatrix2.exists()) {
+            throw new IllegalArgumentException("Please specify L matrix");
+        }
+        return new ONETASimilarity(reader.readAll(W), lMatrix1, lMatrix2, W);
+    }
+
+    @Override
+    public NGramSimilarityMetric makeNGramMetric(ParallelBinarizedReader dat, int W, int n) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    
+
+    @Override
+    public Class<ParallelBinarizedReader> datatype() {
+        return ParallelBinarizedReader.class;
+    }
 }

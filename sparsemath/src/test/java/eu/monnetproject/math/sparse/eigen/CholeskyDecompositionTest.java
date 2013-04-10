@@ -99,6 +99,29 @@ public class CholeskyDecompositionTest {
             }
         }
     }
+    
+    @Test
+    public void testDenseInplaceDecomp() {
+        System.out.println("denseInplaceDecomp");
+        for (int it = 0; it < 100; it++) {
+            final int N = 3;
+            double[][] A = randomSPDMatrix(N);
+            double[][] B = new double[N][N];
+            for(int i = 0; i < N; i++) {
+                System.arraycopy(A[i], 0, B[i], 0, N);
+            }
+            CholeskyDecomposition.denseInplaceDecomp(B);
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    double p = 0.0;
+                    for (int k = 0; k < N; k++) {
+                        p += B[i][k] * B[j][k];
+                    }
+                    Assert.assertEquals(A[i][j], p, 0.00001);
+                }
+            }
+        }
+    }
 
     @Test
     public void testSparseDecomp() {

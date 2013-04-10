@@ -24,21 +24,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-
 package eu.monnetproject.bliss.clesa;
+
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 
 /**
  *
  * @author jmccrae
  */
-public enum CLESAMethod {
-    SIMPLE,
-    TFIDF,
-    TFIDF_STAR,
-    TFTF,
-    NORMALIZED,
-    LOG_NORMALIZED,
-    LUCENE,
-    OKAPI_BM25,
-    SORG
+public class SimpleSimilarity implements CLESASimilarity {
+
+    @Override
+    public double score(Vector<Integer> q, SparseIntArray d) {
+        double score = 0.0;
+        for(int t : q.keySet()) {
+            score += q.doubleValue(t) * d.doubleValue(t);
+        }
+        return score;
+    }
+    
 }

@@ -24,21 +24,41 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************
  */
-
 package eu.monnetproject.bliss.clesa;
+
+import eu.monnetproject.math.sparse.SparseIntArray;
+import eu.monnetproject.math.sparse.Vector;
 
 /**
  *
  * @author jmccrae
  */
-public enum CLESAMethod {
-    SIMPLE,
-    TFIDF,
-    TFIDF_STAR,
-    TFTF,
-    NORMALIZED,
-    LOG_NORMALIZED,
-    LUCENE,
-    OKAPI_BM25,
-    SORG
+public class TFTFSimilarity implements CLESASimilarity {
+    
+    private final int[] tf;
+    private final boolean useTf;
+    
+    public TFTFSimilarity(SparseIntArray[][] x, int l, int W) {
+        this.tf = new int[W];
+        this.useTf = Boolean.parseBoolean(System.getProperty("tfNorm","true"));
+        final int J = x.length;
+        for(int j = 0; j < J; j++) {
+            for(int t : x[j][l].keySet()) {
+                tf[t] += useTf ? x[j][l].intValue(t) : 1;
+            }
+        }
+    }
+
+    @Override
+    public double score(Vector<Integer> q, SparseIntArray d) {
+        double score = 0.0;
+        for(int t : q.keySet()) {
+            if(tf[t] != 0) {
+                score += q.doubleValue(t) * d.doubleValue(t) / tf[t];
+            }
+        }
+        return score;
+    }
+    
+    
 }

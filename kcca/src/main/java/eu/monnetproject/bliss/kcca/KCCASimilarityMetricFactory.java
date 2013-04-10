@@ -47,7 +47,9 @@ public class KCCASimilarityMetricFactory implements SimilarityMetricFactory<Inpu
         }
         final int W2 = dis.readInt();
         if(W != W2) {
-            throw new IllegalArgumentException("Bad W");
+            System.err.println("W=" + W + " ,W2=" + W2);
+            W = W2;
+            //throw new IllegalArgumentException("Bad W");
         }
         final int K = dis.readInt();
         double[][][] U = new double[L][W][K];

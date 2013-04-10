@@ -71,11 +71,17 @@ public class CLESA implements SimilarityMetric {
         };
     }
     
-    private CLESASimilarity getSim(SparseIntArray[][] x, int l, int W) {
+    public static CLESASimilarity getSim(SparseIntArray[][] x, int l, int W) {
         final CLESAMethod method = CLESAMethod.valueOf(System.getProperty("clesaMethod","NORMALIZED"));
         switch(method) {
+            case SIMPLE:
+                return new SimpleSimilarity();
+            case TFTF:
+                return new TFTFSimilarity(x, l, W);
             case TFIDF:
                 return new TFIDFSimilarity(x, l, W);
+            case TFIDF_STAR:
+                return new TFIDFStarSimilarity(x, l, W);
             case NORMALIZED:
                 return new NormalizedSimilarity(x, l, W);
             case LOG_NORMALIZED:
@@ -91,43 +97,12 @@ public class CLESA implements SimilarityMetric {
         }
     }
 
-    /**
-     * Transpose the matrix to a WxJ matrix
-     */
-//    private SparseIntArray[][] transpose(SparseIntArray[][] x) {
-//        final SparseIntArray[][] Xt = new SparseIntArray[W][2];
-//        for (int j = 0; j < x.length; j++) {
-//            n[j] = x[j][0].sum();
-//            n_f[j] = x[j][0].sum();
-//            for (int l = 0; l < 2; l++) {
-//                for (Int2IntMap.Entry e : x[j][l].int2IntEntrySet()) {
-//                    if (Xt[e.getIntKey()][l] == null) {
-//                        Xt[e.getIntKey()][l] = new SparseIntArray(x.length);
-//                    }
-//                    final int v = e.getIntValue();
-//                    if (v != 0) { // So DF calculation doesn't go wrong
-//                        Xt[e.getIntKey()][l].put(j, v);
-//                    }
-//                }
-//            }
-//        }
-//        return Xt;
-//    }
     @Override
     public Vector<Double> simVecSource(Vector<Integer> termVec) {
         double[] sim = new double[J];
         for (int j = 0; j < J; j++) {
             sim[j] = similarity[0].score(termVec, x[j][0]);
         }
-//        for (Map.Entry<Integer, Integer> e : termVec.entrySet()) {
-//            double termVecFreq = (double) e.getValue();
-//            final int w = e.getKey();
-//            if (e.getKey() >= W || xt[e.getKey()][0] == null) {
-//                continue;
-//            }
-//            final SparseIntArray v = xt[w][0];
-//            kernel(sim, termVecFreq, v, w, J, n, df);
-//        }
         return new RealVector(sim);
     }
 
@@ -137,15 +112,6 @@ public class CLESA implements SimilarityMetric {
         for (int j = 0; j < J; j++) {
             sim[j] = similarity[1].score(termVec, x[j][1]);
         }
-//        for (Map.Entry<Integer, Integer> e : termVec.entrySet()) {
-//            double termVecFreq = (double) e.getValue();
-//            final int w = e.getKey();
-//            if (xt[w][1] == null) {
-//                continue;
-//            }
-//            final SparseIntArray v = xt[w][1];
-//            kernel(sim, termVecFreq, v, w, J, n_f, df_f);
-//        }
         return new RealVector(sim);
     }
     private static PrintWriter out;

@@ -30,6 +30,13 @@ import eu.monnetproject.math.sparse.SparseMatrix;
 import eu.monnetproject.math.sparse.SparseRealArray;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.math.sparse.Vectors;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 
 /**
@@ -61,6 +68,121 @@ public class CholeskyDecomposition {
             }
         }
         return l;
+    }
+
+    public static void denseInplaceDecomp(double[][] a) {
+        int n = a.length;
+        int i, j, k;
+        double sum;
+        double[] diagonal = new double[n];
+
+        for (i = 0; i < n; i++) {
+            System.err.print(".");
+            for (j = i; j < n; j++) {
+
+                for (sum = a[i][j], k = i - 1; k >= 0; k--) {
+                    sum -= a[i][k] * a[j][k];
+                }
+                if (i == j) {
+                    if (sum <= 0.0) {
+                        throw new IllegalArgumentException("Matrix not positive definite");
+                    }
+                    diagonal[i] = Math.sqrt(sum);
+                } else {
+                    a[j][i] = sum / diagonal[i];
+                    a[i][j] = 0;
+                }
+
+            }
+        }
+
+
+        for (i = 0; i < n; i++) {
+            a[i][i] = diagonal[i];
+        }
+
+
+    }
+
+    public static void denseOnDiskDecomp(File matrixFile, int n) {
+        int i, j, k;
+        double sum;
+        double[] diagonal = new double[n];
+        try {
+            final FileChannel channel = new RandomAccessFile(matrixFile, "rw").getChannel();
+
+            for (i = 0; i < n; i++) {
+                final MappedByteBuffer row_i = channel.map(FileChannel.MapMode.READ_WRITE, (long) n * i * 8, n * 8);
+                if (i % 10 == 9) {
+                    System.err.print(".");
+                }
+                for (j = i; j < n; j++) {
+                    final MappedByteBuffer row_j = channel.map(FileChannel.MapMode.READ_WRITE, (long) n * j * 8, n * 8);
+
+                    row_i.position(j * 8);
+                    sum = row_i.getDouble();
+                    for (k = i - 1; k >= 0; k--) {
+                        //sum -= a.doubleValue(i, k) * a.doubleValue(j, k);
+                        row_i.position(k * 8);
+                        row_j.position(k * 8);
+                        sum -= row_i.getDouble() * row_j.getDouble();
+                    }
+                    if (i == j) {
+                        if (sum <= 0.0) {
+                            throw new IllegalArgumentException("Matrix not positive definite");
+                        }
+                        diagonal[i] = Math.sqrt(sum);
+                    } else {
+                        row_i.position(j * 8);
+                        row_i.putDouble(sum / diagonal[i]);
+                        row_j.position(i * 8);
+                        row_j.putDouble(sum / diagonal[i]);
+                    }
+
+                }
+            }
+
+
+            for (i = 0; i < n; i++) {
+                channel.map(FileChannel.MapMode.READ_WRITE, (long) ((long) i + (long) n * i) * 8, 8).putDouble(diagonal[i]);
+            }
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
+    public static void denseInplaceDecomp(SparseMatrix<Double> a) {
+        int n = a.rows();
+        int i, j, k;
+        double sum;
+        double[] diagonal = new double[n];
+
+        for (i = 0; i < n; i++) {
+            System.err.print(".");
+            for (j = i; j < n; j++) {
+
+                for (sum = a.doubleValue(i, j), k = i - 1; k >= 0; k--) {
+                    sum -= a.doubleValue(i, k) * a.doubleValue(j, k);
+                }
+                if (i == j) {
+                    if (sum <= 0.0) {
+                        throw new IllegalArgumentException("Matrix not positive definite");
+                    }
+                    diagonal[i] = Math.sqrt(sum);
+                } else {
+                    a.set(j, i, sum / diagonal[i]);
+                    a.set(i, j, 0);
+                }
+
+            }
+        }
+
+
+        for (i = 0; i < n; i++) {
+            a.set(i, i, diagonal[i]);
+        }
+
+
     }
 
     public static SparseMatrix<Double> decomp(SparseMatrix<Double> a, boolean complete) {
@@ -116,6 +238,41 @@ public class CholeskyDecomposition {
         return y;
     }
 
+    public static Vector<Double> solveOnDisk(File matrixFile, int N, Vector<Double> b) {
+        assert (N == b.length());
+        final byte[] buf = new byte[N*8];
+        Vector<Double> y = new SparseRealArray(N);
+        RandomAccessFile raf = null;
+        try {
+            raf = new RandomAccessFile(matrixFile, "r");
+            //final FileChannel channel = raf.getChannel();
+            for (int i = 0; i < N; i++) {
+                //final MappedByteBuffer row_i = channel.map(FileChannel.MapMode.READ_ONLY, (long) i * N * 8, N * 8);
+                raf.seek((long)i * N * 8);
+                raf.readFully(buf);
+                final ByteBuffer row_i = ByteBuffer.wrap(buf);
+                double sum = b.doubleValue(i);
+                row_i.position(0);
+                for (int j = 0; j < i; j++) {
+
+                    sum -= row_i.getDouble() * y.doubleValue(j);
+                }
+                y.put(i, sum / row_i.getDouble());
+            }
+            return y;
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        } finally {
+            if(raf != null) {
+                try {
+                    raf.close();
+                } catch(Exception x) {
+                    x.printStackTrace();
+                }
+            }
+        }
+    }
+
     public static Vector<Double> solveT(SparseMatrix<Double> a, Vector<Double> b) {
         assert (a.cols() == b.length());
         final int N = b.length();
@@ -125,8 +282,45 @@ public class CholeskyDecomposition {
             for (int j = i + 1; j < N; j++) {
                 sum -= a.doubleValue(j, i) * y.doubleValue(j);
             }
-            y.put(i,sum / a.doubleValue(i, i));
+            y.put(i, sum / a.doubleValue(i, i));
         }
         return y;
+    }
+
+    public static Vector<Double> solveTOnDisk(File matrixFile, int N, Vector<Double> b) {
+        assert (N == b.length());
+        final byte[] buf = new byte[N*8];
+        Vector<Double> y = new SparseRealArray(N);
+        RandomAccessFile raf = null;
+        try {
+            raf = new RandomAccessFile(matrixFile, "r");
+            for (int i = N - 1; i >= 0; i--) {
+                //final MappedByteBuffer row_i = channel.map(FileChannel.MapMode.READ_ONLY, (long) i * N * 8, N * 8);
+                raf.seek((long)i * N * 8);
+                raf.readFully(buf);
+                final ByteBuffer row_i = ByteBuffer.wrap(buf);
+                double sum = b.doubleValue(i);
+                if (i + 1 != N) {
+                    row_i.position((i + 1) * 8);
+                }
+                for (int j = i + 1; j < N; j++) {
+                    sum -= row_i.getDouble() * y.doubleValue(j);
+                }
+                row_i.position(i * 8);
+                y.put(i, sum / row_i.getDouble());
+            }
+            return y;
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        } finally {
+            if(raf != null) {
+                try {
+                    raf.close();
+                } catch(Exception x) {
+                    x.printStackTrace();
+                }
+            }
+        }
+
     }
 }

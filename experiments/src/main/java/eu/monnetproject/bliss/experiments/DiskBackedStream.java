@@ -91,6 +91,7 @@ public class DiskBackedStream implements Iterable<double[]> {
                 }
             }
         } catch (IOException x) {
+            System.err.println("Failed mapping " + file.getPath() + " @ " + offset + " # " + toRead);
             x.printStackTrace();
         } finally {
             if (fis != null) {
