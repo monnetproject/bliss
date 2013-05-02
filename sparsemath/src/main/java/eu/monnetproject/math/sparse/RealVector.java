@@ -289,7 +289,7 @@ public class RealVector implements Vector<Double> {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < data.length; i++) {
             if (data[i] != 0) {
                 if (sb.length() > 0) {
@@ -298,7 +298,7 @@ public class RealVector implements Vector<Double> {
                 sb.append(i).append("=").append(data[i]);
             }
         }
-        return sb.toString();
+        return sb.append("]").toString();
     }
 
     @Override
