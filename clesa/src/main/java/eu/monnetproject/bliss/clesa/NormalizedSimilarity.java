@@ -35,12 +35,12 @@ import eu.monnetproject.math.sparse.Vector;
  * @author jmccrae
  */
 public class NormalizedSimilarity implements CLESASimilarity {
-    private final int[] tf;
+    private final double[] tf;
     private final double clesaPower;
     private final boolean useTf;
 
     public NormalizedSimilarity(SparseIntArray[][] x, int l, int W) {
-        this.tf = new int[W];
+        this.tf = new double[W];
         this.useTf = Boolean.parseBoolean(System.getProperty("tfNorm","true"));
         final int J = x.length;
         for(int j = 0; j < J; j++) {
@@ -52,7 +52,7 @@ public class NormalizedSimilarity implements CLESASimilarity {
     }
     
     public NormalizedSimilarity(SparseIntArray[][] x, int l, int W, double clesaPower) {
-        this.tf = new int[W];
+        this.tf = new double[W];
         this.useTf = Boolean.parseBoolean(System.getProperty("tfNorm","true"));
         final int J = x.length;
         for(int j = 0; j < J; j++) {
@@ -61,6 +61,12 @@ public class NormalizedSimilarity implements CLESASimilarity {
             }
         }
         this.clesaPower = clesaPower;
+    }
+
+    public NormalizedSimilarity(double[] tf) {
+        this.tf = tf;
+        this.useTf = true;
+        this.clesaPower = -1.0;
     }
 
     @Override

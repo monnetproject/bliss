@@ -31,13 +31,13 @@ import eu.monnetproject.math.sparse.SparseIntArray;
 import eu.monnetproject.math.sparse.Vector;
 import eu.monnetproject.bliss.ParallelReader;
 import eu.monnetproject.bliss.SimilarityMetric;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Scanner;
 
 /**
  *
@@ -45,6 +45,32 @@ import java.util.Map;
  */
 public class CLESA implements SimilarityMetric {
 
+    private static double[][] readCSV(String property) {
+        try {
+            final DoubleList dl1 = new DoubleArrayList();
+            final DoubleList dl2 = new DoubleArrayList();
+            final File file = new File(property);
+            System.err.println(property);
+            final Scanner in = new Scanner(file);
+            while (in.hasNextLine()) {
+                final String line = in.nextLine();
+                final String[] ss = line.split(",");
+                if (ss.length >= 2) {
+                    dl1.add(Double.parseDouble(ss[0]));
+                    dl2.add(Double.parseDouble(ss[1]));
+                } else {
+                    System.err.println(line);
+                }
+            }
+            System.err.println("read: " + dl1.size());
+            return new double[][]{
+                dl1.toDoubleArray(),
+                dl2.toDoubleArray()
+            };
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
+    }
     public final SparseIntArray[][] x;
     public final int J;
     public final int W;
@@ -70,10 +96,10 @@ public class CLESA implements SimilarityMetric {
             getSim(x, 1, W)
         };
     }
-    
+
     public static CLESASimilarity getSim(SparseIntArray[][] x, int l, int W) {
-        final CLESAMethod method = CLESAMethod.valueOf(System.getProperty("clesaMethod","NORMALIZED"));
-        switch(method) {
+        final CLESAMethod method = CLESAMethod.valueOf(System.getProperty("clesaMethod", "NORMALIZED"));
+        switch (method) {
             case SIMPLE:
                 return new SimpleSimilarity();
             case TFTF:
@@ -87,11 +113,21 @@ public class CLESA implements SimilarityMetric {
             case LOG_NORMALIZED:
                 return new LogNormalizedSimilarity(x, l, W);
             case LUCENE:
-                return new  LucenePracticalSimilarity(x, l, W);
+                return new LucenePracticalSimilarity(x, l, W);
             case OKAPI_BM25:
                 return new OkapiBM25(x, l, W);
             case SORG:
                 return new SorgAssociation(x, l, W);
+            case MSE_OPTIMAL:
+                if(System.getProperty("normFile") != null) {
+                    final double[][] tf = readCSV(System.getProperty("normFile"));
+                    return new NormalizedSimilarity(tf[l]);
+                } else if(System.getProperty("normFileInv") != null) {
+                    final double[][] tf = readCSV(System.getProperty("normFileInv"));
+                    return new NormalizedSimilarity(tf[1-l]);
+                } else {
+                    throw new IllegalArgumentException("Set normFile or normFile Inv");
+                }
             default:
                 throw new IllegalArgumentException("Invalid CLESA Method");
         }
@@ -171,7 +207,6 @@ public class CLESA implements SimilarityMetric {
 //        //R_print("df_f",df_f);
 //        //out.close();
 //    }
-
     @Override
     public int W() {
         return W;

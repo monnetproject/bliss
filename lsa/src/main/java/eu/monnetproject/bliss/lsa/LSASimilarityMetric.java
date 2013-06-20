@@ -69,12 +69,12 @@ public class LSASimilarityMetric implements SimilarityMetric {
                 if(Double.isNaN(u)) {
                     throw new IllegalArgumentException("Matrix contains NaN");
                 }
-                result[k] += u * termVec.value(i-1).intValue();
+                result[k] += u * termVec.value(i).intValue();
             }
         }
-//        for(int k = 0; k < K; k++) {
-//            result[k] *= Math.sqrt(S[k]);
-//        }
+        for(int k = 0; k < K; k++) {
+            result[k] *= Math.sqrt(S[k]);
+        }
         return result;
     }
     

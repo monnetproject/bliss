@@ -78,7 +78,7 @@ public class Uniq {
                 }
             }
         }
-        System.err.println();
+        System.err.println(" read " + read);
         if(lastValue != null) {
             out.println(lastValue + " " + s + " " + n);
         }

@@ -40,5 +40,6 @@ public enum CLESAMethod {
     LOG_NORMALIZED,
     LUCENE,
     OKAPI_BM25,
-    SORG
+    SORG,
+    MSE_OPTIMAL
 }

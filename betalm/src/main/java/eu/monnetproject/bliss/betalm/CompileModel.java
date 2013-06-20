@@ -305,7 +305,7 @@ public class CompileModel {
             while (sortedNGramsIn.hasNextLine()) {
                 final String line = sortedNGramsIn.nextLine();
                 final String[] elems = line.split("\t");
-                if (elems.length == 2) {
+                if (elems.length == 2 && !elems[1].equals("0.0")) {
                     out.println(elems[1] + "\t" + elems[0]);
                 } else if (elems.length == 3) {
                     out.println(elems[1] + "\t" + elems[0] + "\t" + elems[2]);
@@ -433,6 +433,9 @@ public class CompileModel {
     }
 
     private static File sort(final File file) throws Exception {
+        if(file.length() < 0x100000l) {
+            System.err.println("Input file to sort is very small!");
+        }
         final File outFile = new File(file.getPath() + "sorted");
         DeleteFileOnExit.add(outFile);
         try {
@@ -453,6 +456,9 @@ public class CompileModel {
             }
             out.flush();
             out.close();
+        }
+        if(outFile.length() < 0x100000l) {
+            System.err.println("Output file from sort is very small!");
         }
         return outFile;
     }

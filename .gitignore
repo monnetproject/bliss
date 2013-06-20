@@ -20,4 +20,5 @@ experiments/signif.R
 sampleData/wiki-en-es.kcca
 sampleData/wiki-en-es.test
 sampleData/wiki-en-es.train
-
+experiments/clesa-battery.ods
+mftsr.txt

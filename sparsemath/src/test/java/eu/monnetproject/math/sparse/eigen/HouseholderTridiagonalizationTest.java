@@ -80,4 +80,18 @@ public class HouseholderTridiagonalizationTest {
         final double[] realEigenvalues = eigenDecompositionImpl.getRealEigenvalues();
         Assert.assertArrayEquals(new double[]{12.64, -1.06, -5.57}, realEigenvalues, 0.01);
     }
+    
+    @Test
+    public void test2() {
+        System.out.println("tridiagonalize");
+        final SparseMatrix<Integer> A = SparseMatrix.fromArray(new int[][]{
+                    {1, 3, 4, 5, 2},
+                    {3, 2, 8, 9, 0},
+                    {4, 8, 3, 1, 5},
+                    {5, 9, 1, 8, 2},
+                    {2, 0, 5, 2, 4}
+                });
+        final TridiagonalMatrix tri = HouseholderTridiagonalization.tridiagonalize(A);
+        System.out.println(tri.toString());
+    }
 }

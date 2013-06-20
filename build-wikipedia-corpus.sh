@@ -35,7 +35,7 @@ then
    mvn install || die "Maven2 build failed... is Maven2 installed?"
 fi
 
-if [ ! -f wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 ]
+if [ ! -f wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 ] || [ ! -f wiki/${SRCLANG}wiki.xml.gz ]
 then
   echo "Step 1. Download Wikipedia $SRCLANG"
   wget http://dumps.wikimedia.org/${SRCLANG}wiki/latest/${SRCLANG}wiki-latest-pages-articles.xml.bz2 -O wiki/${SRCLANG}wiki-latest-pages-articles.xml.bz2 || die "Could not download WikiPedia dump"
