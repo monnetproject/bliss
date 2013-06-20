@@ -29,13 +29,14 @@ public class ExportSortFormat {
         while(in.hasNextLine()) {
             final String line = in.nextLine();
             final String[] ss = line.split(":");
-            if(ss.length != 2) {
-                System.err.println("Bad line: " + line);
+            if(ss[ss.length-1].length() == 0) {
                 continue;
             }
-            out.print(ss[0]);
-            out.print(":");
-            final String[] tkIds = ss[1].split(" ");
+            for(int i = 0; i < ss.length - 1; i++) {
+                out.print(ss[0]);
+                out.print(":");
+            }
+            final String[] tkIds = ss[ss.length-1].split(" ");
             for(String tkId : tkIds) {
                 out.print(wordMap[Integer.parseInt(tkId)]);
                 out.print(" ");
