@@ -25,7 +25,7 @@ public class ExportSortFormat {
         }
         final int W = WordMap.calcW(wordMapFile);
         final String[] wordMap = WordMap.inverseFromFile(wordMapFile, W, true);
-        final Scanner in = new Scanner(corpusFile);
+        final Scanner in = new Scanner(CLIOpts.openInputAsMaybeZipped(corpusFile));
         while(in.hasNextLine()) {
             final String line = in.nextLine();
             final String[] ss = line.split(":");
