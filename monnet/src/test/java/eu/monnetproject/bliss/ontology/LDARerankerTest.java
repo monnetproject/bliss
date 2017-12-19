@@ -42,72 +42,72 @@ import org.junit.BeforeClass;
  * @author John McCrae
  */
 public class LDARerankerTest {
-
-    public LDARerankerTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-    @Test
-    public void testSomeMethod() throws Exception {
-        final OntologySerializer ontoSerializer = Services.get(OntologySerializer.class);
-        /*final Ontology ontology = ontoSerializer.read(new FileReader("../eu.monnetproject.translation.controller/tmp/foaf.xml"));
-        final TranslationRanker ranker = new LDARankerFactory().getRanker(ontology, Language.ENGLISH, Language.SPANISH);
-        System.err.println(ranker.score(new PTE("financiado por"), null));
-        System.err.println(ranker.score(new PTE("financiado , por"),null));*/
-    }
-
-    
-    private class PTE implements PhraseTableEntry {
-        
-        private final String trans;
-
-        public PTE(String trans) {
-            this.trans = trans;
-        }
-
-        @Override
-        public double getApproxScore() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        
-        
-
-        @Override
-        public Label getTranslation() {
-            return new Label() {
-
-                @Override
-                public String asString() {
-                    return trans;
-                }
-
-                @Override
-                public Language getLanguage() {
-                    throw new UnsupportedOperationException("Not supported yet.");
-                }
-            };
-        }
-
-        @Override
-        public Label getForeign() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Feature[] getFeatures() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        
-    }
+//
+//    public LDARerankerTest() {
+//    }
+//
+//    @BeforeClass
+//    public static void setUpClass() throws Exception {
+//    }
+//
+//    @AfterClass
+//    public static void tearDownClass() throws Exception {
+//    }
+//
+//    @After
+//    public void tearDown() {
+//    }
+//
+//    @Test
+//    public void testSomeMethod() throws Exception {
+////        final OntologySerializer ontoSerializer = Services.get(OntologySerializer.class);
+//        /*final Ontology ontology = ontoSerializer.read(new FileReader("../eu.monnetproject.translation.controller/tmp/foaf.xml"));
+//        final TranslationRanker ranker = new LDARankerFactory().getRanker(ontology, Language.ENGLISH, Language.SPANISH);
+//        System.err.println(ranker.score(new PTE("financiado por"), null));
+//        System.err.println(ranker.score(new PTE("financiado , por"),null));*/
+//    }
+//
+//    
+//    private class PTE implements PhraseTableEntry {
+//        
+//        private final String trans;
+//
+//        public PTE(String trans) {
+//            this.trans = trans;
+//        }
+//
+//        @Override
+//        public double getApproxScore() {
+//            throw new UnsupportedOperationException("Not supported yet.");
+//        }
+//        
+//        
+//
+//        @Override
+//        public Label getTranslation() {
+//            return new Label() {
+//
+//                @Override
+//                public String asString() {
+//                    return trans;
+//                }
+//
+//                @Override
+//                public Language getLanguage() {
+//                    throw new UnsupportedOperationException("Not supported yet.");
+//                }
+//            };
+//        }
+//
+//        @Override
+//        public Label getForeign() {
+//            throw new UnsupportedOperationException("Not supported yet.");
+//        }
+//
+//        @Override
+//        public Feature[] getFeatures() {
+//            throw new UnsupportedOperationException("Not supported yet.");
+//        }
+//        
+//    }
 }
