@@ -3,17 +3,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>eu.monnetproject</groupId>
+      <groupId>com.github.monnetproject</groupId>
       <artifactId>bliss</artifactId>
       <version>1.13.3</version>
       <relativePath>..</relativePath>
     </parent>
     <artifactId>bliss.monnet</artifactId>
     <packaging>bundle</packaging>
-    <name>eu.monnetproject.bliss.monnet</name>
+    <name>com.github.monnetproject.bliss.monnet</name>
     <dependencies>
         <dependency>
-            <groupId>eu.monnetproject</groupId>
+            <groupId>com.github.monnetproject</groupId>
             <artifactId>translation.core</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -23,7 +23,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>eu.monnetproject</groupId>
+            <groupId>com.github.monnetproject</groupId>
             <artifactId>ontology.owlapi</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>

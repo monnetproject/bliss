@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>eu.monnetproject</groupId>
+      <groupId>com.github.monnetproject</groupId>
       <artifactId>bliss</artifactId>
       <version>1.13.3</version>
       <relativePath>..</relativePath>
     </parent>
     <artifactId>bliss.experiments</artifactId>
     <packaging>bundle</packaging>
-    <name>eu.monnetproject.bliss.experiments</name>
+    <name>com.github.monnetproject.bliss.experiments</name>
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

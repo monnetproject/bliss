@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>bliss</artifactId>
-        <groupId>eu.monnetproject</groupId>
+        <groupId>com.github.monnetproject</groupId>
         <version>1.13.3</version>
         <relativePath>..</relativePath>
     </parent>
@@ -11,7 +11,7 @@
     <artifactId>bliss.sparsemath</artifactId>
     <packaging>bundle</packaging>
 
-    <name>eu.monnetproject.bliss.sparsemath</name>
+    <name>com.github.monnetproject.bliss.sparsemath</name>
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>

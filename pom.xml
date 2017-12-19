@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.monnetproject</groupId>
+    <groupId>com.github.monnetproject</groupId>
     <artifactId>bliss</artifactId>
     <version>1.13.3</version>
     <packaging>pom</packaging>
@@ -54,7 +54,7 @@
        <module>lsa</module>
        <module>monnet</module>
        <module>sparsemath</module>
-<!--<module>eu.monnetproject.bliss.dbn</module>-->
+<!--<module>com.github.monnetproject.bliss.dbn</module>-->
   </modules>
 
     <build>

@@ -3,13 +3,13 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>eu.monnetproject</groupId>
+    <groupId>com.github.monnetproject</groupId>
     <artifactId>bliss</artifactId>
     <version>1.13.3</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>bliss.kcca</artifactId>
-  <name>eu.monnetproject.bliss.kcca</name>
+  <name>com.github.monnetproject.bliss.kcca</name>
   <packaging>bundle</packaging>
     <dependencies>
         <dependency>

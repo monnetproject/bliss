@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>eu.monnetproject</groupId>
+      <groupId>com.github.monnetproject</groupId>
       <artifactId>bliss</artifactId>
       <version>1.13.3</version>
       <relativePath>..</relativePath>
     </parent>
     <artifactId>bliss.common</artifactId>
     <packaging>bundle</packaging>
-    <name>eu.monnetproject.bliss.commons</name>
+    <name>com.github.monnetproject.bliss.commons</name>
     <dependencies>
         <dependency>
             <groupId>it.unimi.dsi</groupId>
