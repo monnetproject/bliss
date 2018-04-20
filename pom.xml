@@ -7,34 +7,7 @@
     <version>1.13.3</version>
     <packaging>pom</packaging>
 
-    <distributionManagement>
-        <repository>
-            <id>internal.repo</id>
-            <name>Monnet01 Repository</name>
-            <url>file:///var/www/mvn/</url>
-        </repository>
-        <snapshotRepository>
-            <id>internal.repo</id>
-            <name>Monnet01 Repository</name>
-            <url>file:///var/www/mvn/</url>
-            <uniqueVersion>false</uniqueVersion>
-        </snapshotRepository>
-    </distributionManagement>
-    
-    <repositories>
-        <repository>
-            <id>aduna</id>
-            <name>Aduna Repository</name>
-            <url>http://repo.aduna-software.org/maven2/releases/</url>
-        </repository>
-        <repository>
-            <id>monnet01</id>
-            <name>Monnet repository</name>
-            <url>http://monnet01.sindice.net/mvn</url>
-        </repository>
-    </repositories>
-    
-    <name>Bilingual Similarity Suite</name>
+   <name>Bilingual Similarity Suite</name>
 
     <dependencies>
         <dependency>
